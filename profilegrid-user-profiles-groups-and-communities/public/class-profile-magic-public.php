@@ -1421,7 +1421,7 @@ class Profile_Magic_Public {
             $post = $pm_sanitizer->sanitize($_POST);
 		  $dbhandler    = new PM_DBhandler();
 			$pmrequests = new PM_request();
-                        
+                        $allowed_html = $pmrequests->pg_allowed_html_wp_kses();
 			$pagenum    = filter_input( INPUT_POST, 'pagenum' );
 			$sortby     = filter_input( INPUT_POST, 'member_sort_by' );
 
@@ -1548,10 +1548,10 @@ class Profile_Magic_Public {
 		}
 
 		if ( isset( $pagination ) ) {
-			$return .= '<div class="pm_clear"></div>' . wp_kses_post($pagination);
+			$return .= '<div class="pm_clear"></div>' . $pagination;
 		}
 
-			  echo wp_kses_post( $return );
+			  echo wp_kses( $return,$allowed_html );
 			die;
 	}
 
@@ -4087,18 +4087,22 @@ class Profile_Magic_Public {
 	}
 
 	public function pg_show_all_threads() {
-		 $tid        = filter_input( INPUT_POST, 'tid' );
+		$tid        = filter_input( INPUT_POST, 'tid' );
 		$pmmessenger = new ProfileMagic_Chat();
+                $pmrequests = new PM_request();
+                $allowed_html = $pmrequests->pg_allowed_html_wp_kses();
 		$return      = $pmmessenger->pm_messenger_show_threads( $tid );
-		echo wp_kses_post( $return );
+		echo wp_kses( $return,$allowed_html );
 		die;
 	}
 
 	public function pg_search_threads() {
 		$search      = filter_input( INPUT_POST, 'search' );
 		$pmmessenger = new ProfileMagic_Chat();
+                $pmrequests = new PM_request();
+                $allowed_html = $pmrequests->pg_allowed_html_wp_kses();
 		$return      = $pmmessenger->pm_messenger_search_threads( $search );
-		echo wp_kses_post( $return );
+		echo wp_kses( $return,$allowed_html );
 		die;
 	}
 

@@ -265,7 +265,6 @@ class Profile_Magic {
                                 
 				$this->loader->add_action( 'wp_ajax_pm_wizard_update_group_icon', $plugin_admin, 'pm_wizard_update_group_icon' );
 				$this->loader->add_action( 'wp_ajax_pm_submit_group_wizard_form', $plugin_admin, 'pm_submit_group_wizard_form' );
-                                $this->loader->add_filter( 'wp_kses_allowed_html', $plugin_admin, 'pm_allowed_html_tags', 10, 2 );
                                 $this->loader->add_action( 'wp_ajax_pm_get_groups_details', $plugin_admin, 'pm_get_groups_details' );
                                 $this->loader->add_action('pg_customization_extension_html', $plugin_admin, 'pg_customization_extension_html');
                                 $this->loader->add_action( 'wp_ajax_pg_activate_license', $plugin_admin, 'profilegrid_activate_license' );

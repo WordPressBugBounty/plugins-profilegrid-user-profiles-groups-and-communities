@@ -46,10 +46,12 @@ class ProfileMagic_Chat {
 		$additional  = "content LIKE '%" . $search . "%'";
 		$uid         = get_current_user_id();
 		$messages    = $dbhandler->get_all_result( $identifier, $column = '*', $where, 'results', 0, false, 'timestamp', true, $additional );
-
-		foreach ( $messages as $message ) {
-			$tid[] = $message->t_id;
-		}
+                if(!empty($messages))
+                {
+                    foreach ( $messages as $message ) {
+                            $tid[] = $message->t_id;
+                    }
+                }
 		$thred_id_array = array_unique( $tid );
 
 		if ( ! empty( $thred_id_array ) ) {
@@ -463,6 +465,7 @@ class ProfileMagic_Chat {
 	public function pg_show_message_tab_html_old( $receiver_uid ) {
 		 $pmrequests  = new PM_request();
 		$current_user = wp_get_current_user();
+                $allowed_html = $pmrequests->pg_allowed_html_wp_kses();
 		$return       = $this->pm_messenger_show_threads( '' );
 		?>
 		<div class="pm-group-view">
@@ -483,7 +486,7 @@ class ProfileMagic_Chat {
 								<div id="pm-username-error" class="pm-dbfl"></div>
 						</div>
 						<ul class="dbfl" id="threads_ul">
-							<?php echo wp_kses_post( $return ); ?>
+							<?php echo wp_kses( $return,$allowed_html ); ?>
 						</ul>
 					</div>
 
@@ -503,6 +506,7 @@ class ProfileMagic_Chat {
 	public function pg_show_message_tab_html( $uid, $rid, $tid ) {
 		$pmrequests   = new PM_request();
 		$current_user = wp_get_current_user();
+                $allowed_html = $pmrequests->pg_allowed_html_wp_kses();
 		$return       = $this->pm_messenger_show_threads( $tid );
 
 		?>
@@ -536,7 +540,7 @@ class ProfileMagic_Chat {
 			<div class="pg-msg-list-wrap">
 			  
 				<?php
-				echo wp_kses_post( $return );
+				echo wp_kses( $return,$allowed_html );
 				?>
 			</div>
 			
@@ -653,6 +657,7 @@ class ProfileMagic_Chat {
 
 	public function pg_show_thread_message_panel_old( $rid ) {
 		$pmrequests   = new PM_request();
+                $allowed_html = $pmrequests->pg_allowed_html_wp_kses();
 		$current_user = wp_get_current_user();
 		$uid          = $current_user->ID;
 
@@ -710,7 +715,7 @@ class ProfileMagic_Chat {
 				</div>
 				
 				<div id="message_display_area" class="pm-difl pm_full_width_profile"  style="min-height:200px;max-height:200px;max-width: 550px;overflow-y:auto;">
-					<?php echo wp_kses_post($return); ?>
+					<?php echo wp_kses($return,$allowed_html); ?>
 					<?php $path = plugins_url( '../public/partials/images/typing_image.gif', __FILE__ ); ?>
 				</div>
 					

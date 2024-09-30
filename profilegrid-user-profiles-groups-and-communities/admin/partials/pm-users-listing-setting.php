@@ -41,11 +41,11 @@ $pm_default_search_field = $dbhandler->get_global_option_value( 'pm_default_sear
 ?>
 
 <div class="uimagic">
-  <form name="pm_users_lsiting_settings" id="pm_user_settings" method="post">
+  <form name="pm_users_listing_settings" id="pm_user_settings" method="post">
     <!-----Dialogue Box Starts----->
     <div class="content">
       <div class="uimheader">
-        <?php esc_html_e( 'All Users Lisitng', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        <?php esc_html_e( 'All Users Listing', 'profilegrid-user-profiles-groups-and-communities' ); ?>
       </div>
      
       <div class="uimsubheader">

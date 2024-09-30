@@ -2062,26 +2062,6 @@ class Profile_Magic_Admin {
 				die;
 	}
 
-	public function pm_allowed_html_tags( $allowed, $context ) {
-		if ( 'post' === $context ) {
-			$allowed['a']['onclick']   = true;
-			$allowed['svg']['onclick'] = true;
-			$allowed['div']['onclick'] = true;
-			$allowed['div']['id']      = true;
-			$allowed['div']['class']   = true;
-			$allowed['svg']['fill']    = true;
-			$allowed['svg']['heigth']  = true;
-			$allowed['svg']['width']   = true;
-			$allowed['svg']['viewBox'] = true;
-			$allowed['svg']['xmlns']   = true;
-			$allowed['path']['fill']   = true;
-			$allowed['path']['d']      = true;
-
-		}
-
-		return $allowed;
-	}
-
 	public function pm_get_groups_details() {
             if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'ajax-nonce' ) ) {
 			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );

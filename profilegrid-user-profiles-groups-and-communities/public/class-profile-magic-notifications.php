@@ -170,11 +170,13 @@ class Profile_Magic_Notification {
 	public function pm_generate_notification_without_heartbeat( $loadnum = 1 ) {
 
 		$dbhandler   = new PM_DBhandler();
+                $pmrequests   = new PM_request();
 		$current_uid = get_current_user_id();
 		$loadnum     = isset( $loadnum ) ? absint( $loadnum ) : 1;
 		$limit       = 15;
 		$offset      = ( $loadnum - 1 ) * $limit;
-
+                
+                $allowed_html = $pmrequests->pg_allowed_html_wp_kses();
 		$where   = 1;
 		$exclude = $this->exclude_deactivate_extension_notification();
 
@@ -242,7 +244,7 @@ class Profile_Magic_Notification {
 						break;
 				}
 				if ( $data['pm_notify'][ $id ] != '' ) {
-					echo wp_kses_post($data['pm_notify'][ $id ]);
+					echo wp_kses($data['pm_notify'][ $id ],$allowed_html);
 				}
 				if ( $status == 1 ) {
 					$this->pm_change_notification_status( $id, 4 );

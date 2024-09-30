@@ -5908,48 +5908,142 @@ class PM_request {
         public function pg_allowed_html_wp_kses()
         {
             $allowed_html = array(
-            'div' => array(
-                'class' => array(),
-                'id' => array(),
-            ),
-            'svg' => array(
-                'xmlns' => array(),
-                'height' => array(),
-                'viewBox' => array(),
-                'width' => array(),
-                'fill' => array(),
-            ),
-            'path' => array(
-                'd' => array(),
-                'fill' => array(),
-            ),
-            'img' => array(
-                'width' => array(),
-                'height' => array(),
-                'src' => array(),
-                'class' => array(),
-                'alt' => array(),
-                'size' => array(),
-                'default' => array(),
-                'force_default' => array(),
-                'rating' => array(),
-                'scheme' => array(),
-                'processed_args' => array(),
-                'extra_attr' => array(),
-                'force_display' => array(),
-                'loading' => array(),
-                'fetchpriority' => array(),
-                'decoding' => array(),
-                'found_avatar' => array(),
-                'url' => array(),
-                'srcset' => array(),
-                'sizes' => array(),
-            ),
-            'ul' => array(),
-            'li' => array(
-                'onclick' => array(),
-            ),
-        );
+                
+                'table' => array(
+                    'class' => array(),
+                    'border' => array(),
+                    'cellspacing' => array(),
+                    'cellpadding' => array(),
+                    'width' => array(),
+                    'style' => array(),
+                ),
+                'tbody' => array(),
+                'tr' => array(
+                    'valign' => array(),
+                ),
+                'th' => array(
+                    'scope' => array(),
+                    'class' => array(),
+                ),
+                'td' => array(
+                    'class' => array(),
+                    'colspan' => array(),
+                    'style' => array(),
+                    'align' => array(),
+                    'valign' => array(),
+                ),
+                'label' => array(
+                    'for' => array(),
+                ),
+                'span' => array(
+                    'class' => array(),
+                    'style' => array(),
+                    'aria-current' => true,
+                    'data-*' => true, // Allowing data attributes
+                ),
+                'input' => array(
+                    'type' => array(),
+                    'name' => array(),
+                    'id' => array(),
+                    'class' => array(),
+                    'value' => array(),
+                    'required' => array(),
+                ),
+                'textarea' => array(
+                    'class' => array(),
+                    'rows' => array(),
+                    'cols' => array(),
+                    'name' => array(),
+                    'id' => array(),
+                    'style' => array(),
+                    'aria-hidden' => array(),
+                    'data-*' => true, // Allowing data attributes
+                ),
+                'a' => array(
+                    'href' => array(),
+                    'target' => array(),
+                    'class' => array(),
+                    'id' => array(),
+                    'onclick'=>array(),
+                    'data-*' => true, // Allowing data attributes
+                ),
+                'h1' => array(
+                    'style' => array(),
+                ),
+                'div' => array(
+                    'id' => array(),
+                    'title'=>array(),
+                    'class' => array(),
+                    'style' => array(),
+                    'aria-hidden' => array(),
+                    'onclick'=>array(),
+                    'data-*' => true, // Allowing data attributes
+                ),
+                'button' => array(
+                    'type' => array(),
+                    'id' => array(),
+                    'class' => array(),
+                    'aria-label' => array(),
+                    'aria-pressed' => array(),
+                    'data-*' => true, // Allowing data attributes
+                ),
+                'strong' => array(),
+                'em' => array(),
+                'i' => array(
+                    'class' => array(),
+                ),
+                'p' => array(
+                    'class' => array(),
+                ),
+                'img' => array(
+                    'src' => array(),
+                    'alt' => array(),
+                    'width' => array(),
+                    'height' => array(),
+                    'style' => array(),
+                ),    
+                'svg' => array(
+                    'xmlns' => array(),
+                    'height' => array(),
+                    'viewBox' => array(),
+                    'width' => array(),
+                    'fill' => array(),
+                ),
+                'path' => array(
+                    'd' => array(),
+                    'fill' => array(),
+                ),
+                'img' => array(
+                    'width' => array(),
+                    'height' => array(),
+                    'src' => array(),
+                    'class' => array(),
+                    'alt' => array(),
+                    'size' => array(),
+                    'default' => array(),
+                    'force_default' => array(),
+                    'rating' => array(),
+                    'scheme' => array(),
+                    'processed_args' => array(),
+                    'extra_attr' => array(),
+                    'force_display' => array(),
+                    'loading' => array(),
+                    'fetchpriority' => array(),
+                    'decoding' => array(),
+                    'found_avatar' => array(),
+                    'url' => array(),
+                    'srcset' => array(),
+                    'sizes' => array(),
+                    'style' => array(),
+                ),
+                'ul' => array(
+                    'style' => array(),
+                    'class' => array(),
+                ),
+                'li' => array(
+                    'onclick' => array(),
+                ),
+            );
             return $allowed_html;
         }
         
