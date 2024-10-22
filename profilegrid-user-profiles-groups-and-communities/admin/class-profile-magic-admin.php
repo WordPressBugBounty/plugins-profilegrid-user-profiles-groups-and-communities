@@ -1858,37 +1858,40 @@ class Profile_Magic_Admin {
 	}
 
 	public function pg_create_group_page() {
-            if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'ajax-nonce' ) ) {
-                die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
-            }
-            
-            if ( current_user_can( 'manage_options' ) ) 
-            {
-		$dbhandler  = new PM_DBhandler();
-		$gid        = filter_input( INPUT_POST, 'gid' );
-		$identifier = 'GROUPS';
-		$row        = $dbhandler->get_row( $identifier, $gid );
-		if ( $row->group_options != '' ) {
-			$group_options = maybe_unserialize( $row->group_options );
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'ajax-nonce' ) ) {
+			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
 		}
+		
+		if ( current_user_can( 'manage_options' ) ) 
+		{
+			$dbhandler  = new PM_DBhandler();
+			$gid        = filter_input( INPUT_POST, 'gid' );
+			$identifier = 'GROUPS';
+			$row        = $dbhandler->get_row( $identifier, $gid );
+			if ( $row->group_options != '' ) {
+				$group_options = maybe_unserialize( $row->group_options );
+			}
 
-		$group_name = 'User Group - ' . $dbhandler->get_value( 'GROUPS', 'group_name', $gid );
-		$arg        = array(
-			'post_type'    => 'page',
-			'post_title'   => $group_name,
-			'post_status'  => 'publish',
-			'post_content' => '[profilegrid_group gid="' . $gid . '"]',
-		);
-		$id         = wp_insert_post( $arg );
+			$group_name = 'User Group - ' . $dbhandler->get_value( 'GROUPS', 'group_name', $gid );
+			$arg = array(
+				'post_type'    => 'page',
+				'post_title'   => $group_name,
+				'post_status'  => 'publish',
+				'post_content' => '[profilegrid_register gid="' . $gid . '"]',
+			);
 
-		$group_options['group_page'] = $id;
-		$options                     = maybe_serialize( $group_options );
-		$data                        = array( 'group_options' => $options );
-		$args                        = array( '%s' );
-		$dbhandler->update_row( $identifier, 'id', $gid, $data, $args, '%d' );
+			$arg = apply_filters( 'pm_group_registration_form', $arg, $gid, $group_name, $group_options );
+			
+			$id         = wp_insert_post( $arg );
 
-		echo esc_html( $id );
-            }
+			$group_options['group_page'] = $id;
+			$options                     = maybe_serialize( $group_options );
+			$data                        = array( 'group_options' => $options );
+			$args                        = array( '%s' );
+			$dbhandler->update_row( $identifier, 'id', $gid, $data, $args, '%d' );
+
+			echo esc_html( $id );
+		}
 		die;
 	}
 

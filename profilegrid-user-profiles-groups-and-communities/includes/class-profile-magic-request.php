@@ -4186,8 +4186,10 @@ class PM_request {
 			}
 		} else {
 			if ( $is_group_limit == 1 ) {
+				
 				if ( $limit > $total_users_in_group ) {
 					?>
+					
 				<div class="pm-group-signup">
                                     <?php 
                                        $link = '<a href="'.esc_url( $registration_url ).'" class="pm_button"><button>'.esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ).'</button></a>';
@@ -4276,8 +4278,11 @@ class PM_request {
 			$pmemails->pm_send_group_based_notification( $gid, $uid, 'on_registration' );
 			$notification->pm_joined_new_group_notification( $uid, $gid );
 			return $update;
-		} else {
-
+		}
+		else if($type == 'form'){
+			do_action("pg_handle_group_type_form_functionality",$uid, $gid, $type);
+		} 
+		else{
 			$date    = gmdate( 'Y-m-d H:i:s' );
 			$options = maybe_serialize( array( 'request_date' => $date ) );
 			$data    = array(
@@ -4312,6 +4317,7 @@ class PM_request {
 			do_action( 'profilegrid_join_group_request', $gid, $uid );
 			return true;
 		}
+		
 	}
 
 	public function pm_get_all_join_group_requests( $gid, $pagenum = 1, $limit = 10, $sort_by = 'first_name_asc', $search = '', $search_in = 'user_login' ) {

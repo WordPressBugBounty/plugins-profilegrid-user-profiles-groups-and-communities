@@ -125,10 +125,14 @@ update_option( 'pg_redirect_to_group_page', '0' );
      <div class="pm-card pg-box-h-100 pg-card-mb-16">
          <label for="pg-group-id-<?php echo esc_attr($group->id);?>" class="pg-box-border pg-box-h-100 pg-box-white-bg">
       <div class="pg-box-head">
-       
-        <input type="checkbox" class="pg-all-groups-selected" name="selected[]" value="<?php echo esc_attr($group->id);?>" id="pg-group-id-<?php echo esc_attr($group->id);?>" />
-        <a href="admin.php?page=pm_add_group&id=<?php echo esc_attr($group->id);?>" class="pg-group-card-title"><?php echo esc_html($group->group_name);?></a>    
         
+      <?php  if(isset( $group_options['group_type'] ) && $group_options['group_type'] == 'form' ): ?>
+        <a href="admin.php?page=pm_add_form&id=<?php echo esc_attr($group->id);?>"><?php echo esc_html($group->group_name);?></a>
+        <?php else: ?>
+            <input type="checkbox" class="pg-all-groups-selected" name="selected[]" value="<?php echo esc_attr($group->id);?>" id="pg-group-id-<?php echo esc_attr($group->id);?>" />
+        <a href="admin.php?page=pm_add_group&id=<?php echo esc_attr($group->id);?>" class="pg-group-card-title"><?php echo esc_html($group->group_name);?></a>
+        <?php endif; ?>
+
         <div class="pg-group-status-wrap pg-group-status-open">
             <?php if(strtolower($group_type)=='open'):?>
             <span class="material-icons">public</span>
@@ -137,7 +141,7 @@ update_option( 'pg_redirect_to_group_page', '0' );
             <?php endif;?>
             <span style="text-transform: capitalize;"><?php echo esc_html($group_type); ?></span> <span class="pg-status-sep"> &#8901; </span> <?php if($group->is_group_limit==1){ echo esc_html($total_users).'/'.esc_html($group->group_limit);} else{  echo esc_html($total_users);}?> </div>
       </div>
-      <div class="pm-card-icon"><?php echo wp_kses_post( $pmrequests->pg_get_group_card_icon_link($group->id)); ?></div>  
+      <div class="pm-card-icon"><?php echo $pmrequests->pg_get_group_card_icon_link($group->id); ?></div>  
       
               <div class="pg-submission-wrap"> 
                   <?php if(!empty($users)):?>
@@ -164,11 +168,11 @@ update_option( 'pg_redirect_to_group_page', '0' );
                   </div>
                   <?php endif;?>
               </div>
-  
-      
-    
-      <div class="pm-form-shortcode-row">[profilegrid_register <?php echo esc_html('gid="'.$group->id.'');?>"]</div>
-      
+      <?php if(isset( $group_options['group_type'] ) && $group_options['group_type'] == 'form'): ?>    
+        <div class="pm-form-shortcode-row">[profilegrid_registration_form <?php echo esc_html('id="'.$group->id.'');?>"]</div>                 
+      <?php else: ?>
+        <div class="pm-form-shortcode-row">[profilegrid_register <?php echo esc_html('gid="'.$group->id.'');?>"]</div>
+      <?php endif;?>
       <div class="pg-box-card-setting-wrap">
            <?php if($group_type=='closed'):?>
           <div class="pg-box-card-setting-item">
@@ -182,7 +186,11 @@ update_option( 'pg_redirect_to_group_page', '0' );
           </div>
           <div class="pg-box-card-setting-item">
             <span class="pg-box-card-setting-info"><?php esc_attr_e('Group Options', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
+            <?php if(isset( $group_options['group_type'] ) && $group_options['group_type'] == 'form'):?>
+            <a href="admin.php?page=pm_add_form&id=<?php echo esc_attr($group->id);?>"><span class="material-icons">settings</span></a>
+            <?php else: ?>
             <a href="admin.php?page=pm_add_group&id=<?php echo esc_attr($group->id);?>"><span class="material-icons">settings</span></a>
+            <?php endif;?>
         </div>
           <div class="pg-box-card-setting-item">
             <span class="pg-box-card-setting-info"><?php esc_attr_e('Group Registration Form', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
