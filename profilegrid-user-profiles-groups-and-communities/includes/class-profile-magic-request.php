@@ -2215,6 +2215,7 @@ class PM_request {
 		$mid = 'false';
                 $check_capability = $this->pg_check_user_can_send_message($sid, $rid);
 		if ( $sid != '' && $rid != '' && $check_capability == true ) {
+                        
 			$dbhandler = new PM_DBhandler();
                         
 			$pmemail = new PM_Emails;
@@ -2222,7 +2223,7 @@ class PM_request {
 			$identifier   = 'MSG_CONVERSATION';
 			$status       = apply_filters('pm_default_chat_status',2, $sid);
 			$allowed_html = array();
-			$content      = wp_kses( $content, $allowed_html );
+			$content      = $content;
                         if($tid=='')
                         {
                             $tid          = $this->fetch_or_create_thread( $sid, $rid );
@@ -5160,10 +5161,13 @@ class PM_request {
 		 $path = apply_filters('custom_chat_notification_sound', $path);
 
 		$current_user = wp_get_current_user();
+                $dbhandler = new PM_DBhandler;
+                $enable_private_profile = $dbhandler->get_global_option_value( 'pm_enable_private_profile' );
+		
 		if ( isset( $tab ) && $tab['status'] == '1' ) {
 			switch ( $id ) {
 				case 'pg-messages':
-					if ( $uid == $current_user->ID ) :
+					if ( $uid == $current_user->ID && $enable_private_profile!='1') :
 						?>
 					<audio id="msg_tone" src="<?php echo esc_url( $path ); ?>"></audio>
 					<li class="pm-profile-tab pm-pad10 <?php echo esc_attr( $tab['class'] ); ?>"><a class="pm-dbfl" href="#<?php echo esc_attr( $tab['id'] ); ?>" onClick="pg_msg_open_tab()" ><?php esc_html_e( $tab['title'], 'profilegrid-user-profiles-groups-and-communities' ); ?><b id="unread_thread_count" class=""></b></a></li>

@@ -16,6 +16,8 @@ $args       = array(
 $post     = filter_input_array( INPUT_POST, $args );
 $gids       = implode( ',', $post['groups'] );
 $additional = "associate_group in($gids) and field_type not in('file','heading','paragraph','term_checkbox','user_avatar','user_pass','confirm_pass')";
+
+$additional = apply_filters('profilegrid_export_field_query', $additional, $gids);
 $fields     = $dbhandler->get_all_result( 'FIELDS', '*', 1, 'results', 0, false, null, false, $additional );
 ?>
 <div class="uimrow">

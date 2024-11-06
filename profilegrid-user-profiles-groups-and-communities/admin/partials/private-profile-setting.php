@@ -49,7 +49,7 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
            <input name="pm_enable_private_profile" id="pm_enable_private_profile" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_enable_private_profile' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;"  onClick="pm_show_hide(this,'enable_private_profile_html')" />
           <label for="pm_enable_private_profile"></label>
         </div>
-        <div class="uimnote"><?php esc_html_e( 'Make all user profiles private. Only profile owners can view respective profile pages.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+        <div class="uimnote"><?php esc_html_e( 'When enabled, all user profiles will be set to private, accessible only by their owners. Secondary features, such as the chat system will also be hidden to ensure a fully private experience. Please note that any profile-related interactions will be disabled for other users.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
       </div>
       <div class="childfieldsrow" id="enable_private_profile_html" style="
       <?php

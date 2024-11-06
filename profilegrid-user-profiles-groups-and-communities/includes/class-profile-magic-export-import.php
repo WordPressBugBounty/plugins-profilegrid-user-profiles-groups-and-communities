@@ -43,8 +43,11 @@ class PM_Export_Import {
 		} else {
 			$seprator = ',';
 		}
-		$csv_output .= $this->pm_get_user_fields( $post, $seprator );
+
+        $csv_output .= $this->pm_get_user_fields( $post, $seprator );
 		$csv_output .= $this->pm_get_user_fields_value( $post, $seprator );
+        $csv_output = apply_filters("profilegrid_generate_user_csv_output", $csv_output, $post ) ;
+
 		return $csv_output;
 	}
 

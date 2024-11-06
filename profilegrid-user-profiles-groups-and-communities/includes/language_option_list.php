@@ -1,3 +1,4 @@
+  <option value=""><?php esc_html_e( 'Select Language', 'profilegrid-user-profiles-groups-and-communities' ); ?></option>
   <option value="Afrikanns" <?php selected( $value, 'Afrikanns' ); ?> ><?php esc_html_e( 'Afrikanns', 'profilegrid-user-profiles-groups-and-communities' ); ?></option>
   <option value="Albanian" <?php selected( $value, 'Albanian' ); ?> ><?php esc_html_e( 'Albanian', 'profilegrid-user-profiles-groups-and-communities' ); ?></option>
   <option value="Arabic" <?php selected( $value, 'Arabic' ); ?> ><?php esc_html_e( 'Arabic', 'profilegrid-user-profiles-groups-and-communities' ); ?></option>

@@ -1278,6 +1278,7 @@ class Profile_Magic_Public {
                         }else{
                             $tid = '';
                         }
+                        //echo $rid.' '.$content.' '.$tid;
 			if ( $mid == '' ) {
 				if ($tid == 0){
 				$result = $pmmessenger->pm_messenger_send_new_message( $rid, $content );
@@ -1287,7 +1288,7 @@ class Profile_Magic_Public {
 			} else {
 				$result = $pmmessenger->pm_messenger_send_edit_message( $rid, $mid, $content );
 			}
-			echo wp_kses_post( $result );
+			echo $result;
 		} else {
 			 esc_html_e( ' no post created', 'profilegrid-user-profiles-groups-and-communities' );
 		}
@@ -1326,7 +1327,7 @@ class Profile_Magic_Public {
                  if($tid!=0)
                  {
                     $return     = $pmmessenger->pm_get_messenger_notification( $timestamp, $activity, $tid );
-                    echo wp_kses_post( $return );
+                    echo $return;
                  }
 		die;
 	}
@@ -3940,7 +3941,9 @@ class Profile_Magic_Public {
 		$current_user = wp_get_current_user();
 		$profilechat  = new ProfileMagic_Chat();
 		$pmrequests   = new PM_request();
-		if ( $uid == $current_user->ID ) :
+                $dbhandler = new PM_DBhandler;
+                $enable_private_profile = $dbhandler->get_global_option_value( 'pm_enable_private_profile' );
+		if ( $uid == $current_user->ID && $enable_private_profile!='1' ) :
 			?>
 		<div id="pg-messages" class="pm-dbfl pg-profile-tab-content pg-message-tab">
 			<?php

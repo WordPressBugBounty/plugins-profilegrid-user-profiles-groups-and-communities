@@ -388,6 +388,10 @@ class ProfileMagic_Chat {
 		$time_conversion = isset( $timezone ) ? $timezone * 60 : 0;
 		$offset          = ( $loadnum - 1 ) * $limit;
 		$descending      = true;
+                if(!is_numeric($tid))
+                {
+                   return '';
+                }
 		$messages        = $pmrequests->get_message_of_thread( $tid, $limit, $offset, $descending, $search );
 
 		$return = '';
@@ -775,7 +779,7 @@ class ProfileMagic_Chat {
 		if ( $condition ){
 			$is_msg_sent = $pmrequests->pm_create_message( $sid, $rid, $content ,$tid );
 			if ( !$is_msg_sent ) {
-				$return = __( 'not sent', 'profilegrid-user-profiles-groups-and-communities' );
+				$is_msg_sent = __( 'not sent', 'profilegrid-user-profiles-groups-and-communities' );
 			}
 		}else{
 			$is_msg_sent = __( 'not sent', 'profilegrid-user-profiles-groups-and-communities' );
