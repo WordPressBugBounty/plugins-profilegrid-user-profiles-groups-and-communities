@@ -2223,7 +2223,8 @@ function pm_remove_attachment(obj,key,value)
 			'action': 'pm_remove_attachment_dashboard',
 			'key': key,
 			'value':value,
-			'uid':uid
+			'uid':uid,
+                        'nonce':pm_ajax_object.nonce
 	};
 	  jQuery( obj ).parent( 'a' ).parent( 'span.pm_frontend_attachment' ).remove();
     jQuery.post(

@@ -1900,24 +1900,35 @@ class Profile_Magic_Admin {
 	}
 
 	public function pm_remove_file_attachment() {
-		$key    = filter_input( INPUT_POST, 'key' );
-		$value  = filter_input( INPUT_POST, 'value' );
-		$userid = filter_input( INPUT_POST, 'uid' );
+                    // Verify the nonce for security
+                if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'ajax-nonce' ) ) {
+                    echo esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' );
+                    die;
+                }
+                // Get the inputs securely
+                $key    = sanitize_text_field( filter_input( INPUT_POST, 'key', FILTER_SANITIZE_STRING ) );
+                $value  = sanitize_text_field( filter_input( INPUT_POST, 'value', FILTER_SANITIZE_STRING ) );
+                $userid = absint( filter_input( INPUT_POST, 'uid', FILTER_SANITIZE_NUMBER_INT ) );
 
-		$user_attachments = get_user_meta( $userid, $key, true );
-		if ( $user_attachments != '' ) {
-			 $old_attachments = explode( ',', $user_attachments );
-			 $index           = array_search( $value, $old_attachments, true );
-			 unset( $old_attachments[ $index ] );
-		}
-		if ( empty( $old_attachments ) ) {
-			$val = delete_user_meta( $userid, $key );
-		} else {
-			$ids = implode( ',', $old_attachments );
-			$val = update_user_meta( $userid, $key, $ids );
+                $current_user_id = get_current_user_id();
+                
+                if($current_user_id===$userid || current_user_can('manage_option'))
+                {
+                    $user_attachments = get_user_meta( $userid, $key, true );
+                    if ( $user_attachments != '' ) {
+                             $old_attachments = explode( ',', $user_attachments );
+                             $index           = array_search( $value, $old_attachments, true );
+                             unset( $old_attachments[ $index ] );
+                    }
+                    if ( empty( $old_attachments ) ) {
+                            $val = delete_user_meta( $userid, $key );
+                    } else {
+                            $ids = implode( ',', $old_attachments );
+                            $val = update_user_meta( $userid, $key, $ids );
 
-		}
-				echo esc_html( $val );
+                    }
+                    echo esc_html( $val );
+                }
 		die;
 	}
 

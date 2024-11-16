@@ -32,7 +32,8 @@ function pm_remove_attachment(obj,key,value)
                 var data = {
                         'action': 'pm_remove_attachment',
                         'key': key,
-                        'value':value
+                        'value':value,
+                        'nonce':pm_ajax_object.nonce
                 };
                 $.post(pm_ajax_object.ajax_url, data, function(response) {
                     if(response)

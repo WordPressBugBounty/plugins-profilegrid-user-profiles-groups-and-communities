@@ -2667,8 +2667,14 @@ class Profile_Magic_Public {
 	}
 
 	public function pm_remove_file_attachment() {
-		$key              = filter_input( INPUT_POST, 'key' );
-		$value            = filter_input( INPUT_POST, 'value' );
+               if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'ajax-nonce' ) ) {
+                    echo esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' );
+                    die;
+                }
+		
+                $key    = sanitize_text_field( filter_input( INPUT_POST, 'key', FILTER_SANITIZE_STRING ) );
+                $value  = sanitize_text_field( filter_input( INPUT_POST, 'value', FILTER_SANITIZE_STRING ) );
+                
 		$current_user     = wp_get_current_user();
 		$user_attachments = get_user_meta( $current_user->ID, $key, true );
 		if ( $user_attachments != '' ) {
