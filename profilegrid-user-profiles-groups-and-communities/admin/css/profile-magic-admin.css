@@ -2855,6 +2855,8 @@ pm-group-fields-popup-overlay-fade-in {
     background-image: none;
     padding: 10px;
     min-width: 50%;
+    overflow: auto;
+    border: 1px solid #cfcfcf;
 }
 
 tr.pm_import_row td:first-child {
