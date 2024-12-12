@@ -55,7 +55,8 @@ if ( filter_input( INPUT_POST, 'activate' ) ) {
 		update_user_meta( $uid, 'rm_user_status', '0' );
 		if ( ! empty( $gid ) ) :
 			$pmemails->pm_send_group_based_notification( $gid[0], $uid, 'on_user_activate' );
-				 endif;
+                        do_action('pm_user_activated', $uid);
+                endif;
 	}
     }else{
         die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
@@ -151,6 +152,7 @@ if ( $user_info == false ) {
 		foreach ( $sections as $section ) :
 			echo '<li class="pm-profile-nav-item"><a href="#' . sanitize_key( $section->section_name . '_' . $section->id ) . '">' . esc_html( $section->section_name ) . '</a></li>';
 		endforeach;
+                do_action('pm_user_profile_tabs', $id);
 		?>
 	</ul>
 	
@@ -225,6 +227,7 @@ if ( $user_info == false ) {
 	  </div>
 			<?php
 	endforeach;
+        do_action('pm_user_profile_tab_content', $id);
 		?>
 		<?php
 	else :

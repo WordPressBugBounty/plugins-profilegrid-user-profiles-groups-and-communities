@@ -36,6 +36,7 @@ if(isset($action) && !empty($action))
                 $ugid = $pmrequests->pg_filter_users_group_ids($ugids);
                 $primary_group = $pmrequests->pg_get_primary_group_id($ugid);
                 $pmemails->pm_send_group_based_notification($primary_group, $uid, 'on_user_activate');
+                do_action('pm_user_activated', $uid);
             }
         }
         
@@ -68,7 +69,7 @@ if(isset($action) && !empty($action))
             $ugid = $pmrequests->pg_filter_users_group_ids($ugids);
             $primary_group = $pmrequests->pg_get_primary_group_id($ugid);
             $pmemails->pm_send_group_based_notification($primary_group, $uid, 'on_user_activate');
-            
+            do_action('pm_user_activated', $uid);
         }
         
         if($action=='deactivate')

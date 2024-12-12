@@ -7487,3 +7487,8 @@ span.pg-tooltips::after {
 .toplevel_page_et_divi_options .ui-tabs-nav .ui-state-default {
     background: none !important;
 }
+
+
+#wp-pm_send_friend_request_email_content-wrap button#insert-media-button {
+    margin-bottom: 30px;
+}

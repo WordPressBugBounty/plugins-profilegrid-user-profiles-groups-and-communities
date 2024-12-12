@@ -8,7 +8,7 @@
  * Plugin Name:       ProfileGrid
  * Plugin URI:        http://profilegrid.co
  * Description:       ProfileGrid adds user groups and user profiles functionality to your site.
- * Version:           5.9.3.8
+ * Version:           5.9.3.9
  * Author:            ProfileGrid User Profiles
  * Author URI:        https://profilegrid.co
  * License:           GPL-2.0+
@@ -28,8 +28,9 @@ if ( ! defined( 'WPINC' ) ) {
  */
 
 define('PROGRID_DB_VERSION',4.4);
-define('PROGRID_PLUGIN_VERSION','5.9.3.8');
+define('PROGRID_PLUGIN_VERSION','5.9.3.9');
 define('PROGRID_MULTI_GROUP_VERSION', 3.0);
+
 
 function activate_profile_magic() {
         $profile_magic = 'profilegrid-user-profiles-groups-and-communities';

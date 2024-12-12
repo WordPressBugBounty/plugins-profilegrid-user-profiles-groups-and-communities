@@ -535,7 +535,7 @@ class Profile_Magic_Public {
 			$pmrequests = new PM_request();
 			$rm_form_id = $pmrequests->pm_check_if_group_associate_with_rm_form( $group_id );
 			if ( $rm_form_id ) {
-				return do_shortcode( "[RM_Form id='" . $rm_form_id . "']" );
+				return do_shortcode( "[RM_Forms id='" . $rm_form_id . "']" );
 			} else {
 				return $this->profile_magic_get_template_html( 'profile-magic-registration-form', $content );
 			}
