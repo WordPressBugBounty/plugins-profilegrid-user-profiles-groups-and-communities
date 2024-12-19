@@ -44,6 +44,7 @@ else:
             <input type="text" name="<?php echo esc_attr('user_login');?>" id="<?php echo esc_attr('user_login');?>" placeholder="<?php esc_attr_e('Email or Username','profilegrid-user-profiles-groups-and-communities');?>" required="required">
             <input type="password" name="<?php echo esc_attr('user_pass');?>" id="<?php echo esc_attr('user_pass');?>" placeholder="<?php esc_attr_e('Password','profilegrid-user-profiles-groups-and-communities');?>" required="required">
             <span id="pg-toggle-password" class="pg-toggle-password fa fa-fw fa-eye-slash"></span>
+            <?php do_action('profile_magic_show_captcha_in_login');?>
             <div class="pm-login-box-bottom-container pm-dbfl pm-bg pm-border">
                 <input type="submit" value="<?php esc_attr_e('Login','profilegrid-user-profiles-groups-and-communities');?>" name="login_form_submit" class="pm-difl">
                 <?php if($register_link):?>

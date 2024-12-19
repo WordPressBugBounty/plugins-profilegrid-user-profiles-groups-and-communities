@@ -154,6 +154,7 @@ if ( $user_info == false ) {
 		endforeach;
                 do_action('pm_user_profile_tabs', $id);
 		?>
+		<?php do_action('profilegrid_dashboard_member_profile_top_menus');?>
 	</ul>
 	
 	
@@ -229,6 +230,7 @@ if ( $user_info == false ) {
 	endforeach;
         do_action('pm_user_profile_tab_content', $id);
 		?>
+		<?php do_action('profilegrid_dashboard_member_profile_top_menus_content');?>
 		<?php
 	else :
 		echo '<div class="pg-uim-notice">' . esc_html__( 'This profile is not yet associated with any parent profile group. To make it visible please associate it with a group first.', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>';

@@ -50,6 +50,8 @@ if ( $mgp ) {
                 <button class="pgbtn" onclick="filterSelection('content-restriction')">Content Restriction</button>
                 <button class="pgbtn" onclick="filterSelection('widget')">Widget</button>
                 <button class="pgbtn" onclick="filterSelection('newsletter')">Newsletter</button>
+                <button class="pgbtn" onclick="filterSelection('security')">Security</button>
+                <button class="pgbtn" onclick="filterSelection('form')">Form</button>
                 <button class="pgbtn" onclick="filterSelection('customsolution')">Custom Solution</button>
                 </div>
             </div>   

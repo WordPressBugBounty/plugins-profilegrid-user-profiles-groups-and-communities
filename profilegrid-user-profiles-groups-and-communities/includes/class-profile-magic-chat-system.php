@@ -595,7 +595,7 @@ class ProfileMagic_Chat {
         <div class="pg-msg-thread-header" style="<?php echo esc_attr($style); ?>">
             <?php echo wp_kses_post($r_avatar); ?>
             <div class="pg-msg-conversation-info">
-                <span class="pg-msg-thread-user"><?php echo esc_html($r_name); ?></span>
+                <span class="pg-msg-thread-user"><a href="<?php echo esc_url($profile_url);?>" target="__blank"><?php echo esc_html($r_name); ?></a></span>
                 <span class="pg-msg-thread-time"></span>
             </div>
             <div class="pg-msg-thread-wrap">

@@ -69,6 +69,8 @@ if(isset($post_obj['reg_form_submit']) || isset($post_obj['pm_payment_method']))
 	{
 		$check_captcha=true;
 	}
+	$error_message = apply_filters('pm_captcha_error', esc_html__( 'Captcha Failed','profilegrid-user-profiles-groups-and-communities' ));
+	$check_captcha = apply_filters('pm_captcha_validation_in_reg', $check_captcha);
 	
 	if($check_captcha==true)
 	{
@@ -129,7 +131,8 @@ if(isset($post_obj['reg_form_submit']) || isset($post_obj['pm_payment_method']))
 	}
 	else
 	{
-		$errors = esc_html__('captcha failed','profilegrid-user-profiles-groups-and-communities');	
+		$errors = $error_message;	
+		echo esc_html($errors);
 	}
 }
 else

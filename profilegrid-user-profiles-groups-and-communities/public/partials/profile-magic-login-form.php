@@ -51,6 +51,9 @@ if(isset($post['login_form_submit']))
 	{
 		$check_captcha=true;
 	}
+        $error_message = apply_filters('pm_captcha_error', esc_html__( 'Captcha Failed','profilegrid-user-profiles-groups-and-communities' ));
+        $check_captcha = apply_filters('pm_captcha_validation_in_login', $check_captcha);
+        
 	if($nonce){
             if($check_captcha==true)
             {
@@ -99,8 +102,8 @@ if(isset($post['login_form_submit']))
                     }
             }
             else
-            {
-                $pm_error .= '<p class="pm_error">'. esc_html__( 'Captcha Failed','profilegrid-user-profiles-groups-and-communities' ).'</p>';	
+            { 
+                $pm_error .= '<p class="pm_error">'. $error_message .'</p>';	
             }
         }else{
             $pm_error .= '<p class="pm_error">'. esc_html__('Failed security check.','profilegrid-user-profiles-groups-and-communities' ).'</p>';

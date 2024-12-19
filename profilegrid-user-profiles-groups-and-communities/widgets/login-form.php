@@ -67,6 +67,8 @@ if(isset($post['pg_widget_login_form_submit']))
 	{
 		$check_captcha=true;
 	}
+    $check_captcha = apply_filters('pm_captcha_validation_in_login', $check_captcha);
+
 	if($nonce){
             if($check_captcha==true)
             {
@@ -224,6 +226,7 @@ else:
         <label for="<?php echo esc_attr('user_pass');?>" class="pm-dbfl"><?php esc_html_e('Password','profilegrid-user-profiles-groups-and-communities');?></label>
         <input type="password" name="<?php echo esc_attr('user_pass');?>" id="<?php echo esc_attr('user_pass');?>" placeholder="<?php esc_attr_e('Password','profilegrid-user-profiles-groups-and-communities');?>" required="required">
             </div>
+            <?php do_action('profile_magic_show_captcha_in_login');?>
             <div class="pm-login-box-bottom-container pm-dbfl">
                 <input type="submit" value="<?php esc_attr_e('Login','profilegrid-user-profiles-groups-and-communities');?>" name="pg_widget_login_form_submit" class="">
                 <?php if($register_link):?>

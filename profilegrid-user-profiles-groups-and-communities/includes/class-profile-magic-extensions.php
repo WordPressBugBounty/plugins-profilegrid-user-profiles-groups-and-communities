@@ -660,6 +660,32 @@ class Profile_Magic_Extensions {
             'path'          => 'profilegrid-user-profiles-groups-and-communities-profilegrid-customized-terawallet-integration/profilegrid-credit.php',
             'class'         => 'Profilegrid_Credit',
         );
+        
+        $list['PROFILE_VISITORS'] =array(
+            'slug'          => 'PROFILE_VISITORS',
+            'price'         => 'paid',
+            'filter'        => 'profiles',
+            'title'         => __( 'Profile Visitors', 'profilegrid-user-profiles-groups-and-communities' ),
+            'image'         => 'profile-visitor-icon.png',
+            'description'   => __( 'Enable users to see who visited their profile with detailed visitor information, enhancing engagement and interaction. Track and display profile visitors directly on the user profile page.', 'profilegrid-user-profiles-groups-and-communities' ),
+            'option_url'    => admin_url( 'admin.php?page=pm_profile_visitor_details_settings' ),
+            'extension_url' => 'https://profilegrid.co/extensions/profile-visitors/',
+            'path'          => 'profilegrid-user-profiles-groups-and-communities-profilegrid-profile-visitors/profilegrid-profile-visitors.php',
+            'class'         => 'Profilegrid_profile_visitor_details',
+        );
+        
+        $list['TURNSTILE'] =array(
+            'slug'          => 'TURNSTILE',
+            'price'         => 'paid',
+            'filter'        => 'security form',
+            'title'         => __( 'Turnstile Antispam Security', 'profilegrid-user-profiles-groups-and-communities' ),
+            'image'         => 'pg-turnstile-icon.png',
+            'description'   => __( 'ProfileGrid Turnstile Antispam Security adds Cloudflare Turnstile protection to your user registration and profile forms, preventing automated spam submissions while maintaining a smooth user experience.', 'profilegrid-user-profiles-groups-and-communities' ),
+            'option_url'    => admin_url( 'admin.php?page=pm_turnstile_security_settings' ),
+            'extension_url' => 'https://profilegrid.co/extensions/turnstile-antispam-security/',
+            'path'          => 'profilegrid-user-profiles-groups-and-communities-profilegrid-turnstile-antispam-security/profilegrid-turnstile-antispam-security.php',
+            'class'         => 'Profilegrid_Turnstile_Antispam_Cloudflare',
+        );
 
         return $list;
     }

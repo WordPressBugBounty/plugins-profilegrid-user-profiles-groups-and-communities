@@ -1056,6 +1056,10 @@ class PM_request {
 	public function pm_update_user_custom_fields_data( $post, $files, $server, $gid, $fields, $user_id ) {
 			  $dbhandler     = new PM_DBhandler();
 				$pmsanitizer = new PM_sanitizer();
+				if(isset($post['pg_group']) && !empty($post['pg_group']))
+                {
+					update_user_meta( $user_id,'pg_select_user_group', sanitize_text_field($post['pg_group']) );
+                }
 		if ( isset( $fields ) && ! empty( $fields ) ) :
                         foreach ( $fields as $field ) {
                                 $value         = '';
@@ -5292,7 +5296,9 @@ class PM_request {
                         'Profilegrid_Custom_Group_Slug',
                         'Profilegrid_Woocommerce_Product_Restrictions',
                         'Profilegrid_User_Invitation_Field',
-                        'Profilegrid_Credit'
+                        'Profilegrid_Credit',
+                        'Profilegrid_profile_visitor_details',
+                        'Profilegrid_Turnstile_Antispam_Cloudflare'
 		);
 		$class_not_exist = array();
 		foreach ( $classes as $class ) {
@@ -5360,7 +5366,9 @@ class PM_request {
                         'Profilegrid_Custom_Group_Slug',
                         'Profilegrid_Woocommerce_Product_Restrictions',
                         'Profilegrid_User_Invitation_Field',
-                        'Profilegrid_Credit'
+                        'Profilegrid_Credit',
+                        'Profilegrid_profile_visitor_details',
+                        'Profilegrid_Turnstile_Antispam_Cloudflare'
 		);
 		$free_exist = array();
 		foreach ( $free as $fc ) {
@@ -6073,5 +6081,5 @@ class PM_request {
             
             return $delete;
         }
-
+        
 }

@@ -37,7 +37,6 @@ else:
      <div class="pm-login-header pm-dbfl pm-bg pm-border-bt pm-pad10"><?php esc_html_e('If you have lost your password, we can help you reset it. To initiate password reset process, please enter your username or email in the box below and click on the button.','profilegrid-user-profiles-groups-and-communities');?></div>
      <input type="text" name="<?php echo esc_attr('user_login');?>" id="user_login" placeholder="<?php esc_attr_e('Email or Username','profilegrid-user-profiles-groups-and-communities');?>">
          
-    
             <div class="pm-login-box-bottom-container pm-dbfl pm-bg pm-border">
                 <input type="submit" name="submit" class="lostpassword-button" value="<?php esc_attr_e( 'Reset Password','profilegrid-user-profiles-groups-and-communities' ); ?>"/>
             </div>

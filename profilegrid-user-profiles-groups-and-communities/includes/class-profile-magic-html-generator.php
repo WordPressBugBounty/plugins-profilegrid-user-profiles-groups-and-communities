@@ -129,6 +129,10 @@ class PM_HTML_Creator {
 			if ( isset( $fields ) && !empty( $fields ) ) {
 						echo '<fieldset id="fieldset_' . esc_attr($section->id) . '">';
 						echo '<legend>' . esc_html($section->section_name) . '</legend>';
+                        if($j==1)
+                                {
+                                    do_action('profile_magic_pg_registration_form_field',$gid);
+                                }
 				foreach ( $fields as $field ) {
 					if ( $field->field_options != '' ) {
 								   $field_options = maybe_unserialize( $field->field_options );

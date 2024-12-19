@@ -292,7 +292,9 @@ class Profile_Magic_License {
                     'Profilegrid_Custom_Group_Slug' => array(70488, 'Customized Group Slugs'),
                     'Profilegrid_Woocommerce_Product_Restrictions' => array(70490, 'WooCommerce Customized Product Restrictions'),
                     'Profilegrid_User_Invitation_Field' => array('', ''),
-                    'Profilegrid_Credit' => array(70336, 'Customized TeraWallet Integration')
+                    'Profilegrid_Credit' => array(70336, 'Customized TeraWallet Integration'),
+                    'Profilegrid_profile_visitor_details'  => array(77696, 'Profile Visitors'),
+                    'Profilegrid_Turnstile_Antispam_Cloudflare'  => array(77691, 'Turnstile Antispam Security')
                 );
 
 		$activate = array();
