@@ -2072,11 +2072,11 @@ div#pm_result_pane .pm-loader {
     width: 20px;
     height: 20px;
     text-align: center;
-    line-height: 28px
+    line-height: 30px;
+
 }
 .pmagic .pm-notification-close svg {
-    fill: #fff;
-    width: 18px;
+    fill: #8a8989;
     height: 18px;
 }
 .pmagic .pm-myfriends-list {

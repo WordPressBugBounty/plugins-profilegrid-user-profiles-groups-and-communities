@@ -727,10 +727,9 @@ class Profile_Magic_Notification {
             <div id="notif_' . $id . '" class="pm-notification  pm-group-blog-post-notice ">
             <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
             <div class="pm-notification-card pm-dbfl">
-             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>
+             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>
                 <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'New Group Blog Post', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                 <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                     <div class="pm-notification-profile-image pm-difl">' . $sender_avatar . '</div>
@@ -801,10 +800,9 @@ class Profile_Magic_Notification {
 		$return = '<div id="notif_' . $id . '" class="pm-notification pm-new-post-comment-notice ">
                  <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
                 <div class="pm-notification-card pm-dbfl">
-                <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>   <div class="pm-notification-title pm-pad10 ">' . $bold . $title . $bold_close . '</div>
+                <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>   <div class="pm-notification-title pm-pad10 ">' . $bold . $title . $bold_close . '</div>
                     <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                         <div class="pm-notification-profile-image pm-difl">' . $sender_avatar . '</div>
                         
@@ -910,10 +908,9 @@ class Profile_Magic_Notification {
 		$return = '   <div id="notif_' . $id . '" class="pm-notification pm-friend-request-notice ">
                           <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
                                     <div class="pm-notification-card pm-dbfl">
-                             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>     <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'New Friend Request', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
+                             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>     <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'New Friend Request', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                                     <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                                         <div class="pm-notification-profile-image pm-difl">' . $sender_avatar . '</div>
                                          <div class="pm-notification-description pm-difl">';
@@ -986,10 +983,9 @@ class Profile_Magic_Notification {
 		$return = '   <div id="notif_' . $id . '" class="pm-notification pm-new-friend-added-notice ">
                         <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
                         <div class="pm-notification-card pm-dbfl">
-                   <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>        <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'New Friend Added', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
+                   <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>        <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'New Friend Added', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                             <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                                 <div class="pm-notification-profile-image pm-difl">' . $sender_avatar . '</div>
                                 
@@ -1109,10 +1105,9 @@ class Profile_Magic_Notification {
             <div id="notif_' . $id . '" class="pm-notification  pm-group-blog-post-notice ">
             <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
             <div class="pm-notification-card pm-dbfl">
-             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>
+             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>
                 <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'Blog Post Published', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                 <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                     <div class="pm-notification-profile-image pm-difl">' . $sender_avatar . '</div>
@@ -1188,10 +1183,9 @@ class Profile_Magic_Notification {
             <div id="notif_' . $id . '" class="pm-notification  pm-group-blog-post-notice ">
             <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
             <div class="pm-notification-card pm-dbfl">
-             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>
+             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>
                 <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'New Post on Group Wall', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                 <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                     <div class="pm-notification-profile-image pm-difl">' . $sender_avatar . '</div>
@@ -1271,10 +1265,9 @@ class Profile_Magic_Notification {
             <div id="notif_' . $id . '" class="pm-notification  pm-group-blog-post-notice ">
             <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
             <div class="pm-notification-card pm-dbfl">
-             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>
+             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>
                 <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'Wall Post Published', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                 <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                     <div class="pm-notification-profile-image pm-difl">' . $sender_avatar . '</div>
@@ -1348,10 +1341,9 @@ class Profile_Magic_Notification {
             <div id="notif_' . $id . '" class="pm-notification  pm-group-blog-post-notice ">
             <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
             <div class="pm-notification-card pm-dbfl">
-             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>
+             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>
                 <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'Joined New Group', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                 <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                     <div class="pm-notification-profile-image pm-difl">' . $group_icon . '</div>
@@ -1425,7 +1417,9 @@ class Profile_Magic_Notification {
             <div id="notif_' . $id . '" class="pm-notification  pm-group-blog-post-notice ">
             <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
             <div class="pm-notification-card pm-dbfl">
-             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close ss"><svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></div>
+             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>
                 <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'Removed from Group', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                 <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                     <div class="pm-notification-profile-image pm-difl">' . $group_icon . '</div>
@@ -1484,10 +1478,9 @@ class Profile_Magic_Notification {
             <div id="notif_' . $id . '" class="pm-notification  pm-group-blog-post-notice ">
             <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
             <div class="pm-notification-card pm-dbfl">
-             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>
+             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>
                 <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'New Private Message', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                 <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                     <div class="pm-notification-profile-image pm-difl">' . $sender_avatar . '</div>
@@ -1545,10 +1538,9 @@ class Profile_Magic_Notification {
             <div id="notif_' . $id . '" class="pm-notification  pm-group-blog-post-notice ">
             <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
             <div class="pm-notification-card pm-dbfl">
-             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>
+             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>
                 <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'Awarded New Badge', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                 <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                     <div class="pm-notification-profile-image pm-difl">' . $sender_avatar . '</div>
@@ -1612,10 +1604,9 @@ class Profile_Magic_Notification {
             <div id="notif_' . $id . '" class="pm-notification  pm-group-blog-post-notice ">
             <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
             <div class="pm-notification-card pm-dbfl">
-             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>
+             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>
                 <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'New Group Event', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                 <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                     <div class="pm-notification-profile-image pm-difl">' . $sender_avatar . '</div>
@@ -1678,10 +1669,9 @@ class Profile_Magic_Notification {
             <div id="notif_' . $id . '" class="pm-notification  pm-group-blog-post-notice ">
             <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
             <div class="pm-notification-card pm-dbfl">
-             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-       <path d="M0 0h24v24H0z" fill="none"/>
-    </svg></div>
+             <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg></div>
                 <div class="pm-notification-title pm-pad10 ">' . $bold . __( 'New User Profile Status Added', 'profilegrid-user-profiles-groups-and-communities' ) . $bold_close . '</div>
                 <div class="pm-notification-description-wrap pm-dbfl pm-pad10  ">
                     <div class="pm-notification-profile-image pm-difl">' . $sender_avatar . '</div>
