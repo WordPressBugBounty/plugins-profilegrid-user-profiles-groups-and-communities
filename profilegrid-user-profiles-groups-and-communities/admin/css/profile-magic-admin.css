@@ -6849,6 +6849,14 @@ a.pg-premium-extension-link:hover span {
     text-align: right;
 }
 
+#display_name_pattern .pg-premium-extensionlink-wrap{
+    float: right;
+}
+
+#display_name_pattern .pg-premium-extensionlink-wrap a{
+    padding-top: 0px;
+}
+
 /* new extensions page filters css start */
 
 .pmagic div#pgmyBtnContainer {
