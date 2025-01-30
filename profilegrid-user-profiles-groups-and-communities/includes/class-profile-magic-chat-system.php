@@ -372,6 +372,25 @@ class ProfileMagic_Chat {
 		return $return;
 
 	}
+        
+        public function is_current_user_able_to_fetch_thread_messages($tid)
+        {
+                $current_user = wp_get_current_user();
+		$cur_uid      = $current_user->ID;
+                $dbhandler  = new PM_DBhandler();
+                $identifier = 'MSG_THREADS';
+                $where      = 1;
+                $additional = " t_id = $tid AND (s_id = $cur_uid OR r_id = $cur_uid)";
+                $thread     = $dbhandler->get_all_result( $identifier, $column = '*', $where, 'results', 0, false, $sort_by = 'timestamp', true, $additional );
+                if(!empty($thread))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+        }
 
 	public function pm_messenger_show_messages( $tid, $loadnum, $timezone = 0, $search = '' ) {
 		$pmrequests   = new PM_request();
@@ -392,6 +411,12 @@ class ProfileMagic_Chat {
                 {
                    return '';
                 }
+                
+                if($this->is_current_user_able_to_fetch_thread_messages($tid)==false)
+                {
+                    return '';
+                }
+                
 		$messages        = $pmrequests->get_message_of_thread( $tid, $limit, $offset, $descending, $search );
 
 		$return = '';

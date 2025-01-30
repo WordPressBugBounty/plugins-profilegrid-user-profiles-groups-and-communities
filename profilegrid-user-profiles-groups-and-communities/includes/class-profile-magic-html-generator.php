@@ -264,13 +264,23 @@ class PM_HTML_Creator {
 					}
 
                             $field_value = maybe_unserialize( $field_value );
+                            // Prevent PHP Object Injection
+                            if (is_object($field_value) || is_resource($field_value)) {
+                                $field_value = ''; // Block unsafe objects
+                            }
+
+                            // Ensure `$field_value` is either a string or an array
+                            if (!is_string($field_value) && !is_array($field_value)) {
+                                $field_value = ''; // Block unexpected types
+                            }
 					if ( $field->field_type=='checkbox' || $field->field_type=='repeatable_text' ) {
 						if ( !is_array( $field_value ) ) {
-							$field_value = explode( ',', $field_value );
+							$field_value = explode( ',', (string)$field_value );
 						}
 					}
 
 					if ( is_array( $field_value ) ) {
+                                            
 						if ( $field->field_type=='address' ) {
 							$address_value = '';
 							$options       = maybe_unserialize( $field->field_options );
@@ -293,7 +303,7 @@ class PM_HTML_Creator {
 								continue;
 							}
 							if ( $val!='' ) {
-									$value .= '<div class="pm-field-multiple-value pm-difl pm-radius5">' . $val . '</div>';
+									$value .= '<div class="pm-field-multiple-value pm-difl pm-radius5">' . wp_kses_post($val) . '</div>';
 							}
 						}
 
@@ -301,7 +311,7 @@ class PM_HTML_Creator {
 							continue;
 						}
 					} else {
-						$value = $field_value;
+						$value = wp_kses_post($field_value);
 					}
 					?>
 			

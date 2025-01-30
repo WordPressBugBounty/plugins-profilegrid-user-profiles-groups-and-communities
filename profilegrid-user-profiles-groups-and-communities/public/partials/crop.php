@@ -19,9 +19,15 @@ $jpeg_quality = intval($dbhandler->get_global_option_value('pg_image_quality','9
   break;
   
   case 'save' :
-     
-    $image = wp_get_image_editor( $post['fullpath'] );
-       $image_attribute = wp_get_attachment_image_src($post['attachment_id'],'full');
+         
+    $image_path = get_attached_file($post['attachment_id']); // Securely retrieve image path
+    $image_attribute = wp_get_attachment_image_src($post['attachment_id'], 'full');
+    if (!$image_path || !file_exists($image_path)) {
+        wp_send_json_error(['message' => 'Invalid image file.']);
+        exit;
+    }
+    $image = wp_get_image_editor($image_path);
+
       $basename = basename($post['fullpath']);
     if ( ! is_wp_error( $image ) && $post['user_id']==$current_user->ID && $post['user_meta']=='pm_user_avatar') {
         $image->crop( $post['x'], $post['y'], $post['w'], $post['h'], $post['w'], $post['h'], false );

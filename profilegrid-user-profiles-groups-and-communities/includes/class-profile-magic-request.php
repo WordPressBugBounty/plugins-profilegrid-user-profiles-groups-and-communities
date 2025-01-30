@@ -6003,6 +6003,7 @@ class PM_request {
                     'class' => array(),
                     'aria-label' => array(),
                     'aria-pressed' => array(),
+                    'pagenum' => array(),
                     'data-*' => true, // Allowing data attributes
                 ),
                 'strong' => array(),
