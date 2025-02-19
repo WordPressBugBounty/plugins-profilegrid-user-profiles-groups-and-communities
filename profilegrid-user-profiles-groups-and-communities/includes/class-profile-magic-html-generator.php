@@ -263,7 +263,13 @@ class PM_HTML_Creator {
                               continue;
 					}
 
-                            $field_value = maybe_unserialize( $field_value );
+                            //$field_value = maybe_unserialize( $field_value );
+                            if (is_string($field_value) && preg_match('/[oc]:\d+:/i', $field_value)) {
+                                $field_value = ''; // Block PHP Object Injection attempt
+                            } else {
+                                // Step 2: Safely unserialize
+                                $field_value = maybe_unserialize($field_value);
+                            }
                             // Prevent PHP Object Injection
                             if (is_object($field_value) || is_resource($field_value)) {
                                 $field_value = ''; // Block unsafe objects
@@ -273,6 +279,10 @@ class PM_HTML_Creator {
                             if (!is_string($field_value) && !is_array($field_value)) {
                                 $field_value = ''; // Block unexpected types
                             }
+                            
+                            // Step 4: Convert unserialized data to JSON and back to ensure safety
+                            $field_value = json_decode(json_encode($field_value), true);
+                            
 					if ( $field->field_type=='checkbox' || $field->field_type=='repeatable_text' ) {
 						if ( !is_array( $field_value ) ) {
 							$field_value = explode( ',', (string)$field_value );

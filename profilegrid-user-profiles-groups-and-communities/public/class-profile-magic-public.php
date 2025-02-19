@@ -5373,6 +5373,7 @@ class Profile_Magic_Public {
                 $tid = $pmrequests->get_thread_id( $rid, $uid );
 		$chat   = new ProfileMagic_Chat();
 		$chat->pg_show_thread_message_panel( $uid, $rid, $tid, $search );
+                $pmrequests->update_message_status_to_read( $tid );
 		die;
 	}
 

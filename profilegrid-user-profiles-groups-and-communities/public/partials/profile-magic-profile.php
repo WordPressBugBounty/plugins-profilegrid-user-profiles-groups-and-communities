@@ -44,7 +44,7 @@ if(isset($post['remove_image']))
 
 if(isset($post['edit_profile']))
 {
-   
+   //print_r($post);die;
         $allowed_user_id = apply_filters('pg_edit_user_profile_user_id',$current_user->ID,$post);
         
         if($post['euid']==$allowed_user_id)

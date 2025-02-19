@@ -867,6 +867,7 @@ class PM_request {
 					}
 					break;
 			}
+                        $value = json_decode(json_encode($value), true);
 			return $value;
 		}
 	}
@@ -1055,7 +1056,9 @@ class PM_request {
 
 	public function pm_update_user_custom_fields_data( $post, $files, $server, $gid, $fields, $user_id ) {
 			  $dbhandler     = new PM_DBhandler();
+                          
 				$pmsanitizer = new PM_sanitizer();
+                                $post = $pmsanitizer->sanitize($post);
 				if(isset($post['pg_group']) && !empty($post['pg_group']))
                 {
 					update_user_meta( $user_id,'pg_select_user_group', sanitize_text_field($post['pg_group']) );
@@ -2256,6 +2259,8 @@ class PM_request {
 			 if($send_email=='1')
 			 {
                             $pmemail->pm_send_unread_message_notification($sid,$rid);
+                            //wp_schedule_single_event( time() + 3600, 'pm_send_message_notification', array( $mid, $args ) );
+
 			 }
 		}
 		if ( $mid == 'false' ) {
@@ -5163,7 +5168,7 @@ class PM_request {
 		 $path = plugins_url( '../public/partials/images/sounds/msg_tone.mp3', __FILE__ );
 
 		 $path = apply_filters('custom_chat_notification_sound', $path);
-
+                
 		$current_user = wp_get_current_user();
                 $dbhandler = new PM_DBhandler;
                 $enable_private_profile = $dbhandler->get_global_option_value( 'pm_enable_private_profile' );
@@ -5172,9 +5177,12 @@ class PM_request {
 			switch ( $id ) {
 				case 'pg-messages':
 					if ( $uid == $current_user->ID && $enable_private_profile!='1') :
+                                            $profile_chats = new ProfileMagic_Chat();
+                                            $unread_message_obj = json_decode($profile_chats->pm_messenger_notification_extra_data());
+                                            //print_r($unread_message_obj->unread_threads);
 						?>
 					<audio id="msg_tone" src="<?php echo esc_url( $path ); ?>"></audio>
-					<li class="pm-profile-tab pm-pad10 <?php echo esc_attr( $tab['class'] ); ?>"><a class="pm-dbfl" href="#<?php echo esc_attr( $tab['id'] ); ?>" onClick="pg_msg_open_tab()" ><?php esc_html_e( $tab['title'], 'profilegrid-user-profiles-groups-and-communities' ); ?><b id="unread_thread_count" class=""></b></a></li>
+					<li class="pm-profile-tab pm-pad10 <?php echo esc_attr( $tab['class'] ); ?>"><a class="pm-dbfl" href="#<?php echo esc_attr( $tab['id'] ); ?>" onClick="pg_msg_open_tab()" ><?php esc_html_e( $tab['title'], 'profilegrid-user-profiles-groups-and-communities' ); ?><b id="unread_thread_count" class=""><?php echo !empty($unread_message_obj->unread_threads)?$unread_message_obj->unread_threads:''; ?></b></a></li>
 
 						<?php
 					endif;

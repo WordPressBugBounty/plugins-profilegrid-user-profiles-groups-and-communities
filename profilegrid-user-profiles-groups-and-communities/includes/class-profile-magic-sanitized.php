@@ -450,6 +450,18 @@ class PM_sanitizer {
 		$new_input = array();
 		// Loop through the input and sanitize each of the values
 		foreach ( $input as $key => $val ) {
+                    
+                         // Prevent PHP Object Injection
+                        if (is_string($val) && preg_match('/[oc]:\d+:/i', $val)) {
+                            $new_input[$key] = ''; // Reject serialized input
+                            continue;
+                        }
+
+                        // Ensure all values are treated as plain data (avoid objects)
+                        if (!is_array($val)) {
+                            $val = json_decode(json_encode($val), true);
+                        }
+                        
                         if(empty($val)){
                             $new_input[ $key ] = $val;
                             continue;

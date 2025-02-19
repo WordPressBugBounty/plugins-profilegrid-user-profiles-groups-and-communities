@@ -14,7 +14,7 @@ class ProfileMagic_Chat {
 			foreach ( $threads as $thread ) {
 				$unread_message_count = $pmrequests->get_unread_msg_count( $thread->t_id );
 				if ( ! empty( $unread_message_count ) ) {
-					$thread_count = $thread_count + 1;
+					$thread_count = $thread_count + $unread_message_count;
 				}
 
 				if ( $i == 0 ) {
@@ -481,7 +481,7 @@ class ProfileMagic_Chat {
 
 			}
 		}
-		$pmrequests->update_message_status_to_read( $tid );
+		//$pmrequests->update_message_status_to_read( $tid );
 		$return .= '<div id="typing_on" class="pm-user-description-row pm-dbfl">
     <div class="pm-typing-inner" style="display:none;">
                     <img height="9px" width="40px" src="' . $path . '"/>

@@ -187,6 +187,7 @@ if ( filter_input( INPUT_POST, 'submit_group' ) ) {
 
             $new_post = array_replace_recursive( $group_options, $post['group_options'] );
 
+            do_action('pg_group_option_additionl_saves',$groupid, $post);
             $post['group_options'] = apply_filters("pg_mailchimp_group_list_update", $new_post, $post['group_options']["mailchimp_list"]);
 
 	}
