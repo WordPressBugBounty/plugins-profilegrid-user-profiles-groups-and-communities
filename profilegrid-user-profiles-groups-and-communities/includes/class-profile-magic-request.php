@@ -868,6 +868,7 @@ class PM_request {
 					break;
 			}
                         $value = json_decode(json_encode($value), true);
+                        $value = apply_filters( 'pm_get_user_field_value', $value, $field, $field_type, $userid );
 			return $value;
 		}
 	}
@@ -1976,6 +1977,7 @@ class PM_request {
 		if ( $exclude != '' ) {
 			$additional .= ' AND field_type not in(' . $exclude . ')';
 		}
+                $additional = apply_filters('pg_user_privacy_fields_visibility_qry', $additional, $uid, $gid, $group_leader, $view, $section, $exclude);
 		$fields = $dbhandler->get_all_result( 'FIELDS', $column = '*', $where, 'results', 0, false, $sort_by = 'ordering', false, $additional );
                 
                 return apply_filters( 'pg_user_privacy_fields',$fields, $uid );

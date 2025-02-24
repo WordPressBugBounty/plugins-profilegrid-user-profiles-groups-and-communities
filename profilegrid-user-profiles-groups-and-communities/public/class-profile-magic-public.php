@@ -3269,37 +3269,44 @@ class Profile_Magic_Public {
 		$dbhandler  = new PM_DBhandler();
 		$pmrequests = new PM_request();
 		$pmemails   = new PM_Emails();
+                $current_user = wp_get_current_user();
 		$uid        = $post['uid'];
-		if ( is_numeric( $uid ) ) {
-			$gid        = filter_input( INPUT_POST, 'gid' );
-			$where      = array(
-				'gid' => $gid,
-				'uid' => $uid,
-			);
-			$data       = array( 'status' => '2' );
-			$request_id = $dbhandler->get_value_with_multicondition( 'REQUESTS', 'id', $where );
-			// $dbhandler->update_row('REQUESTS','id', $request_id,$data);
-			$dbhandler->remove_row( 'REQUESTS', 'id', $request_id );
-			$pmemails->pm_send_group_based_notification( $gid, $uid, 'on_request_denied' );
-			do_action( 'pm_user_membership_request_denied', $gid, $uid );
-		} else {
-			$ids = maybe_unserialize( $uid );
-			foreach ( $ids as $id ) {
-				$gid        = filter_input( INPUT_POST, 'gid' );
-				$where      = array(
-					'gid' => $gid,
-					'uid' => $id,
-				);
-				$data       = array( 'status' => '2' );
-				$request_id = $dbhandler->get_value_with_multicondition( 'REQUESTS', 'id', $where );
-				// $dbhandler->update_row('REQUESTS','id', $request_id,$data);
-				$dbhandler->remove_row( 'REQUESTS', 'id', $request_id );
-				$pmemails->pm_send_group_based_notification( $gid, $id, 'on_request_denied' );
-				do_action( 'pm_user_membership_request_denied', $gid, $id );
-			}
-		}
+                $gid        = filter_input( INPUT_POST, 'gid' );
+                $is_leader = $pmrequests->pg_check_in_single_group_is_user_group_leader($current_user->ID, $gid);
+                if($is_leader==true || current_user_can( 'manage_options' ))
+                {
+                    if ( is_numeric( $uid ) ) {
 
-		echo 'success';
+                            $where      = array(
+                                    'gid' => $gid,
+                                    'uid' => $uid,
+                            );
+                            $data       = array( 'status' => '2' );
+                            $request_id = $dbhandler->get_value_with_multicondition( 'REQUESTS', 'id', $where );
+                            // $dbhandler->update_row('REQUESTS','id', $request_id,$data);
+                            $dbhandler->remove_row( 'REQUESTS', 'id', $request_id );
+                            $pmemails->pm_send_group_based_notification( $gid, $uid, 'on_request_denied' );
+                            do_action( 'pm_user_membership_request_denied', $gid, $uid );
+                    } else {
+                            $ids = maybe_unserialize( $uid );
+                            foreach ( $ids as $id ) {
+
+                                    $where      = array(
+                                            'gid' => $gid,
+                                            'uid' => $id,
+                                    );
+                                    $data       = array( 'status' => '2' );
+                                    $request_id = $dbhandler->get_value_with_multicondition( 'REQUESTS', 'id', $where );
+                                    // $dbhandler->update_row('REQUESTS','id', $request_id,$data);
+                                    $dbhandler->remove_row( 'REQUESTS', 'id', $request_id );
+                                    $pmemails->pm_send_group_based_notification( $gid, $id, 'on_request_denied' );
+                                    do_action( 'pm_user_membership_request_denied', $gid, $id );
+                            }
+                    }
+
+                    echo 'success';
+                }
+                
 		die;
 	}
 
@@ -3312,7 +3319,8 @@ class Profile_Magic_Public {
                 $post = $pm_sanitizer->sanitize($_POST);
 		$pmrequest            = new PM_request();
 		$dbhandler            = new PM_DBhandler();
-		$path                 = plugins_url( '/partials/images/popup-close.png', __FILE__ );
+                $current_user = wp_get_current_user();
+                $path                 = plugins_url( '/partials/images/popup-close.png', __FILE__ );
 		$gid                  = filter_input( INPUT_POST, 'gid' );
 		$uid                  = $post['uid'];
 		$meta_query_array     = $pmrequest->pm_get_user_meta_query( array( 'gid' => $gid ) );
@@ -3320,6 +3328,11 @@ class Profile_Magic_Public {
 		$limit                = $dbhandler->get_value( 'GROUPS', 'group_limit', $gid );
 		$user_query           = $dbhandler->pm_get_all_users_ajax( '', $meta_query_array );
 		$total_users_in_group = $user_query->get_total();
+                $is_leader = $pmrequest->pg_check_in_single_group_is_user_group_leader($current_user->ID, $gid);
+                if($is_leader==true || current_user_can( 'manage_options' ))
+                {
+                    
+                
 		if ( $is_group_limit == 1 ) {
 			if ( $limit > $total_users_in_group ) {
 				if ( is_numeric( $uid ) ) {
@@ -3374,6 +3387,7 @@ class Profile_Magic_Public {
 			echo 'success';
 			die;
 		}
+                }
 	}
 
 	public function pm_get_all_requests_from_group() {

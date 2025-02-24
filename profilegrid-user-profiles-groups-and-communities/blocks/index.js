@@ -1,3 +1,4 @@
+document.addEventListener("DOMContentLoaded", function() {
 // import apiFetch from '@wordpress/api-fetch';
 const {registerBlockType} = wp.blocks; //Blocks API
 const {createElement,useState} = wp.element; //React.createElement
@@ -2218,4 +2219,5 @@ registerBlockType( 'profilegrid-blocks/group-name', {
 	save(){
 		return null;//save has to exist. This all we need
 	}
+});
 });

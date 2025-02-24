@@ -52,7 +52,9 @@ else
         <?php echo wp_kses_post($pmrequests->pm_show_profile_image_profile_page($uid, $current_user->ID, $user_info));?>
         <div class="pm-profile-title pm-difl pm-pad10">
           <?php if($dbhandler->get_global_option_value('pm_show_user_display_name','1')=='1'): ?>  
-          <div class="pm-user-name pm-dbfl pm-clip"><?php echo wp_kses_post($pmrequests->pm_get_display_name($uid,true));?></div>
+          <div class="pm-user-name pm-dbfl pm-clip"><?php 
+              $display_name = wp_kses_post($pmrequests->pm_get_display_name($uid,true)); 
+              echo apply_filters("profilegrid_field_privacy_username",$display_name,$uid );?></div>
           <?php endif;?> 
           <?php if(!empty($gid) && $dbhandler->get_global_option_value('pm_show_user_group_name','1')=='1'):?>
           <div class="pm-user-group-name pm-dbfl pm-clip">

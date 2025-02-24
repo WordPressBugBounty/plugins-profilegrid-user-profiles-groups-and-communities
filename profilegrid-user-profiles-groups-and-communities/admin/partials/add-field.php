@@ -1483,7 +1483,7 @@ if ( filter_input( INPUT_GET, 'action' ) == 'delete' ) {
                                 >
                     <?php esc_html_e( 'Only Group Manager', 'profilegrid-user-profiles-groups-and-communities' ); ?>
                             </li>
-
+                            <?php do_action('profile_magic_field_visibility_options', $row, $gid);?>
                         </ul>
                         <div class="errortext"></div>
                     </div>
