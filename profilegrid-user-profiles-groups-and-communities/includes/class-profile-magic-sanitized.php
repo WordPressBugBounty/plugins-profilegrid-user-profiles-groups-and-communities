@@ -445,7 +445,7 @@ class PM_sanitizer {
 		return $input;
 	}
 
-	public function sanitize( $input ) {
+	public function sanitize_old( $input ) {
 		// Initialize the new array that will hold the sanitize values
 		$new_input = array();
 		// Loop through the input and sanitize each of the values
@@ -456,6 +456,24 @@ class PM_sanitizer {
                             $new_input[$key] = ''; // Reject serialized input
                             continue;
                         }
+                        
+                        // Prevent PHP Object Injection by rejecting serialized input
+                        if (is_string($val) && preg_match('/(^|;|{|})[oc]:\d+:/i', $val)) {
+                            $new_input[$key] = ''; // Reject serialized input
+                            continue;
+                        }
+                        
+                         // Prevent PHP Object Injection by rejecting serialized input
+                        if (is_string($val) && (preg_match('/(^|;|{|})[oc]:\d+:/i', $val) || preg_match('/(^|;|{|})[ars]:\d+:/i', $val))) {
+                            $new_input[$key] = ''; // Reject serialized input
+                            continue;
+                        }
+                        
+                       // Prevent PHP Object Injection by rejecting serialized input
+                       if (is_string($val) && is_serialized($val)) {
+                           $new_input[$key] = ''; // Reject serialized input
+                           continue;
+                       }
 
                         // Ensure all values are treated as plain data (avoid objects)
                         if (!is_array($val)) {
@@ -517,5 +535,87 @@ class PM_sanitizer {
 		return $new_input;
 
 	}
+        
+        public function sanitize( $input ) {
+    // Initialize sanitized data array
+    $new_input = array();
+
+    foreach ( $input as $key => $val ) {
+
+        // Step 1: Decode URL encoding only if the value is a string
+        $decoded_val = is_string($val) ? urldecode($val) : $val;
+
+        // Step 2: Strong Serialized Object Injection Protection (handles escaped characters too)
+        if (is_string($decoded_val) && preg_match('/[oc]:\d+:\{?.*?\}?/i', stripslashes($decoded_val))) {
+            $new_input[$key] = ''; // 🚫 Block PHP Object Injection before unserialization
+            continue;
+        }
+
+        // Step 3: Double Check with `is_serialized()`
+        if (is_string($decoded_val) && is_serialized($decoded_val)) {
+            $new_input[$key] = ''; // 🚫 Block serialized input
+            continue;
+        }
+
+        // Step 4: Ensure all values are plain data (avoid objects)
+        if (!is_array($val)) {
+            $val = json_decode(json_encode($val), true);
+        }
+
+        // Step 5: Handle empty values
+        if (empty($val)) {
+            $new_input[$key] = $val;
+            continue;
+        }
+
+        // Step 6: Recursive sanitization for arrays
+        if (is_array($val)) {
+            $new_input[$key] = $this->sanitize($val);
+        } else {
+            switch ( $key ) {
+                case 'login':
+                case 'uname':
+                    $new_input[$key] = sanitize_user($val);
+                    break;
+                case 'user_email':
+                case 'pm_email_address':
+                    $new_input[$key] = sanitize_email($val);
+                    break;
+                case 'key':
+                case 'checkemail':
+                    $new_input[$key] = sanitize_text_field($val);
+                    break;
+                case 'nonce':
+                case 'pg_user_profile_nonce':
+                case 'pg-permalinks-nonce':
+                case '_wpnonce':
+                    $new_input[$key] = sanitize_key($val);
+                    break;
+                case 'user_login':
+                case 'userdata':
+                    if (is_email($val)) {
+                        $new_input[$key] = sanitize_email($val);
+                    } else {
+                        $new_input[$key] = sanitize_user($val);
+                    }
+                    break;
+                case 'authors':
+                case 'posttypes':
+                case 'content':
+                    $new_input[$key] = wp_kses_post($val);
+                    break;
+                default:
+                    if (is_email($val)) {
+                        $new_input[$key] = sanitize_email($val);
+                    } else {
+                        $new_input[$key] = sanitize_text_field($val); // Use text field sanitization
+                    }
+                    break;
+            }
+        }
+    }
+    return $new_input;
+}
+
 
 }

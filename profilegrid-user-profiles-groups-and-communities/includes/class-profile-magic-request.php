@@ -868,6 +868,12 @@ class PM_request {
 					break;
 			}
                         $value = json_decode(json_encode($value), true);
+                        
+                        if(is_object($value))
+                        {
+                            $value = '';
+                        }
+                        
                         $value = apply_filters( 'pm_get_user_field_value', $value, $field, $field_type, $userid );
 			return $value;
 		}

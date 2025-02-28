@@ -6,7 +6,44 @@ class PM_Custom_Fields {
         if ($textdomain == '')
             $textdomain = 'profilegrid-user-profiles-groups-and-communities';
         $function = 'pm_get_custom_form_field_' . $row->field_type;
+        
+//        // Step 1: Decode URL encoding only if the value is a string
+//        $decoded_val =  $value;
+//
+//        // Step 2: Strong Serialized Object Injection Protection (handles escaped characters too)
+//        if (preg_match('/[oc]:\d+:\{?.*?\}?/i', stripslashes($decoded_val))) {
+//            $value = ''; // 🚫 Block PHP Object Injection before unserialization
+//        }
+//
+//        // Step 3: Double Check with `is_serialized()`
+//        if (is_string($decoded_val)) {
+//            $value = ''; // 🚫 Block serialized input
+//        }
+//
+//        if($value!=''){$value = maybe_unserialize($value);}
+//        
+//        // Step 4: Ensure all values are plain data (avoid objects)
+
+
+       // Step 1: Decode URL encoding only if the value is a string
+        $value = is_string($value) ? urldecode($value) : $value;
+
+        // Step 2: Strong Serialized Object Injection Protection (handles escaped characters too)
+        if (is_string($value) && preg_match('/[oc]:\d+:\{?.*?\}?/i', stripslashes($value))) {
+            $value = ''; // 🚫 Block PHP Object Injection before unserialization
+            
+        }
+        
         if($value!=''){$value = maybe_unserialize($value);}
+        if(is_object($value))
+        {
+            $value ='';
+        }
+        
+        if (!is_array($value)) {
+            $value = json_decode(json_encode($value), true);
+        }
+        
         if(method_exists($this,$function))
         {
             $this->$function($row, $value, $textdomain);

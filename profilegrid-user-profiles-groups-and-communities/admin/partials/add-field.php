@@ -21,7 +21,7 @@ if ( $id == false || $id == null ) {
     $ordering      = $lastrow + 1;
     $field_options = array();
     $field_key     = $pmrequests->get_field_key( $str, $ordering );
-
+    $row = false;
 } else {
     $row = $dbhandler->get_row( $identifier, $id );
 
