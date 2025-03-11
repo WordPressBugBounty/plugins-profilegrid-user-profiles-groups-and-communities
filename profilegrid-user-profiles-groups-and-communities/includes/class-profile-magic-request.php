@@ -4945,6 +4945,7 @@ class PM_request {
 				$registration_url = $this->profile_magic_get_frontend_url( 'pm_registration_page', '' );
 				$registration_url = add_query_arg( 'gid', $group->id, $registration_url );
                                 $img_link = (is_user_logged_in())?$group_url:$registration_url;
+                                $img_link = apply_filters('profilegrid_group_image_link',$img_link,$group->id);
 				?>
 				<div class="pm-group pm-difl pm-border pm-radius5 pm-bg-lt pm50">
                                     <div class="pm-group-heading pm-dbfl pm-border-bt pm-pad10 pm-clip"><?php echo wp_kses_post($password_html);?><a href="<?php echo esc_url( $group_url ); ?>"><?php echo esc_html( $group->group_name ); ?></a></div>
@@ -4967,7 +4968,7 @@ class PM_request {
 					} else {
 							$groupdesc = $group->group_desc;
 					}
-
+                                        $groupdesc = apply_filters('profilegrid_group_description', $groupdesc, $group);
 					?>
 					<div class="pm-group-desc pm-dbfl pm-pad10"><?php if(!empty($groupdesc)) echo wp_kses_post( $groupdesc ); ?></div>
 

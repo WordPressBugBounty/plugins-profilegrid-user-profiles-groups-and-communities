@@ -1489,7 +1489,7 @@ if ( filter_input( INPUT_GET, 'action' ) == 'delete' ) {
                     </div>
                     <div class="uimnote"><?php esc_html_e( 'Set visibility of the field in User Profiles.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
                 </div>
-
+            <?php do_action('pg_field_after_visibility_option', $row, $gid);?>
             <div class="uimrow" id="dateofbirth">
                 <div class="uimfield">
 <?php esc_html_e( 'range of year dropdown', 'profilegrid-user-profiles-groups-and-communities' ); ?>

@@ -1256,25 +1256,25 @@ class Profile_Magic_Public {
             $post = $pm_sanitizer->sanitize($_POST);
             $pmmessenger = new ProfileMagic_Chat();
 		if ( isset( $post ) ) {
-                        if(isset($post['rid'])){
-                            $rid     = $post['rid'];
+                        if(isset($post['rid']) && !empty($post['rid'])){
+                            $rid     = intval($post['rid']);
                         }else{
                             $rid = '';
                         }
                         
-                        if(isset($post['mid'])){
-                            $mid     = $post['mid'];
+                        if(isset($post['mid']) && !empty($post['mid'])){
+                            $mid     = intval($post['mid']);
                         }else{
                             $mid = '';
                         }
-                        if(isset($post['content'])){
-                            $content = $post['content'];
+                        if(isset($post['content']) && !empty($post['content'])){
+                            $content = wp_kses_post($post['content']);
                         }else{
                             $content = '';
                         }
                         
                         if(isset($post['tid'])){
-                            $tid = $post['tid'];
+                            $tid = intval($post['tid']);
                         }else{
                             $tid = '';
                         }
@@ -4121,6 +4121,10 @@ class Profile_Magic_Public {
 
 	public function pg_search_threads() {
 		$search      = filter_input( INPUT_POST, 'search' );
+                if(!empty($search))
+                { 
+                    $search = sanitize_text_field($search);
+                }
 		$pmmessenger = new ProfileMagic_Chat();
                 $pmrequests = new PM_request();
                 $allowed_html = $pmrequests->pg_allowed_html_wp_kses();
