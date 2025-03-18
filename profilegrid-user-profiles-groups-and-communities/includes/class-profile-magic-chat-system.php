@@ -37,14 +37,20 @@ class ProfileMagic_Chat {
 	}
 
 	public function pm_messenger_search_threads( $search = '' ) {
-		$dbhandler   = new PM_DBhandler();
+		global $wpdb;
+                
+                $dbhandler   = new PM_DBhandler();
 		$pmrequests  = new PM_request();
 		$identifier  = 'MSG_CONVERSATION';
 		$identifier2 = 'MSG_THREADS';
 		$where       = 1;
 		$tid         = array();
-		$additional  = "content LIKE '%" . $search . "%'";
+		//$additional  = "content LIKE '%" . $search . "%'";
 		$uid         = get_current_user_id();
+                // Escape search input to prevent SQL injection
+                $search_like = '%' . $wpdb->esc_like( $search ) . '%';
+                $additional  = $wpdb->prepare( "content LIKE %s", $search_like );
+
 		$messages    = $dbhandler->get_all_result( $identifier, $column = '*', $where, 'results', 0, false, 'timestamp', true, $additional );
                 if(!empty($messages))
                 {
@@ -57,7 +63,9 @@ class ProfileMagic_Chat {
 		if ( ! empty( $thred_id_array ) ) {
 			$thread_ids          = implode( ',', $thred_id_array );
 			$where2              = array( 'status' => 2 );
-			$additional          = "AND t_id in($thread_ids) AND (s_id = $uid OR r_id = $uid)";
+			//$additional          = "AND t_id in($thread_ids) AND (s_id = $uid OR r_id = $uid)";
+                        $additional = $wpdb->prepare( "AND t_id in($thread_ids) AND (s_id = %d OR r_id = %d)", $uid, $uid );
+       
 			$threads             = $dbhandler->get_all_result( $identifier2, '*', $where2, 'results', 0, false, 'timestamp', true, $additional );
 			$unread_thread_count = 0;
 			$return              = '';

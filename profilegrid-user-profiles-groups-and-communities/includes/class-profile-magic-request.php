@@ -879,7 +879,7 @@ class PM_request {
 		}
 	}
         
-        public function profile_magic_change_date_format($value)
+        public function profile_magic_change_date_format_old($value)
         {
             $dateFormat = $this->pg_date_format();
             $dateTime = new DateTime($value);
@@ -887,6 +887,31 @@ class PM_request {
             $formattedDate = $dateTime->format($dateFormat);
             return $formattedDate;
         }
+        
+        public function profile_magic_change_date_format($value)
+        {
+            $dateFormat = $this->pg_date_format(); // Target format you want to display
+
+            // Try to create DateTime object from dd/mm/yyyy format
+            $dateTime = DateTime::createFromFormat($dateFormat, $value);
+
+            // If parsing failed, handle gracefully
+            if (!$dateTime) {
+                // Attempt with d/m/y format if needed
+                $dateTime = DateTime::createFromFormat($dateFormat, $value);
+
+                if (!$dateTime) {
+                    // Optionally log error or return original value
+                    return $value;
+                }
+            }
+
+            // Format the date in the desired format
+            $formattedDate = $dateTime->format($dateFormat);
+            return $formattedDate;
+        }
+
+        
 
 	public function profile_magic_get_link_field( $value ) {
 		$attachment_html = '';
