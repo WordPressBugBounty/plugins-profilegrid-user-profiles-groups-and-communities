@@ -699,7 +699,9 @@ function add_group_validation()
     jQuery( '.pm_admin_label' ).each(
         function (index, element) { //Validation for number type custom field
 			var value     = jQuery( this ).children( 'input' ).val();
-                var regex = /^[a-zA-Z0-9 ]+$/;
+                        //var regex = /^[a-zA-Z0-9 ]+$/;
+                        var regex  = /^[\p{L}\p{N} _\-]+$/u; // allows letters, numbers, spaces, underscore, hyphen
+
 			var value2    = jQuery.trim( value );
 
 			if (value2!='' && !value2.match( regex )) {

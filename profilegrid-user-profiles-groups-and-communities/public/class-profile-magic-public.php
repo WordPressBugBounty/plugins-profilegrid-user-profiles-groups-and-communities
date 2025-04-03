@@ -4028,7 +4028,7 @@ class Profile_Magic_Public {
 		$pmrequests  = new PM_request();
 		$pmmessenger = new ProfileMagic_Chat();
 		$sid         = get_current_user_id();
-		$rid         = $other_uid  = filter_input( INPUT_POST, 'uid' );
+		$rid         = $other_uid  = filter_input( INPUT_POST, 'uid' , FILTER_VALIDATE_INT);
 		$tid         = $thread_status = $pmrequests->fetch_or_create_thread( $sid, $rid );
 
 		

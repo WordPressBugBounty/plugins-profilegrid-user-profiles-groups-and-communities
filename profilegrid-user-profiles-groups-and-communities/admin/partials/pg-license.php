@@ -36,7 +36,7 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
     
       <p><strong>Read about activating licenses <a target="_blank" href="https://profilegrid.co/how-to-activate-profilegrid-licenses">here</a></strong></p>
 
-            
+            <?php if( isset( $is_any_ext_activated ) && !empty($is_any_ext_activated ) ) {?>
             <table class="form-table">
                 <tbody>
                     <tr>
@@ -51,7 +51,7 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    
+                                    <!--
                                     <tr class="<?php esc_attr_e($key);?>">
                                             <td>
                                             <div class="pg-purchase-selector">
@@ -98,9 +98,9 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
                         </span>
                     </td>
                                          
-                                    </tr>
+                                    </tr>-->
                                     
-                                    <?php if( isset( $is_any_ext_activated ) && !empty($is_any_ext_activated ) ) {
+                                    <?php
                                         foreach($is_any_ext_activated as $key=>$product):
                                         if(empty($product) || $product[0]=='')
                                         {
@@ -152,14 +152,39 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
                 </tr>
          
                                     
-                                    <?php endforeach; } ?>
+                                    <?php endforeach;?>
                                 </tbody>
                             </table>
                         </td>
                     </tr>
                 </tbody>
             </table>
-        
+            <?php }else{
+                ?>
+            <div class="">
+              <?php
+            printf(
+                esc_html__(
+                    'Note: License key fields will appear %1$safter activating your purchased extensions.%2$s If you don’t see any fields yet, please activate the corresponding extensions from the %3$sPlugins%4$s page.', 
+                    'profilegrid-user-profiles-groups-and-communitiest'
+                ),
+                '<strong>', '</strong>', '<strong>', '</strong>'
+            );
+
+            echo '<br>';
+            printf(
+                esc_html__(
+                    'You can download your purchased extensions from your %1$sOrder History%2$s page.', 
+                    'profilegrid-user-profiles-groups-and-communities'
+                ),
+                '<a href="https://profilegrid.co/checkout/order-history/" target="_blank">', '</a>'
+            );
+            ?>
+
+            </div>
+                <?php
+            }
+?>
         
   </form>
 

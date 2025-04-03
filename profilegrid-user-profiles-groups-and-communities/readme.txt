@@ -5,7 +5,7 @@ Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 5.9.4.8
+Stable tag: 5.9.4.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -673,6 +673,10 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 == Changelog ==
 
+= 5.9.4.9: April 3, 2025 = 
+* Added: Security improvements
+* Added: Minor UI changes 
+ 
 = 5.9.4.8: March 18, 2025 =
 * Added: Security fixes.
 
@@ -1442,6 +1446,10 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 5.9.4.9: April 3, 2025 = 
+* Added: Security improvements
+* Added: Minor UI changes 
 
 = 5.9.4.8: March 18, 2025 =
 * Added: Security fixes.

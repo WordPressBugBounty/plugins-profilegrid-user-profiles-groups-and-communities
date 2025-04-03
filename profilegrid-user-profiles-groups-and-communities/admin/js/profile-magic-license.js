@@ -122,7 +122,10 @@ function show_pg_toast( type, message, heading = true ) {
     if(type === "error"){
         console.log(message);
         jQuery( "#pg-extension-license-status" ).addClass( 'pg-status-failed-model' );
-        jQuery( "#pg-extension-license-status" ).removeClass( 'pg-status-succuess-model' )
+        jQuery( "#pg-extension-license-status" ).removeClass( 'pg-status-succuess-model' );
+    }else{
+        jQuery( "#pg-extension-license-status" ).removeClass( 'pg-status-failed-model' );
+        jQuery( "#pg-extension-license-status" ).addClass( 'pg-status-succuess-model' );
     }
     
     setTimeout(
