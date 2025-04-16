@@ -269,6 +269,8 @@ class Profile_Magic {
                                 $this->loader->add_action('pg_customization_extension_html', $plugin_admin, 'pg_customization_extension_html');
                                 $this->loader->add_action( 'wp_ajax_pg_activate_license', $plugin_admin, 'profilegrid_activate_license' );
                                 $this->loader->add_action( 'wp_ajax_pg_deactivate_license', $plugin_admin, 'profilegrid_deactivate_license' );
+                                $this->loader->add_action( 'admin_notices', $plugin_admin, 'pg_dismissible_buddybot_promotion' );
+				
                                 
 	}
 

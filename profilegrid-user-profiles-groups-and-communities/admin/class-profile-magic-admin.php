@@ -2197,5 +2197,32 @@ class Profile_Magic_Admin {
             }
         
     }
+    public function pg_dismissible_buddybot_promotion(){
+        $notice_name  = get_option( 'pg_dismissible_buddybot_promotion', '0' );
+        
+        if ( $notice_name == '1' || defined('BUDDYBOT_PLUGIN_VERSION')) {
+                return;
+        }
+         $install_url = wp_nonce_url(
+                    self_admin_url('update.php?action=install-plugin&plugin=buddybot-ai-custom-ai-assistant-and-chat-agent'),
+                    'install-plugin_buddybot-ai-custom-ai-assistant-and-chat-agent' 
+                );
+        ?>
+           <div class="notice notice-info is-dismissible pg-dismissible" id="pg_dismissible_buddybot_promotion">
+                <p>
+                    <span>
+                        <a href="<?php echo esc_url( $install_url ); ?>" 
+                      class="button button-primary thickbox" 
+                      aria-label="<?php esc_attr_e('Install BuddyBot Plugin','profilegrid-user-profiles-groups-and-communitiest'); ?>">
+                       <?php esc_html_e('Click here','profilegrid-user-profiles-groups-and-communities'); ?>
+                   </a>
+                    </span>
+                    <?php esc_html_e(' – to try BuddyBot. Help your visitors find answers fast with an AI chatbot trained on your WordPress content. Built by the ProfileGrid team.', 'profilegrid-user-profiles-groups-and-communities'); ?>
+                 
+                </p>
+
+            </div>
+        <?php
+    }
 
 }
