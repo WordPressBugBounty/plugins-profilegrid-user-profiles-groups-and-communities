@@ -591,7 +591,10 @@ class Profile_Magic_Admin {
 	}
 
 	public function profile_magic_set_section_order() {
-				 $dbhandler = new PM_DBhandler();
+                if ( !current_user_can('manage_options') ) {
+                    die;
+                }
+                $dbhandler = new PM_DBhandler();
 		$textdomain         = $this->profile_magic;
 		$path               = plugin_dir_url( __FILE__ );
 		$identifier         = 'SECTION';

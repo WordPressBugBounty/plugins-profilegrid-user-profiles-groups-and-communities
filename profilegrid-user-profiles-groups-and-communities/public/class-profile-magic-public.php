@@ -1819,7 +1819,7 @@ class Profile_Magic_Public {
 		$dbhandler         = new PM_DBhandler();
 			$pmfriends     = new PM_Friends_Functions();
 			$pmhtmlcreator = new PM_HTML_Creator( $this->profile_magic, $this->version );
-		$uid               = filter_input( INPUT_POST, 'uid' );
+		$uid               = filter_input( INPUT_POST, 'uid', FILTER_VALIDATE_INT );
 		$path              = plugin_dir_url( __FILE__ );
 			$pm_f_search   = filter_input( INPUT_POST, 'pm_f_search' );
 			$view          = filter_input( INPUT_POST, 'pm_friend_view' );
@@ -1835,7 +1835,7 @@ class Profile_Magic_Public {
 
 	public function pm_fetch_friend_list_counter() {
 		$pmfriends = new PM_Friends_Functions();
-		$uid       = filter_input( INPUT_POST, 'uid' );
+		$uid       = filter_input( INPUT_POST, 'uid', FILTER_VALIDATE_INT );
 		$view      = filter_input( INPUT_POST, 'pm_friend_view' );
 		switch ( $view ) {
 			case 1:
@@ -1856,7 +1856,7 @@ class Profile_Magic_Public {
 		$dbhandler     = new PM_DBhandler();
 			$pmfriends = new PM_Friends_Functions();
 		$identifier    = 'FRIENDS';
-		$uid           = filter_input( INPUT_POST, 'uid' );
+		$uid           = filter_input( INPUT_POST, 'uid', FILTER_VALIDATE_INT );
 		$path          = plugin_dir_url( __FILE__ );
 		$pagenum       = filter_input( INPUT_POST, 'pagenum' );
 		$suggestions   = $pmfriends->profile_magic_friends_suggestion( $uid );

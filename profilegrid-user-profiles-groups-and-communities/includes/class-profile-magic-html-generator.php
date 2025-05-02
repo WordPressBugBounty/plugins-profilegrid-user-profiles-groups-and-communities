@@ -206,7 +206,7 @@ class PM_HTML_Creator {
 		?>
         
         <div class="pm-user-card pm-difl pm-border pm-radius5">
-            <?php do_action('pm_before_group_member_card',$uid, $gid, $group_leader, $imgsize = '', $arg = '', $hide_profile_link = '' );?>
+            <?php do_action('pm_before_group_member_card',$uid, $gid, $group_leader, $imgsize, $arg = '', $hide_profile_link = '' );?>
             <div class="pm-user-card-cover pm-dbfl">
                 <?php
 				echo wp_kses_post( $pmrequests->profile_magic_get_cover_image( $uid, $imgsize, '', false, $arg ) );

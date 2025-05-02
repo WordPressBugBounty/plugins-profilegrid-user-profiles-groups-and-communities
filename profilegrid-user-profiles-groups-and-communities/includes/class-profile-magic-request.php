@@ -4190,17 +4190,22 @@ class PM_request {
 						if ( $limit > $total_users_in_group ) {
 							?>
 							<div class="pm-group-signup">
-								<form method="post" <?php echo wp_kses_post( $action ); ?>>
-									<input type="hidden" name="pg_uid" id="pg_uid" value="<?php echo esc_attr( $current_user->ID ); ?>" />
-									<input type="hidden" name="pg_join_gid" id="pg_join_gid" value="<?php echo esc_attr( $gid ); ?>" />
-									<input type="hidden" name="pg_join_group" id="pg_join_group" value="1" />
-									<a class="pm_button" onclick="submit()">
-										<button type="submit"><?php 
-                                                                                    $join_group_label = apply_filters('profilegrid_join_group_label',__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ));
-                                                                                    esc_html_e($join_group_label); 
-                                                                                    ?></button>
-									</a>
-								</form>
+                            <?php 
+                                $form_html = '<form method="post" ' . wp_kses_post($action) . '>
+                                <input type="hidden" name="pg_uid" id="pg_uid" value="' . esc_attr($current_user->ID) . '" />
+                                <input type="hidden" name="pg_join_gid" id="pg_join_gid" value="' . esc_attr($gid) . '" />
+                                <input type="hidden" name="pg_join_group" id="pg_join_group" value="1" />
+                                <a class="pm_button" onclick="submit()">
+                                    <button type="submit">' . esc_html(apply_filters('profilegrid_join_group_label', __('Join Group', 'profilegrid-user-profiles-groups-and-communities'))) . '</button>
+                                </a>
+                                </form>';
+
+                                // Apply a filter to the entire form HTML
+                                $form_html = apply_filters('profilegrid_join_group_form_html', $form_html, $gid);
+
+                                // Output the form
+                                echo $form_html;
+                            ?>
 							</div>
 							<?php
 						} else {
@@ -4211,17 +4216,22 @@ class PM_request {
 					} else {
 						?>
 						<div class="pm-group-signup">
-								<form method="post" <?php echo wp_kses_post( $action ); ?>>
-									<input type="hidden" name="pg_uid" id="pg_uid" value="<?php echo esc_attr( $current_user->ID ); ?>" />
-									<input type="hidden" name="pg_join_gid" id="pg_join_gid" value="<?php echo esc_attr( $gid ); ?>" />
-									<input type="hidden" name="pg_join_group" id="pg_join_group" value="1" />
-									<a class="pm_button" onclick="submit()">
-										<button type="submit"><?php 
-                                                                                    $join_group_label = apply_filters('profilegrid_join_group_label',__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ));
-                                                                                    esc_html_e($join_group_label); 
-                                                                                    ?></button>
-									</a>
-								</form>
+                        <?php 
+                            $form_html = '<form method="post" ' . wp_kses_post($action) . '>
+                            <input type="hidden" name="pg_uid" id="pg_uid" value="' . esc_attr($current_user->ID) . '" />
+                            <input type="hidden" name="pg_join_gid" id="pg_join_gid" value="' . esc_attr($gid) . '" />
+                            <input type="hidden" name="pg_join_group" id="pg_join_group" value="1" />
+                            <a class="pm_button" onclick="submit()">
+                                <button type="submit">' . esc_html(apply_filters('profilegrid_join_group_label', __('Join Group', 'profilegrid-user-profiles-groups-and-communities'))) . '</button>
+                            </a>
+                            </form>';
+
+                            // Apply a filter to the entire form HTML
+                            $form_html = apply_filters('profilegrid_join_group_form_html', $form_html, $gid);
+
+                            // Output the form
+                            echo $form_html;
+                        ?>
 						</div>
 						<?php
 					}

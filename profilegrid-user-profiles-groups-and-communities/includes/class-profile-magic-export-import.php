@@ -316,7 +316,7 @@ class PM_Export_Import {
 				}
 				$value      = maybe_serialize( $field_value );
 				$data[ $i ] = $value;
-				if ( class_exists( Profilegrid_Geolocation_Public ) ) {
+				if ( class_exists( 'Profilegrid_Geolocation_Public' ) ) {
 					 $gelocation = new Profilegrid_Geolocation_Public( 'profilegrid-user-profiles-groups-and-communities', '1.0' );
 					 $address    = implode( ' ', $address_array );
 					 $address    = rawurlencode( $address );
