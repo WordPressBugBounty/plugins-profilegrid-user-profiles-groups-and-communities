@@ -4028,12 +4028,17 @@ class PM_request {
 			$user_name           = $this->profile_magic_get_user_field_value( $uid, 'user_login' );
 			$group_page_url      = admin_url( 'admin.php?page=pm_add_group' );
 			$group_page_url      = add_query_arg( 'id', $gid, $group_page_url );
+                        $group_options       = maybe_unserialize($row->group_options);
 			$dbhandler->update_row( 'GROUPS', 'id', $gid, array( 'group_leaders' => $group_leaders_array ) );
 			$subject  = esc_html__( 'A Manager Left the Group', 'profilegrid-user-profiles-groups-and-communities' );
 			$message  = esc_html__( 'Hello,', 'profilegrid-user-profiles-groups-and-communities' );
 			$message .= "<br />\r\n\r\n";
-			$message .= esc_html__( 'A {{group_admin_label}} has left the group {{group_name}}. Consequently, this group is without a {{group_admin_label}}. Closed user groups require a {{group_admin_label}} for proper group management. Please assign a new {{group_admin_label}} to this group by visiting {{edit_group_url}}. Alternatively, consider making it an Open group. For now, all messages for {{group_admin_label}} of {{group_name}} will be redirected to you.', 'profilegrid-user-profiles-groups-and-communities' );
-			$message .= "<br />\r\n\r\n";
+			if(isset($group_options['group_type']) && $group_options['group_type'] == 'open'){
+                            $message .= esc_html__( 'A {{group_admin_label}} has left the group {{group_name}}. Consequently, this group is without a {{group_admin_label}}. Since this is an Open user group, it can continue to function without a designated {{group_admin_label}}. However, appointing a new leader is still recommended to ensure effective group coordination and communication. You may assign a new {{group_admin_label}} to this group by visiting {{edit_group_url}}. For now, all messages for {{group_admin_label}} of {{group_name}} will be redirected to you.', 'profilegrid-user-profiles-groups-and-communities' );    
+                        }else{
+                            $message .= esc_html__( 'A {{group_admin_label}} has left the group {{group_name}}. Consequently, this group is without a {{group_admin_label}}. Closed user groups require a {{group_admin_label}} for proper group management. Please assign a new {{group_admin_label}} to this group by visiting {{edit_group_url}}. Alternatively, consider making it an Open group. For now, all messages for {{group_admin_label}} of {{group_name}} will be redirected to you.', 'profilegrid-user-profiles-groups-and-communities' );
+                        }
+                        $message .= "<br />\r\n\r\n";
 			$message .= esc_html__( 'Regards.', 'profilegrid-user-profiles-groups-and-communities' ) . "<br />\r\n";
 			$message  = $pm_emails->pm_filter_email_content( $message, $uid, false, $gid );
 			$pm_emails->pm_send_admin_notification( $subject, $message );
@@ -4179,9 +4184,9 @@ class PM_request {
 					if ( $dbhandler->get_global_option_value( 'pm_show_group_leave_group_button', '1' ) ) :
 						?>
 					<div class="pm-group-signup">
-				   <a class="pm_button" onclick="pg_edit_blog_popup('group','remove_group','<?php echo esc_attr( $current_user->ID ); ?>','<?php echo esc_attr( $gid ); ?>')">
-					   <button><?php esc_html_e( 'Leave Group', 'profilegrid-user-profiles-groups-and-communities' ); ?></button>
-				   </a>
+				   <button class="pm_button" onclick="pg_edit_blog_popup('group','remove_group','<?php echo esc_attr( $current_user->ID ); ?>','<?php echo esc_attr( $gid ); ?>')">
+					   <?php esc_html_e( 'Leave Group', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+				   </button>
 					</div>
 						<?php
 					endif;
@@ -4195,9 +4200,8 @@ class PM_request {
                                 <input type="hidden" name="pg_uid" id="pg_uid" value="' . esc_attr($current_user->ID) . '" />
                                 <input type="hidden" name="pg_join_gid" id="pg_join_gid" value="' . esc_attr($gid) . '" />
                                 <input type="hidden" name="pg_join_group" id="pg_join_group" value="1" />
-                                <a class="pm_button" onclick="submit()">
-                                    <button type="submit">' . esc_html(apply_filters('profilegrid_join_group_label', __('Join Group', 'profilegrid-user-profiles-groups-and-communities'))) . '</button>
-                                </a>
+                                <button type="submit" class="pm_button">' . esc_html(apply_filters('profilegrid_join_group_label', __('Join Group', 'profilegrid-user-profiles-groups-and-communities'))) . '</button>
+                                
                                 </form>';
 
                                 // Apply a filter to the entire form HTML
@@ -4221,9 +4225,8 @@ class PM_request {
                             <input type="hidden" name="pg_uid" id="pg_uid" value="' . esc_attr($current_user->ID) . '" />
                             <input type="hidden" name="pg_join_gid" id="pg_join_gid" value="' . esc_attr($gid) . '" />
                             <input type="hidden" name="pg_join_group" id="pg_join_group" value="1" />
-                            <a class="pm_button" onclick="submit()">
-                                <button type="submit">' . esc_html(apply_filters('profilegrid_join_group_label', __('Join Group', 'profilegrid-user-profiles-groups-and-communities'))) . '</button>
-                            </a>
+                            <button type="submit" class="pm_button">' . esc_html(apply_filters('profilegrid_join_group_label', __('Join Group', 'profilegrid-user-profiles-groups-and-communities'))) . '</button>
+                            
                             </form>';
 
                             // Apply a filter to the entire form HTML
@@ -4238,6 +4241,12 @@ class PM_request {
 				}
 			}
 		} else {
+                    $allowed_tags = array(
+                        'button' => array(
+                            'class' => true,
+                            'onclick' => true,
+                        ),
+                    );
 			if ( $is_group_limit == 1 ) {
 				
 				if ( $limit > $total_users_in_group ) {
@@ -4245,9 +4254,9 @@ class PM_request {
 					
 				<div class="pm-group-signup">
                                     <?php 
-                                       $link = '<a href="'.esc_url( $registration_url ).'" class="pm_button"><button>'.esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ).'</button></a>';
+                                       $link = '<button onclick="window.location.href=\'' . esc_url( $registration_url ) . '\'" class="pm_button">'.esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ).'</button>';
                                        $link = apply_filters('profilegrid_group_page_button_link',$link,$gid);
-                                       echo wp_kses_post($link);
+                                       echo wp_kses($link, $allowed_tags);
                                     ?>
                                     
 				</div>
@@ -4260,9 +4269,10 @@ class PM_request {
 				?>
 				<div class="pm-group-signup">
                                     <?php 
-                                        $link = '<a href="'.esc_url( $registration_url ).'" class="pm_button"><button>'.esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ).'</button></a>';
-                                        $link = apply_filters('profilegrid_group_page_button_link',$link,$gid);
-                                        echo wp_kses_post($link);
+                                        $link = '<button onclick="window.location.href=\'' . esc_url( $registration_url ) . '\'" class="pm_button">' . esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ) . '</button>';
+                                        $link = apply_filters('profilegrid_group_page_button_link', $link, $gid);
+                                        echo wp_kses($link, $allowed_tags);
+
                                     ?>
 				</div>                
 				<?php
@@ -4968,7 +4978,12 @@ class PM_request {
 		$option    = 'pm_show_group_on_groups_page_' . $group->id;
                 $pmgroupoption = maybe_unserialize($group->group_options);
                 $is_global_password_protected = $dbhandler->get_global_option_value('pm_enable_group_password_option',0);
-	
+                $allowed_tags = array(
+                        'button' => array(
+                            'class' => true,
+                            'onclick' => true,
+                        ),
+                    );
                 $is_password_protected = (isset($pmgroupoption['enable_password_protection']))?$pmgroupoption['enable_password_protection']:0;
                 $password_html = ($is_password_protected==1 && $is_global_password_protected==1)?'<i class="fa fa-lock"></i>':'';
 		if ( $dbhandler->get_global_option_value( $option, '1' ) == '1' ) {
@@ -5012,9 +5027,9 @@ class PM_request {
 				  <div class="pm-group-button pm-dbfl pm-pad10">
 				   <div class="pm-group-signup">
                                        <?php 
-                                       $link = '<a href="'.esc_url( $registration_url ).'" class="pm_button"><button>'.esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ).'</button></a>';
+                                       $link = '<button onclick="window.location.href=\'' . esc_url( $registration_url ) . '\'" class="pm_button">'.esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ).'</button>';
                                        $link = apply_filters('profilegrid_all_groups_page_button_link',$link,$group->id,$group_url,$registration_url);
-                                       echo wp_kses_post($link);
+                                       echo wp_kses($link, $allowed_tags);
                                        ?>
                                    </div>
 						<?php if ( $this->profile_magic_check_paid_group( $group->id ) > 0 ) : ?>
@@ -5035,9 +5050,9 @@ class PM_request {
 				  <div class="pm-group-button pm-dbfl pm-pad10">
 				   <div class="pm-group-signup">
                                        <?php 
-                                       $link = '<a href="'.esc_url( $group_url ).'" class="pm_button"><button>'.esc_html__( 'Details', 'profilegrid-user-profiles-groups-and-communities' ).'</button></a>';
+                                       $link = '<button onclick="window.location.href=\'' . esc_url( $group_url ) . '\'" class="pm_button">'.esc_html__( 'Details', 'profilegrid-user-profiles-groups-and-communities' ).'</button>';
                                        $link = apply_filters('profilegrid_all_groups_page_button_link',$link,$group->id,$group_url,$registration_url);
-                                       echo wp_kses_post($link);
+                                       echo wp_kses($link, $allowed_tags);
                                        ?>
 				   </div>
 				  </div>
@@ -5076,9 +5091,9 @@ class PM_request {
 				  <div class="pm-group-button pm-dbfl pm-pad10">
 				   <div class="pm-group-signup">
                                     <?php 
-                                         $link = '<a href="'.esc_url( $registration_url ).'" class="pm_button"><button>'.esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ).'</button></a>';
+                                         $link = '<button onclick="window.location.href=\'' . esc_url( $registration_url ) . '\'"  class="pm_button">'.esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ).'</button>';
                                          $link = apply_filters('profilegrid_all_groups_page_button_link',$link,$group->id,$group_url,$registration_url);
-                                         echo wp_kses_post($link);
+                                         echo wp_kses($link, $allowed_tags);
                                     ?>
                                        
                                    </div>
@@ -5100,9 +5115,9 @@ class PM_request {
 				  <div class="pm-group-button pm-dbfl pm-pad10">
 				   <div class="pm-group-signup">
                                         <?php 
-                                       $link = '<a href="'.esc_url( $group_url ).'" class="pm_button"><button>'.esc_html__( 'Details', 'profilegrid-user-profiles-groups-and-communities' ).'</button></a>';
+                                       $link = '<button onclick="window.location.href=\'' . esc_url( $group_url ) . '\'" class="pm_button">'.esc_html__( 'Details', 'profilegrid-user-profiles-groups-and-communities' ).'</button>';
                                        $link = apply_filters('profilegrid_all_groups_page_button_link',$link,$group->id,$group_url,$registration_url);
-                                       echo wp_kses_post($link);
+                                       echo wp_kses($link, $allowed_tags);
                                        ?>
 				   </div>
 				  </div>
@@ -5226,7 +5241,7 @@ class PM_request {
                                             //print_r($unread_message_obj->unread_threads);
 						?>
 					<audio id="msg_tone" src="<?php echo esc_url( $path ); ?>"></audio>
-					<li class="pm-profile-tab pm-pad10 <?php echo esc_attr( $tab['class'] ); ?>"><a class="pm-dbfl" href="#<?php echo esc_attr( $tab['id'] ); ?>" onClick="pg_msg_open_tab()" ><?php esc_html_e( $tab['title'], 'profilegrid-user-profiles-groups-and-communities' ); ?><b id="unread_thread_count" class=""><?php echo !empty($unread_message_obj->unread_threads)?$unread_message_obj->unread_threads:''; ?></b></a></li>
+					<li class="pm-profile-tab pm-pad10 <?php echo esc_attr( $tab['class'] ); ?>"><a class="pm-dbfl" href="#<?php echo esc_attr( $tab['id'] ); ?>" onClick="pg_msg_open_tab()" ><?php esc_html_e( $tab['title'], 'profilegrid-user-profiles-groups-and-communities' ); ?><b id="unread_thread_count" class="thread-count-show"><?php echo !empty($unread_message_obj->unread_threads)?$unread_message_obj->unread_threads:''; ?></b></a></li>
 
 						<?php
 					endif;

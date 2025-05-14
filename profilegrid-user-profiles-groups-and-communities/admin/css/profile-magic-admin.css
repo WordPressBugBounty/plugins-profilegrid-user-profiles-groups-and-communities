@@ -2685,6 +2685,12 @@ img.pm-popup-close {
     margin-right: 8px;
 }
 
+.pm-popup-field-name svg{
+    width: 12px;
+    top: 2px;
+    position: relative;
+}
+
 .pm-popup-field-details {
     display: block;
     float: left;
@@ -2702,7 +2708,7 @@ img.pm-popup-close {
     flex-direction: row;
     flex-wrap: nowrap;
     justify-content: center;
-    align-items: flex-start;
+    align-items: stretch;
     align-content: flex-start;
 }
 
@@ -4831,7 +4837,7 @@ button.pg_pr_action:focus{
     -webkit-column-break-inside: avoid;
     break-inside: avoid;
     display: inline-block;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
 
 }
 
@@ -4906,7 +4912,7 @@ button.pg_pr_action:focus{
 
 .pg-escblock-wrap .pg-escsubblock .pg-sc-dropdown .pg-sc-dropdown-item a:hover {
     background-color: #0DB14B;
-    color: #fff;
+    color: #fff !important;
 }
 
 .pg-escblock-wrap .pg-escsubblock .pg-scblock.pg-sctitle .pg-sc-menu {
@@ -5029,7 +5035,7 @@ button.pg_pr_action:focus{
 
 @media screen and (-webkit-min-device-pixel-ratio:0) {
     .pg-escblock-wrap.pg-escblock-content-wrap .pg-escsubblock{
-        float: left;
+        /*float: left;*/
     }
 }
 
@@ -5047,7 +5053,7 @@ button.pg_pr_action:focus{
 
 
 .pg-escblock-wrap.pg-escblock-content-wrap .pg-escsubblock {
-    float: left;
+  
 }
 
 .pg-admin-element-group-row
@@ -7499,4 +7505,36 @@ span.pg-tooltips::after {
 
 #wp-pm_send_friend_request_email_content-wrap button#insert-media-button {
     margin-bottom: 30px;
+}
+/*----Button CSS---*/
+
+
+
+.wp-core-ui .pmagic .button-primary {
+    background: #0DB14B !important;
+    border-color: #0DB14B !important;
+    color: #fff !important;
+    text-decoration: none;
+    text-shadow: none;
+}
+
+.wp-core-ui .pmagic .button{
+    font-size: 13px !important;
+}
+
+
+.wp-core-ui .pmagic .button-primary:focus,
+.wp-core-ui .pmagic .button-primary:hover {
+    background: #000;
+    border-color: #000;
+    color: #fff;
+}
+
+
+.wp-core-ui .pmagic .button, 
+.wp-core-ui .pmagic .button-secondary {
+    color: #0DB14B;
+    border-color: #0DB14B;
+    background: #fff;
+    vertical-align: top;
 }

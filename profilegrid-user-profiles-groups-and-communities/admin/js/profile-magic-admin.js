@@ -1084,11 +1084,17 @@ jQuery(
 				handle: '.pm-slab-drag-handle',
 				update: function (event, ui) {
 					var list_sortable = jQuery( this ).sortable( 'toArray' ).toString();
+                                        var nonce = jQuery('#pm_section_reorder_nonce').val();
 					var data          = {
 						'action': 'pm_set_section_order',
-						'list_order': list_sortable
+						'list_order': list_sortable,
+                                                'nonce': nonce
 					};
-					jQuery.post( pm_ajax_object.ajax_url, data, function(response) {} );
+					jQuery.post( pm_ajax_object.ajax_url, data, function(response) {
+                                            if(response !== ''){
+                                                alert(response);
+                                            }
+                                        } );
 					// change order in the database using Ajax
 				}
             }
@@ -2638,3 +2644,11 @@ function pg_all_groups_popup(id)
                 form.submit();
             }
         }
+        
+    function pg_delete_form_section(gid, section_id){
+            event.preventDefault();
+            var delete_url = 'admin.php?page=pm_add_section&action=delete&id='+section_id+'&gid='+gid;
+            jQuery('.pm-section-delete-popup').css('visibility', 'visible');
+            jQuery('.pm-delete-section-confirm-btn').attr('href', delete_url);
+            //jQuery('.pm-move-to-group').css('visibility', 'hidden');
+    }

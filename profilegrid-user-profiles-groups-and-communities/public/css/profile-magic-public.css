@@ -815,6 +815,14 @@ screen and (-ms-high-contrast: none) {
     border-bottom: 1px solid #e1e1e1
 }
 
+.pmagic .pm-group-view #pg-about .pm-section .pm-section-nav-vertical ul li .pm-section-group-name{
+    font-size: 80%;
+    margin-left: 0px;
+    display: inline-block;
+    width: 100%;
+    color: #646060;
+}
+
 .pmagic .pm-group-view #pg-about .pm-section .pm-section-nav-vertical ul li:last-child{
     border-bottom:0px; 
 }

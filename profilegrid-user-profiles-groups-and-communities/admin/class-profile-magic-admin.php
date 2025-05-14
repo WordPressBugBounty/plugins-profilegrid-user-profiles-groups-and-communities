@@ -594,20 +594,26 @@ class Profile_Magic_Admin {
                 if ( !current_user_can('manage_options') ) {
                     die;
                 }
-                $dbhandler = new PM_DBhandler();
-		$textdomain         = $this->profile_magic;
-		$path               = plugin_dir_url( __FILE__ );
-		$identifier         = 'SECTION';
-		$list_order         = filter_input( INPUT_POST, 'list_order' );
-		if ( isset( $list_order ) ) {
-			$list = explode( ',', $list_order );
-			$i    = 1;
-			foreach ( $list as $id ) {
-				$dbhandler->update_row( $identifier, 'id', $id, array( 'ordering' => $i ), array( '%d' ), '%d' );
+                if (isset($_POST['nonce']) && wp_verify_nonce($_POST['nonce'], 'pm_section_reorder_nonce')) {
+                    // Nonce is valid, process the form
+                
+                    $dbhandler = new PM_DBhandler();
+                    $textdomain         = $this->profile_magic;
+                    $path               = plugin_dir_url( __FILE__ );
+                    $identifier         = 'SECTION';
+                    $list_order         = filter_input( INPUT_POST, 'list_order' );
+                    if ( isset( $list_order ) ) {
+                            $list = explode( ',', $list_order );
+                            $i    = 1;
+                            foreach ( $list as $id ) {
+                                    $dbhandler->update_row( $identifier, 'id', $id, array( 'ordering' => $i ), array( '%d' ), '%d' );
 
-				$i++;
-			}
-		}
+                                    $i++;
+                            }
+                    }
+                } else {
+                    die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
+                }
 		die;
 	}
 

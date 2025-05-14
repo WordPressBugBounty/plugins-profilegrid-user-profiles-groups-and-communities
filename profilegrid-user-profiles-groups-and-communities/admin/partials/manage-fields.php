@@ -293,10 +293,10 @@ $section_ordering = $lastrow + 1;
 
         <div class="pm-popup-field-box" onClick="add_pm_field('twitter', '<?php echo esc_attr( $gid ); ?>')">
             <div class="pm-popup-field-name">
-                <i class="fa fa-twitter" aria-hidden="true"></i>
-                <?php esc_html_e( 'Twitter', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+                <i class="fa" aria-hidden="true"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"/></svg></i>
+                <?php esc_html_e( 'X/Twitter', 'profilegrid-user-profiles-groups-and-communities' ); ?>
             </div>
-            <div class="pm-popup-field-details"><?php esc_html_e( 'A speciality URL field for asking Twitter Profile page.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+            <div class="pm-popup-field-details"><?php esc_html_e( 'A speciality URL field for asking X/Twitter Profile page.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
         </div>
 
 
@@ -339,7 +339,7 @@ $section_ordering = $lastrow + 1;
                 <i class="fa fa-instagram   " aria-hidden="true"></i>
                 <?php esc_html_e( 'Instagram', 'profilegrid-user-profiles-groups-and-communities' ); ?>
             </div>
-            <div class="pm-popup-field-details"><?php esc_html_e( 'Asks User his/ her Instagram Profile.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+            <div class="pm-popup-field-details"><?php esc_html_e( 'A speciality URL field for asking Instagram Profile page.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
         </div>
             
             <?php do_action( 'pg_add_field_in_popup', $gid ); ?>
@@ -398,6 +398,8 @@ $section_ordering = $lastrow + 1;
         <!----Slab View---->
 
         <div class="pm-field-creator" id="sections">
+            <?php wp_nonce_field('pm_section_reorder_nonce', 'pm_section_reorder_nonce'); ?>
+
             <ul class="pm-page-tabs-sidebar field-tabs pm_sortable_tabs">
                 <?php
                 if ( isset( $sections ) ) :
@@ -434,7 +436,11 @@ endif;
 															$sort_by = 'ordering'
                                                         );
 														?>
-                            <div class="pmrow"> <a href="admin.php?page=pm_add_section&id=<?php echo esc_attr( $section->id ); ?>#<?php echo sanitize_key( 'profile_section_' . $section->id ); ?>"><?php esc_html_e( 'Edit Section', 'profilegrid-user-profiles-groups-and-communities' ); ?></a> <a href="admin.php?page=pm_add_section&action=delete&id=<?php echo esc_attr( $section->id ); ?>&gid=<?php echo esc_attr( $gid ); ?>"><?php esc_html_e( 'Delete Section', 'profilegrid-user-profiles-groups-and-communities' ); ?></a> </div>
+                            <div class="pmrow"> 
+                                <a href="admin.php?page=pm_add_section&id=<?php echo esc_attr( $section->id ); ?>#<?php echo sanitize_key( 'profile_section_' . $section->id ); ?>"><?php esc_html_e( 'Edit Section', 'profilegrid-user-profiles-groups-and-communities' ); ?></a> 
+                                <!--<a href="admin.php?page=pm_add_section&action=delete&id=<?php echo esc_attr( $section->id ); ?>&gid=<?php echo esc_attr( $gid ); ?>"><?php esc_html_e( 'Delete Section', 'profilegrid-user-profiles-groups-and-communities' ); ?></a> -->
+                                <a onclick="pg_delete_form_section('<?php echo esc_attr( $gid ); ?>','<?php echo esc_attr( $section->id ); ?>')" href="javascript:void(0)"><?php esc_html_e( 'Delete Section', 'profilegrid-user-profiles-groups-and-communities' ); ?></a>
+                            </div>
                             <ul class="pm_sortable_fields">
                                 <?php
                                 if ( !empty( $fields ) ) :
@@ -498,7 +504,21 @@ endif;
                 </div>
             </div>
         </div>
-        
+        <div class="pm-popup pm-section-delete-popup pm-popup-height-auto" >
+            <div class="pm-popup-header">
+                <div class="pm-popup-title"><?php esc_html_e('Please Confirm', 'profilegrid-user-profiles-groups-and-communities'); ?>   </div>
+                <img class="pm-popup-close" src="<?php echo esc_url($path . '/images/close-pm.png'); ?>">
+            </div>
+
+            <div class="pm-popup-body" style="padding:15px;" >
+                <p class=""> <?php esc_html_e('Please confirm that you wish to permanently delete this section. This action is irreversible and the data cannot be recovered.', 'profilegrid-user-profiles-groups-and-communities'); ?></p>
+            </div>
+            <div class="modal-footer" style="padding:15px;">
+                
+                <input type="button" id="cancel-delete" class="pm-popup-close button " value="<?php esc_attr_e('Cancel', 'profilegrid-user-profiles-groups-and-communities'); ?> " />
+                <a href="" class='pm-delete-section-confirm-btn button button-primary'><?php esc_attr_e('Confirm', 'profilegrid-user-profiles-groups-and-communities'); ?></a>
+            </div>
+        </div>
         
           <?php if ( $pmrequests->pm_check_field_exist( $gid, 'user_pass', true ) == false ) : ?>
     <div class="pg-ui-info-notice">

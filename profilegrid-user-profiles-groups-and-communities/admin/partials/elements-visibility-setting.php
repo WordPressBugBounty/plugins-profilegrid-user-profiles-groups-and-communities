@@ -46,6 +46,9 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
 		if ( !isset( $post['pm_show_user_left_menu'] ) ) {
 			$post['pm_show_user_left_menu'] = 0;
 		}
+                if ( !isset( $post['pm_show_about_section_group_name'] ) ) {
+			$post['pm_show_about_section_group_name'] = 0;
+		}
 		if ( !isset( $post['pm_show_user_email'] ) ) {
 			$post['pm_show_user_email'] = 0;
 		}
@@ -290,7 +293,17 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
           <label for="pm_show_user_left_menu"></label>
         </div>
          
-      </div> 
+      </div>
+        <div class="uimrow">
+        <div class="uimfield">
+          <?php esc_html_e( 'Show Group Name', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        </div>
+        <div class="uiminput">
+           <input name="pm_show_about_section_group_name" id="pm_show_about_section_group_name" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_show_about_section_group_name', '1' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
+          <label for="pm_show_about_section_group_name"></label>
+        </div>
+         
+      </div>
         
 <!--        <div class="uimrow">
         <div class="uimfield">

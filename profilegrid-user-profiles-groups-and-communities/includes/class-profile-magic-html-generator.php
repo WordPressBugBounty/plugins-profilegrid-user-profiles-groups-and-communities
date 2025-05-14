@@ -2702,9 +2702,16 @@ class PM_HTML_Creator {
 				if ( !empty( $sections ) ) :
                     foreach ( $sections as $section ) :
                         $fields = $pm_request->pm_get_frontend_user_meta( $uid, $group, $group_leader, '', $section->id, '"user_avatar","user_pass","user_name","heading","paragraph","confirm_pass"' );
-
                         if ($fields){
-                            echo '<li class="pm-dbfl pm-border-bt pm-pad10"><a class="pm-dbfl" href="#' . sanitize_key( $section->section_name ) . esc_attr($section->id) . '">' . esc_html( $section->section_name ) . '</a></li>';
+                            $pm_show_about_section_group_name = $dbhandler->get_global_option_value( 'pm_show_about_section_group_name', '1' );
+                            $group_name = $dbhandler->get_value( 'GROUPS', 'group_name', $group );
+                            if($pm_show_about_section_group_name == 1){
+                                echo '<li class="pm-dbfl pm-border-bt pm-pad10"><a class="pm-dbfl" href="#' . sanitize_key( $section->section_name ) . esc_attr($section->id) . '">' . esc_html( $section->section_name ) . '<span class="pm-section-group-name">'.esc_html($group_name).'</span></a></li>';
+                            }else{
+                                echo '<li class="pm-dbfl pm-border-bt pm-pad10"><a class="pm-dbfl" href="#' . sanitize_key( $section->section_name ) . esc_attr($section->id) . '">' . esc_html( $section->section_name ) . '</a></li>';
+                                
+                            }
+                            
                         }
 						
                     endforeach;
