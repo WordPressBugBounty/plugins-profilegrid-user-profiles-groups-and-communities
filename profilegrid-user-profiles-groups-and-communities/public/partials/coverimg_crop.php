@@ -19,30 +19,37 @@ $jpeg_quality = intval($dbhandler->get_global_option_value('pg_image_quality','9
   break;
   
   case 'save' :
-     
-    $image = wp_get_image_editor( $post['fullpath'] );
-     
-       $image_attribute = wp_get_attachment_image_src($post['attachment_id'],'full');
-      
-      $basename = basename($post['fullpath']);
-    if ( ! is_wp_error( $image ) && $post['user_id']==$current_user->ID ) {
-        $image->crop( $post['x'], $post['y'], $post['w'], $post['h'], $post['w'], $post['h'], false );
-        $image->resize( $post['w'], $post['h'], array($post['x'], $post['y']) );
-        if (is_numeric($jpeg_quality)) 
-        {
-            $image->set_quality(intval($jpeg_quality));
+    
+    if(isset($post['fullpath'])){
+        
+        $valid_fullpath = $pmrequests->pg_file_fullpath_validation($post['fullpath']);
+        if(empty($valid_fullpath)){
+           esc_html_e('Something went wrong.', 'profilegrid-user-profiles-groups-and-communities');
+           die();
+        }else{
+            $image = wp_get_image_editor( $post['fullpath'] );
+            $image_attribute = wp_get_attachment_image_src($post['attachment_id'],'full');
+            $basename = basename($post['fullpath']);
+            if ( ! is_wp_error( $image ) && $post['user_id']==$current_user->ID ) {
+                $image->crop( $post['x'], $post['y'], $post['w'], $post['h'], $post['w'], $post['h'], false );
+                $image->resize( $post['w'], $post['h'], array($post['x'], $post['y']) );
+                if (is_numeric($jpeg_quality)) 
+                {
+                    $image->set_quality(intval($jpeg_quality));
+                }
+
+                $image->save( $uploads['path']. '/'.$basename );
+
+                update_user_meta($post['user_id'],'pm_cover_image',$post['attachment_id']);
+                do_action('pm_update_cover_image',$post['user_id']);
+                echo "<img id='coverphotofinal' file-name='".esc_attr($basename)."' src='".esc_url($image_attribute[0])."' class='preview'/>";
+            }
+            else {
+                echo wp_kses_post($image->get_error_message());
+            }
+           die;
         }
-        
-        $image->save( $uploads['path']. '/'.$basename );
-        
-        update_user_meta($post['user_id'],'pm_cover_image',$post['attachment_id']);
-        do_action('pm_update_cover_image',$post['user_id']);
-        echo "<img id='coverphotofinal' file-name='".esc_attr($basename)."' src='".esc_url($image_attribute[0])."' class='preview'/>";
     }
- else {
-         echo wp_kses_post($image->get_error_message());
-    }
-    die;
   break;
   default:
         

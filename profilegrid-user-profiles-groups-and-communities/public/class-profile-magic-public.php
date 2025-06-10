@@ -5384,9 +5384,12 @@ class Profile_Magic_Public {
 	public function pg_show_msg_panel() {
                 $pmrequests = new PM_request();
 		/*$uid    = filter_input( INPUT_POST, 'uid' ); */
-		$rid    = filter_input( INPUT_POST, 'rid' );
+		/*$rid    = filter_input( INPUT_POST, 'rid' ); */
 		/*$tid    = filter_input( INPUT_POST, 'tid' );*/
-		$search = filter_input( INPUT_POST, 'search' );
+                $rid    = isset($_POST['rid']) ? intval($_POST['rid']) : 0;
+                $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+
+		//$search = filter_input( INPUT_POST, 'search' );
                 $uid = get_current_user_id();
                 $tid = $pmrequests->get_thread_id( $rid, $uid );
 		$chat   = new ProfileMagic_Chat();

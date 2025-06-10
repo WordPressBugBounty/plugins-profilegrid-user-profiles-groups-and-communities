@@ -19,36 +19,44 @@ $jpeg_quality = intval($dbhandler->get_global_option_value('pg_image_quality','9
   break;
   
   case 'save' :
-         
-    $image_path = get_attached_file($post['attachment_id']); // Securely retrieve image path
-    $image_attribute = wp_get_attachment_image_src($post['attachment_id'], 'full');
-    if (!$image_path || !file_exists($image_path)) {
-        wp_send_json_error(['message' => 'Invalid image file.']);
-        exit;
-    }
-    $image = wp_get_image_editor($image_path);
-
-      $basename = basename($post['fullpath']);
-    if ( ! is_wp_error( $image ) && $post['user_id']==$current_user->ID && $post['user_meta']=='pm_user_avatar') {
-        $image->crop( $post['x'], $post['y'], $post['w'], $post['h'], $post['w'], $post['h'], false );
-        $image->resize( $post['w'], $post['h'], array($post['x'], $post['y']) );
-        if($post['user_meta']=='pm_user_avatar')
-        {
-            $image_attribute = wp_get_attachment_image_src($post['attachment_id'],array(150,150));
-            $basename = basename($image_attribute[0]);
-        }
-        if (is_numeric($jpeg_quality)) 
-        {
-            $image->set_quality(intval($jpeg_quality));
-        }
+    if(isset($post['fullpath'])){
         
-        $image->save( $uploads['path']. '/'.$basename );
-        update_user_meta($post['user_id'],'pm_user_avatar',$post['attachment_id']);
-        do_action('pm_update_profile_image',$post['user_id']);
-        echo "<img id='photofinal' file-name='".esc_attr($basename)."' src='".esc_url($image_attribute[0])."' class='preview'/>";
-    }
-    else {
-         echo wp_kses_post($image->get_error_message());
+        $valid_fullpath = $pmrequests->pg_file_fullpath_validation($post['fullpath']);
+        if(empty($valid_fullpath)){
+           esc_html_e('Something went wrong.', 'profilegrid-user-profiles-groups-and-communities');
+           die();
+        }else{     
+            $image_path = get_attached_file($post['attachment_id']); // Securely retrieve image path
+            $image_attribute = wp_get_attachment_image_src($post['attachment_id'], 'full');
+            if (!$image_path || !file_exists($image_path)) {
+                wp_send_json_error(['message' => 'Invalid image file.']);
+                exit;
+            }
+            $image = wp_get_image_editor($image_path);
+
+            $basename = basename($post['fullpath']);
+            if ( ! is_wp_error( $image ) && $post['user_id']==$current_user->ID && $post['user_meta']=='pm_user_avatar') {
+                $image->crop( $post['x'], $post['y'], $post['w'], $post['h'], $post['w'], $post['h'], false );
+                $image->resize( $post['w'], $post['h'], array($post['x'], $post['y']) );
+                if($post['user_meta']=='pm_user_avatar')
+                {
+                    $image_attribute = wp_get_attachment_image_src($post['attachment_id'],array(150,150));
+                    $basename = basename($image_attribute[0]);
+                }
+                if (is_numeric($jpeg_quality)) 
+                {
+                    $image->set_quality(intval($jpeg_quality));
+                }
+
+                $image->save( $uploads['path']. '/'.$basename );
+                update_user_meta($post['user_id'],'pm_user_avatar',$post['attachment_id']);
+                do_action('pm_update_profile_image',$post['user_id']);
+                echo "<img id='photofinal' file-name='".esc_attr($basename)."' src='".esc_url($image_attribute[0])."' class='preview'/>";
+            }
+            else {
+                 echo wp_kses_post($image->get_error_message());
+            }
+        }
     }
     die;
   break;

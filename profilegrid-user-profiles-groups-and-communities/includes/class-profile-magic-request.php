@@ -6150,4 +6150,30 @@ class PM_request {
             return $delete;
         }
         
+        public function pg_file_fullpath_validation($fullpath) {
+            // Step 1: Block URLs
+            if ( filter_var($fullpath, FILTER_VALIDATE_URL) ) {
+                return false;
+            }
+            // Step 2: Block path traversal and absolute paths
+            if ( strpos($fullpath, '..') !== false || preg_match('/^(\/|[A-Z]:\\\\)/i', $fullpath) ) {
+                // Note: You might want to allow absolute paths depending on use case
+            }
+            // Step 3: Resolve realpath
+            $realpath = realpath($fullpath);
+            if ($realpath === false) {
+                return false;
+            }
+            // Step 4: Normalize slashes for Windows
+            $realpath_normalized = str_replace('\\', '/', $realpath);
+            $upload_dir = str_replace('\\', '/', wp_get_upload_dir()['basedir']);
+
+            // Step 5: Ensure realpath is within uploads dir
+            if ( strpos($realpath_normalized, $upload_dir) !== 0 ) {
+                return false;
+            }
+            return true;
+        }
+
+
 }
