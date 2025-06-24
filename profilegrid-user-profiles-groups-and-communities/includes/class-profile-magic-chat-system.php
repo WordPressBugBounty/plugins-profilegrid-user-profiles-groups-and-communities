@@ -813,7 +813,9 @@ class ProfileMagic_Chat {
 			$is_msg_sent = $pmrequests->pm_create_message( $sid, $rid, $content ,$tid );
 			if ( !$is_msg_sent ) {
 				$is_msg_sent = __( 'not sent', 'profilegrid-user-profiles-groups-and-communities' );
-			}
+			}else{
+                            do_action('pm_sent_new_message_notification', $sid, $rid, $content, $tid);
+                        }
 		}else{
 			$is_msg_sent = __( 'not sent', 'profilegrid-user-profiles-groups-and-communities' );
 		}

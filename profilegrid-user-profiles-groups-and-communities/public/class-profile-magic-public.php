@@ -4073,7 +4073,7 @@ class Profile_Magic_Public {
 
 	public function pm_get_active_thread_header() {
 		 $pmrequests = new PM_request();
-		$rid         = filter_input( INPUT_POST, 'uid' );
+		$rid         = filter_input( INPUT_POST, 'uid', FILTER_VALIDATE_INT );
 		$profile_url = $pmrequests->pm_get_user_profile_url( $rid );
 		$r_avatar    = get_avatar(
 			$rid,
@@ -4093,14 +4093,14 @@ class Profile_Magic_Public {
 
 	public function pm_messages_mark_as_read() {
 		$pmrequests = new PM_request();
-		$tid        = filter_input( INPUT_POST, 'tid' );
+		$tid        = filter_input( INPUT_POST, 'tid', FILTER_VALIDATE_INT );
 		$pmrequests->update_message_status_to_read( $tid );
 		die;
 	}
 
 	public function pm_messages_mark_as_unread() {
 		$pmrequests = new PM_request();
-		$tid        = filter_input( INPUT_POST, 'tid' );
+		$tid        = filter_input( INPUT_POST, 'tid', FILTER_VALIDATE_INT );
 		$messages   = $pmrequests->update_message_status_to_unread( $tid );
 		if ( ! empty( $messages ) ) {
 			echo 'success';
@@ -4110,7 +4110,7 @@ class Profile_Magic_Public {
 	}
 
 	public function pg_show_all_threads() {
-		$tid        = filter_input( INPUT_POST, 'tid' );
+		$tid        = filter_input( INPUT_POST, 'tid', FILTER_VALIDATE_INT );
 		$pmmessenger = new ProfileMagic_Chat();
                 $pmrequests = new PM_request();
                 $allowed_html = $pmrequests->pg_allowed_html_wp_kses();

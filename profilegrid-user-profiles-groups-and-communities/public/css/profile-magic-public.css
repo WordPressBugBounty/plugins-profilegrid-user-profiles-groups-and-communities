@@ -3921,6 +3921,8 @@ button#send_msg_btn {
     height: 35px;
     background: none;
     border: 0px;
+    outline: none !important;
+    cursor: pointer;
 }
 .msg-search-result{color:red;}
 
