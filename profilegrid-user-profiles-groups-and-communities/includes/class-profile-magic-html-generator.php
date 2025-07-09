@@ -1605,7 +1605,7 @@ class PM_HTML_Creator {
                      <div class="pm-dbfl pg-info-message">        
                     
 							<?php
-							esc_html_e( 'You can simultaneously add upto <strong>10 users</strong> to your group using this method.', 'profilegrid-user-profiles-groups-and-communities' );
+                            echo sprintf(wp_kses(__( 'You can simultaneously add upto <strong>%s</strong> to your group using this method.', 'profilegrid-user-profiles-groups-and-communities' ), array( 'strong' => array() )),esc_html( '10 users' ) );
 							?>
                                          
 

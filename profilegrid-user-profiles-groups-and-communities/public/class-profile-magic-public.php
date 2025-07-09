@@ -146,7 +146,7 @@ class Profile_Magic_Public {
 			$error['valid_phone_number']           = esc_html__( 'Please enter a valid phone number.', 'profilegrid-user-profiles-groups-and-communities' );
 		$error['valid_mobile_number']              = esc_html__( 'Please enter a valid mobile number.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_facebook_url']           = esc_html__( 'Please enter a valid Facebook url.', 'profilegrid-user-profiles-groups-and-communities' );
-			$error['valid_twitter_url']            = esc_html__( 'Please enter a Twitter url.', 'profilegrid-user-profiles-groups-and-communities' );
+			$error['valid_twitter_url']            = esc_html__( 'Please enter a X url.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_google_url']             = esc_html__( 'Please enter a valid Google url.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_linked_in_url']          = esc_html__( 'Please enter a Linked In url.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_youtube_url']            = esc_html__( 'Please enter a valid Youtube url.', 'profilegrid-user-profiles-groups-and-communities' );
@@ -272,7 +272,7 @@ class Profile_Magic_Public {
 			$error['valid_phone_number']           = esc_html__( 'Please enter a valid phone number.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_mobile_number']          = esc_html__( 'Please enter a valid mobile number.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_facebook_url']           = esc_html__( 'Please enter a valid Facebook url.', 'profilegrid-user-profiles-groups-and-communities' );
-			$error['valid_twitter_url']            = esc_html__( 'Please enter a Twitter url.', 'profilegrid-user-profiles-groups-and-communities' );
+			$error['valid_twitter_url']            = esc_html__( 'Please enter a X url.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_google_url']             = esc_html__( 'Please enter a valid Google url.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_linked_in_url']          = esc_html__( 'Please enter a Linked In url.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_youtube_url']            = esc_html__( 'Please enter a valid Youtube url.', 'profilegrid-user-profiles-groups-and-communities' );
@@ -1321,9 +1321,9 @@ class Profile_Magic_Public {
 
 	public function pm_get_messenger_notification() {
 		$pmmessenger = new PM_Messenger();
-		$timestamp   = filter_input( INPUT_GET, 'timestamp' );
+		$timestamp   = filter_input( INPUT_GET, 'timestamp', FILTER_VALIDATE_INT );
 		$activity    = filter_input( INPUT_GET, 'activity' );
-		 $tid        = filter_input( INPUT_GET, 'tid' );
+		 $tid        = filter_input( INPUT_GET, 'tid',FILTER_VALIDATE_INT );
                  if($tid!=0)
                  {
                     $return     = $pmmessenger->pm_get_messenger_notification( $timestamp, $activity, $tid );
@@ -2112,6 +2112,12 @@ class Profile_Magic_Public {
 		$pmfriends    = new PM_Friends_Functions();
 		$PM_Messanger = new PM_Messenger();
 		$current_user = wp_get_current_user();
+        // Allow developers to override this behavior
+        $pm_override_right_side_options = false;
+        $pm_override_right_side_options = apply_filters( 'pm_override_right_side_options', false, $uid, $gid );
+        if ( $pm_override_right_side_options ) {
+            return;
+        }
 		if ( $uid != $current_user->ID && $dbhandler->get_global_option_value( 'pm_enable_private_messaging', '1' ) == 1 ) :
 			$messenger_url = $PM_Messanger->pm_get_message_url( $uid );
 			?>

@@ -1684,7 +1684,7 @@ if ( filter_input( INPUT_GET, 'action' ) == 'delete' ) {
                     </select>
                     <div class="errortext"></div>
                 </div>
-                <div class="uimnote"><?php esc_html_e( 'No RegistrationMagic form has been assigned to this group. To map this profile field with a custom registration form field, assign a registration form from Group Settings → Group Registration Form.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+                <div class="uimnote"><?php esc_html_e( 'No RegistrationMagic form has been assigned to this group. To map this profile field with a custom registration form field, assign a registration form from Group Settings → Membership → Group Registration Form.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
             </div>
 					<?php
 				}

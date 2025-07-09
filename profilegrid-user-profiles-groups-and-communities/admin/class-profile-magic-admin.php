@@ -186,7 +186,7 @@ class Profile_Magic_Admin {
 			$error['user_exist']                = __( 'Sorry, username already exist.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['email_exist']               = __( 'Sorry, email already exist.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_facebook_url']        = __( 'Please enter a valid facebook url.', 'profilegrid-user-profiles-groups-and-communities' );
-			$error['valid_twitter_url']         = __( 'Please enter a valid twitter url.', 'profilegrid-user-profiles-groups-and-communities' );
+			$error['valid_twitter_url']         = __( 'Please enter a valid x url.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_google_url']          = __( 'Please enter a valid google+ url.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_linked_in_url']       = __( 'Please enter a valid linkedin url.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_youtube_url']         = __( 'Please enter a valid youtube url.', 'profilegrid-user-profiles-groups-and-communities' );

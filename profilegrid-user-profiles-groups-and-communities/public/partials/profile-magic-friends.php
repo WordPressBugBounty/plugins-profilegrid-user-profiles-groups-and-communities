@@ -37,7 +37,13 @@ if($uid==$current_user->ID):
      
     <ul class="dbfl">
         <li class="pm-dbfl pm-border-bt pm-pad10"><a class="pm-dbfl" href="#pg-myfriends"><?php esc_html_e('My Friends','profilegrid-user-profiles-groups-and-communities');?><span class="pm-difr notification-count"><?php echo wp_kses_post($total_myfriends);?></span></a></li>
+        <?php
+            $show_friend_requests = true;
+            $show_friend_requests = apply_filters('pm_show_friend_requests', $show_friend_requests, $uid);
+            if($show_friend_requests){
+        ?>
         <li class="pm-dbfl pm-border-bt pm-pad10"><a class="pm-dbfl" href="#pg-friend-requests"><?php esc_html_e('Friend Requests','profilegrid-user-profiles-groups-and-communities');?><span class="pm-difr notification-count"><?php echo wp_kses_post($total_myfriends_requests);?></span></a></li>
+        <?php } ?>
         <li class="pm-dbfl pm-border-bt pm-pad10"><a class="pm-dbfl" href="#pg-requests-sent"><?php esc_html_e('Requests Sent','profilegrid-user-profiles-groups-and-communities');?><span class="pm-difr notification-count"><?php echo wp_kses_post($total_send_requests);?></span></a></li>
     </ul>
 </div>
@@ -48,10 +54,16 @@ if($uid==$current_user->ID):
    $pmhtmlcreator->pm_get_my_friends_html($uid,$pagenum,$pm_f_search,$limit,1);
    ?>
 </div>
+<?php
+    $show_friend_requests = true;
+    $show_friend_requests = apply_filters('pm_show_friend_requests', $show_friend_requests, $uid);
+    if($show_friend_requests){
+?>
 <div id="pg-friend-requests" class="pm-blog-desc-wrap pm-difl pm-section-content">
    
    <?php $pmhtmlcreator->pm_get_my_friends_html($uid,$pagenum,$pm_f_search,$limit,2);?>
 </div>
+<?php } ?>
 <div id="pg-requests-sent" class="pm-blog-desc-wrap pm-difl pm-section-content">
     
    <?php $pmhtmlcreator->pm_get_my_friends_html($uid,$pagenum,$pm_f_search,$limit,3);?>

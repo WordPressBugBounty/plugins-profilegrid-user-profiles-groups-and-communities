@@ -604,6 +604,9 @@ class PM_sanitizer {
                 case 'content':
                     $new_input[$key] = wp_kses_post($val);
                     break;
+                case 'description':
+                    $new_input[$key] = wp_kses_post($val);
+                    break;
                 default:
                     if (is_email($val)) {
                         $new_input[$key] = sanitize_email($val);
