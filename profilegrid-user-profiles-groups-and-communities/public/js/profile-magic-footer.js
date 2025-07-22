@@ -945,5 +945,8 @@ $('.pg-group-setting.pm-profile-tab a').click(function(e){
     $('#pg_group_setting .pm-section-content:first').show(); 
 });
 
+
+
+
 })(jQuery);
 

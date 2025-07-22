@@ -2206,7 +2206,10 @@ class Profile_Magic_Admin {
             }
         
     }
+    
+ /*
     public function pg_dismissible_buddybot_promotion(){
+        
         $notice_name  = get_option( 'pg_dismissible_buddybot_promotion', '0' );
         
         if ( $notice_name == '1' || defined('BUDDYBOT_PLUGIN_VERSION')) {
@@ -2232,6 +2235,44 @@ class Profile_Magic_Admin {
 
             </div>
         <?php
+    }
+    */
+    
+    public function pg_dismissible_sale_promotion(){
+        $notice_name  = get_option( 'pg_dismissible_discount_sale_banner', '0' );
+        $today = new DateTime();
+        $year = (int) $today->format('Y');
+        $last_date = DateTime::createFromFormat('Y-m-d', "$year-07-31");
+
+        if ( $today > $last_date ) {
+            return;
+        }
+        if ( $notice_name == '1') {
+                return;
+        }
+        ?>
+            <div class="notice notice-info pg-brand-notice is-dismissible pg-dismissible" id="pg_dismissible_discount_sale_banner" style="display: none;">
+            <div class="pg-content pg-d-flex pg-box-center">
+                <div class="pg-icon">🎉</div>
+                <div class="pg-message">
+                <?php
+                echo wp_kses_post(
+                        __('<strong>Save 30% on ProfileGrid Premium – Limited Time!</strong>
+                        Use code <strong>PGJULY30</strong> at checkout. Offer valid until <strong>July 31</strong>.','profilegrid-user-profiles-groups-and-communities')
+                    );
+                ?>
+                    
+           
+                </div>
+                     <span class="pg-cta">
+                    <a href="<?php echo esc_url('https://profilegrid.co/extensions/?utm_source=plugin&utm_medium=banner&utm_campaign=pgjuly30');?>" class="button button-primary" target="_blank"><?php esc_html_e('Upgrade Now','profilegrid-user-profiles-groups-and-communities');?></a>
+                </span>
+            </div>
+            
+            
+           
+        </div>
+    <?php
     }
 
 }

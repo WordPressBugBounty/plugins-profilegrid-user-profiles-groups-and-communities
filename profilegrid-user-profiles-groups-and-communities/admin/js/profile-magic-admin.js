@@ -1875,11 +1875,11 @@ jQuery( document ).ready(
 
 jQuery( document ).ready(
     function(){
-		jQuery( ".pg-dismissible" ).click(
+		jQuery(document).on('click', ".pg-dismissible .notice-dismiss",
             function()
             {
 
-                    var notice_name = jQuery( this ).attr( 'id' );
+                    var notice_name = jQuery( this ).parent().attr( 'id' );
                     var data        = {'action': 'pm_dismissible_notice','notice_name': notice_name,'nonce':pm_ajax_object.nonce};
                     jQuery.post(
                         pm_ajax_object.ajax_url,
@@ -2652,3 +2652,22 @@ function pg_all_groups_popup(id)
             jQuery('.pm-delete-section-confirm-btn').attr('href', delete_url);
             //jQuery('.pm-move-to-group').css('visibility', 'hidden');
     }
+
+
+//Admin Sale Offer Notice
+
+//RM Upgrade Notice JS
+
+
+
+
+jQuery(document).ready(function ($) {
+    var rmUpgradeNotice = $('.pg-brand-notice');
+    setTimeout(function () {
+        // Delay 5000ms (1 seconds) before showing the banner
+        $('#wpadminbar').after(rmUpgradeNotice);
+        
+        rmUpgradeNotice.show();
+    }, 1000);
+});
+

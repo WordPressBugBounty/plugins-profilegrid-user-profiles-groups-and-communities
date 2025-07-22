@@ -102,7 +102,7 @@ class Profile_Magic_Extensions {
         $list['FRONTEND_GROUP'] =array(
             'slug'          => 'FRONTEND_GROUP',
             'price'         => 'paid',
-            'filter'        => 'groups',
+            'filter'        => 'groups form',
             'title'         => __( 'Frontend Group Creator', 'profilegrid-user-profiles-groups-and-communities' ),
             'image'         => 'frontend-group.png',
             'description'   =>__( 'Allow registered users to create new Groups on front end. These Groups behave and work just like regular ProfileGrid groups.', 'profilegrid-user-profiles-groups-and-communities' ),
@@ -677,7 +677,7 @@ class Profile_Magic_Extensions {
         $list['TURNSTILE'] =array(
             'slug'          => 'TURNSTILE',
             'price'         => 'paid',
-            'filter'        => 'security form',
+            'filter'        => 'security',
             'title'         => __( 'Turnstile Antispam Security', 'profilegrid-user-profiles-groups-and-communities' ),
             'image'         => 'pg-turnstile-icon.png',
             'description'   => __( 'ProfileGrid Turnstile Antispam Security adds Cloudflare Turnstile protection to your user registration and profile forms, preventing automated spam submissions while maintaining a smooth user experience.', 'profilegrid-user-profiles-groups-and-communities' ),

@@ -381,7 +381,7 @@ update_option( 'pg_redirect_to_group_page', '0' );
                 
               </div>
              <div class="pg-box-row pg-box-modal-footer">
-                     <div class="pg-box-col-12 pg-box-text-center">
+                     <div class="pg-box-col-12 pg-box-text-right">
                   <?php wp_nonce_field('save_pm_add_group'); ?>
                   <input type="submit" value="<?php esc_attr_e('Save', 'profilegrid-user-profiles-groups-and-communities'); ?>" name="submit_group" id="submit_group" onclick="return check_validation(this)" />
                   </div>
@@ -412,19 +412,24 @@ update_option( 'pg_redirect_to_group_page', '0' );
         </div>
         <div class="pg-box-row pg-box-mb-25">
             <div class="pg-box-col-12"> 
-                <div class="pg-group-modal-subtitle pg-delete-group-modal"><?php esc_attr_e('You are going to delete the following Groups. This action is irreversible. Please confirm to proceed.', 'profilegrid-user-profiles-groups-and-communities'); ?></div></div>
+                <div class="pg-group-modal-wrap">
+                    <div class="pg-group-modal-subtitle pg-delete-group-modal">
+                        <?php esc_attr_e('You are going to delete the following Groups. This action is irreversible. Please confirm to proceed.', 'profilegrid-user-profiles-groups-and-communities'); ?>
+                    </div>
+                </div>
+            </div>
         </div>
         
         
         <div class="pg-group-modal-wrap">              
         <div class="pg-delete-group-form">
             <form name="pm_delete_group" id="pm_delete_group" class="" action="admin.php?page=pm_add_group" method="post">
-             <div class="pg-box-row-wrap pg-deletable-group-details">
+             <div class="pg-deletable-group-details">
                 
                 
               </div>
              <div class="pg-box-row pg-box-modal-footer">
-                     <div class="pg-box-col-12 pg-box-text-center">
+                     <div class="pg-box-col-12 pg-box-text-right">
                   <?php wp_nonce_field('delete_pm_group'); ?>
                         <!-- <input type="checkbox" name="notify_users" id="notify_users"  value="1" /> <label for="notify_users"> <?php //esc_html_e('Also notify users who are members of this group.'); ?> </label>    -->  
                   <input type="submit" value="<?php esc_attr_e('Confirm', 'profilegrid-user-profiles-groups-and-communities'); ?>" name="delete_group" id="delete_group" />
@@ -455,7 +460,7 @@ update_option( 'pg_redirect_to_group_page', '0' );
         </div>
         
         <div class="pg-group-modal-wrap">
-        <div class="pg-group-modal-subtitle"><?php esc_attr_e('You are going to duplicate the following Groups. Please confirm to proceed.', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
+        <div class="pg-group-modal-subtitle pg-duplicate-group-modal"><?php esc_attr_e('You are going to duplicate the following Groups. Please confirm to proceed.', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
                
         <div class="pg-new-group-form">
              <form name="pm_duplicate_group" id="pm_duplicate_group" action="admin.php?page=pm_add_group" method="post">
@@ -464,7 +469,7 @@ update_option( 'pg_redirect_to_group_page', '0' );
                 
               </div>
              <div class="pg-box-row pg-box-modal-footer">
-                     <div class="pg-box-col-12 pg-box-text-center">
+                     <div class="pg-box-col-12 pg-box-text-right">
                   <?php wp_nonce_field('duplicate_pm_group'); ?>
                         <!-- <input type="checkbox" name="notify_users" id="notify_users"  value="1" /> <label for="notify_users"> <?php //esc_html_e('Also notify users who are members of this group.'); ?> </label>    -->  
                   <input type="submit" value="<?php esc_attr_e('Confirm', 'profilegrid-user-profiles-groups-and-communities'); ?>" name="duplicate" id="duplicate" />
