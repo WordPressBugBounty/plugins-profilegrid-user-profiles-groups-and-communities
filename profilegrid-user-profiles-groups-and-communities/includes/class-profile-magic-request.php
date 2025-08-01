@@ -228,6 +228,7 @@ class PM_request {
 						$attach_id   = wp_insert_attachment( $attachment, $filename, $parent_post_id );
 						$attach_data = wp_generate_attachment_metadata( $attach_id, $filename );
 						wp_update_attachment_metadata( $attach_id, $attach_data );
+                                                do_action('pg_media_file_uploaded', $attach_id, $attachment);
 
 					} else {
 						if ( strpos( $allowfieldstypes, $current_file_type ) === false ) {

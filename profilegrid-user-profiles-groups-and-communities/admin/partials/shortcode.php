@@ -5171,75 +5171,75 @@ wp_enqueue_style( 'pg-google-fonts', 'https://fonts.googleapis.com/icon?family=M
 }    
 	
 	
-(function($){ 
-	
-$(document).ready(function() {
-	
-var showChar = 50;
-var ellipsestext = "...";
-var moretext = "See More";
-var lesstext = "See Less";
-$('.pg-scblock.pg-sc-description-row .pg-sc-deccc').each(function () {
-	var content = $(this).html();
-	if (content.length > showChar) {
-		var show_content = content.substr(0, showChar);
-		var hide_content = content.substr(showChar, content.length - showChar);
-		var html = show_content + '<span class="moreelipses">' + ellipsestext + '</span><span class="remaining-content"><span>' + hide_content + '</span>&nbsp;&nbsp;<a href="" class="pg-morelinkcc">' + moretext + '</a></span>';
-		$(this).html(html);
-	}
+(function($) { 
+    $(document).ready(function() {
+        // === Show More / See Less in Description ===
+        var showChar = 50;
+        var ellipsestext = "...";
+        var moretext = "See More";
+        var lesstext = "See Less";
+
+   $('.pg-escsubblock').each(function () {
+    var $dropdown = $(this);
+    var $showMore = $dropdown.find(".pg-shorocode-show-more");
+    var $showLess = $dropdown.find(".pg-shorocode-show-less");
+    var $hiddenBlock = $dropdown.find(".pg-scblock-hide");
+
+    $showMore.on("click", function (e) {
+        e.preventDefault();
+
+        // Hide all other open sections
+        $('.pg-escsubblock .pg-scblock-hide').hide();
+        $('.pg-escsubblock .pg-shorocode-show-less').hide();
+        $('.pg-escsubblock .pg-shorocode-show-more').show();
+
+        // Show current one
+        $hiddenBlock.show();
+        $showLess.show();
+        $showMore.hide();
+    });
+
+    $showLess.on("click", function (e) {
+        e.preventDefault();
+        $hiddenBlock.hide();
+        $showLess.hide();
+        $showMore.show();
+    });
 });
 
-$(".pg-morelinkcc").click(function () {
-	if ($(this).hasClass("less")) {
-		$(this).removeClass("less");
-		$(this).html(moretext);
-	} else {
-		$(this).addClass("less");
-		$(this).html(lesstext);
-	}
-	$(this).parent().prev().toggle();
-	$(this).prev().toggle();
-	return false;
 
-	   });    
-	
-	});
-	
-	
+        $(document).on("click", ".pg-morelinkcc", function(e) {
+            e.preventDefault();
+            var $this = $(this);
+            $this.toggleClass("less").html($this.hasClass("less") ? lesstext : moretext);
+            $this.closest(".remaining-content").prev(".moreelipses").toggle();
+            $this.prev().toggle();
+        });
 
+        // === Show / Hide Shortcode Blocks ===
+        $('.pg-escsubblock').each(function() {
+            var $dropdown = $(this);
+            var $showMore = $dropdown.find(".pg-shorocode-show-more");
+            var $showLess = $dropdown.find(".pg-shorocode-show-less");
+            var $hiddenBlock = $dropdown.find(".pg-scblock-hide");
 
+            $showMore.on("click", function(e) {
+                e.preventDefault();
+                $hiddenBlock.show();
+                $showLess.show();
+                $showMore.hide();
+            });
 
-$(document).ready(function(){
-
-  $('.pg-escsubblock').each(function() {
-	var $dropdown = $(this);
-
-	$(".pg-shorocode-show-more", $dropdown).click(function(e) {
-	  e.preventDefault();
-	  $(".pg-scblock-hide", $dropdown).show();
-	   $(".pg-shorocode-show-less", $dropdown).show();
-	  $(".pg-shorocode-show-more", $dropdown).hide();
-	  return false;
-	});
-	
-	
-	  $(".pg-shorocode-show-less", $dropdown).click(function(e) {
-	  e.preventDefault();
-	  $(".pg-scblock-hide", $dropdown).hide();
-	   $(".pg-shorocode-show-less", $dropdown).hide();
-	  $(".pg-shorocode-show-more", $dropdown).show();
-
-
-   });
-
-});
-	
-
-	  
-});
-	
-
+            $showLess.on("click", function(e) {
+                e.preventDefault();
+                $hiddenBlock.hide();
+                $showLess.hide();
+                $showMore.show();
+            });
+        });
+    });
 })(jQuery);
+
 
 
 function pg_copy_shortcode(target) {

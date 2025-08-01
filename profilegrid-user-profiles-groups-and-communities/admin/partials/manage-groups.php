@@ -234,11 +234,10 @@ update_option( 'pg_redirect_to_group_page', '0' );
     <div class="pg-group-side-banner pg-box-border pg-box-white-bg">
 
         <div class="pg-box-row pg-box-text-center">
-            <div class="pg-box-col-12 ">
+            <div class="pg-box-col-12">
                 <div class="pg-sidebanner-image">
                     <img src="<?php echo esc_url($path . 'images/svg/pg-logo-icon.svg'); ?>">
                 </div>
-                <div class="pg-side-banner-mg-logo pg-text-a"><img src="<?php echo esc_url($path . 'images/mg-logo.png'); ?>"></div>
             </div>
         </div>
 

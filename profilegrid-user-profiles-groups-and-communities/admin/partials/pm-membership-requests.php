@@ -235,8 +235,12 @@ $pagination   = $dbhandler->pm_get_pagination_new_ui( $num_of_pages, $pagenum );
                 if (isset($gid) && $gid != '') {
                     esc_html_e('No membership requests matches your search.', 'profilegrid-user-profiles-groups-and-communities');
                 } else {
-                    esc_html_e('If you have assigned Group Managers with Frontend Group Manager extension installed, they can Manage Group Membership requests for respective closed Groups from Group Management page. As a site Administrator, you too can approve or reject membership requests directly from the dashboard. This is helpful when you do not plan to assign Group Managers or do not have Frontend Group Manager extension installed.', 'profilegrid-user-profiles-groups-and-communities');
-                }
+                echo '<strong>' . esc_html__('Tip:', 'profilegrid-user-profiles-groups-and-communities') . '</strong> ';
+                esc_html_e(
+                        'If you’ve assigned Group Managers and have the Frontend Group Manager extension active, they can handle membership requests from the Group Management page. As the site admin, you can also approve or reject requests here—useful if no managers are assigned or the extension isn’t installed.',
+                        'profilegrid-user-profiles-groups-and-communities'
+                );
+            }
 
                 echo wp_kses_post('</td>');
             }
