@@ -1722,15 +1722,12 @@ function validate_facebook_url(val)
 
 function validate_twitter_url(val)
 {
-	if (val != '') {
-		if (/(ftp|http|https):\/\/?((www|\w\w)\.)?twitter.com(\w+:{0,1}\w*@)?(\S+)(:([0-9])+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i.test( val )) {
-			return true;
-		} else {
-			return false;
-		}
-	} else {
-		return true;
-	}
+    if (val !== '') {
+        const regex = /^(https?:\/\/)(www\.)?(twitter\.com|x\.com)\/([A-Za-z0-9_]{1,15})\/?$/i;
+        return regex.test(val);
+    } else {
+        return true;
+    }
 }
 
 function validate_google_url(val)

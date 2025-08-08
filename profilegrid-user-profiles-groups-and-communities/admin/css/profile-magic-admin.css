@@ -3688,6 +3688,10 @@ tr.pm_import_row td:first-child {
     float: left;
 }
 
+body.toplevel_page_pm_manage_groups #dolly {
+    display: none !important; 
+}
+
 /*#toplevel_page_pm_manage_groups ul li:last-child a::before {
     font-family: dashicons;
     content: "\f313";

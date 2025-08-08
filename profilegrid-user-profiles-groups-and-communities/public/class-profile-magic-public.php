@@ -1322,7 +1322,7 @@ class Profile_Magic_Public {
 	public function pm_get_messenger_notification() {
 		$pmmessenger = new PM_Messenger();
 		$timestamp   = filter_input( INPUT_GET, 'timestamp', FILTER_VALIDATE_INT );
-		$activity    = filter_input( INPUT_GET, 'activity' );
+		$activity    = filter_input( INPUT_GET, 'activity', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		 $tid        = filter_input( INPUT_GET, 'tid',FILTER_VALIDATE_INT );
                  if($tid!=0)
                  {

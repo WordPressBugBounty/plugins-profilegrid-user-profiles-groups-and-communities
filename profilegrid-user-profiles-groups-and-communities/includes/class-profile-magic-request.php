@@ -5366,7 +5366,8 @@ class PM_request {
                         'Profilegrid_User_Invitation_Field',
                         'Profilegrid_Credit',
                         'Profilegrid_profile_visitor_details',
-                        'Profilegrid_Turnstile_Antispam_Cloudflare'
+                        'Profilegrid_Turnstile_Antispam_Cloudflare',
+                        'Profilegrid_F12_Integration'
 		);
 		$class_not_exist = array();
 		foreach ( $classes as $class ) {
@@ -5436,7 +5437,8 @@ class PM_request {
                         'Profilegrid_User_Invitation_Field',
                         'Profilegrid_Credit',
                         'Profilegrid_profile_visitor_details',
-                        'Profilegrid_Turnstile_Antispam_Cloudflare'
+                        'Profilegrid_Turnstile_Antispam_Cloudflare',
+                        'Profilegrid_F12_Integration'
 		);
 		$free_exist = array();
 		foreach ( $free as $fc ) {

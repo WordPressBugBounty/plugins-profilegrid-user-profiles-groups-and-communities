@@ -686,6 +686,18 @@ class Profile_Magic_Extensions {
             'path'          => 'profilegrid-user-profiles-groups-and-communities-profilegrid-turnstile-antispam-security/profilegrid-turnstile-antispam-security.php',
             'class'         => 'Profilegrid_Turnstile_Antispam_Cloudflare',
         );
+        $list['PROFILEGRID_F12'] =array(
+            'slug'          => 'PROFILEGRID_F12',
+            'price'         => 'paid',
+            'filter'        => 'security integration form',
+            'title'         => __( 'Profilegrid F12', 'profilegrid-user-profiles-groups-and-communities' ),
+            'image'         => 'f12-integration.png',
+            'description'   => __( 'Integration of F12 Spam Protection plugin with ProfileGrid to comply with GDPR.', 'profilegrid-user-profiles-groups-and-communities' ),
+            'option_url'    => admin_url( 'admin.php?page=pm_f12_integration_settings' ),
+            'extension_url' => 'https://profilegrid.co/extensions/f12-integration/',
+            'path'          => 'profilegrid-user-profiles-groups-and-communities-profilegrid-turnstile-antispam-security/profilegrid-turnstile-antispam-security.php',
+            'class'         => 'Profilegrid_F12_Integration',
+        );
 
         return $list;
     }

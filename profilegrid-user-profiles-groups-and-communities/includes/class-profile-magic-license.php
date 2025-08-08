@@ -294,7 +294,8 @@ class Profile_Magic_License {
                     'Profilegrid_User_Invitation_Field' => array('', ''),
                     'Profilegrid_Credit' => array(70336, 'Customized TeraWallet Integration'),
                     'Profilegrid_profile_visitor_details'  => array(77696, 'Profile Visitors'),
-                    'Profilegrid_Turnstile_Antispam_Cloudflare'  => array(77691, 'Turnstile Antispam Security')
+                    'Profilegrid_Turnstile_Antispam_Cloudflare'  => array(77691, 'Turnstile Antispam Security'),
+                    'Profilegrid_F12_Integration'  => array(81211, 'Profilegrid F12 Integration')
                 );
 
 		$activate = array();
