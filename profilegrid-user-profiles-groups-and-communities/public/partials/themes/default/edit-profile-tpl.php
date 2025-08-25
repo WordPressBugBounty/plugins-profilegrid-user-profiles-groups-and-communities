@@ -97,7 +97,7 @@ endforeach;
     </form>
       
       <?php else:?>
-      <div class="pg-edit-profile-notice"><?php esc_html_e('There are no profile fields to edit. Profile fields are added by admin to individual User Groups.','profilegrid-user-profiles-groups-and-communities');?> <a href="<?php echo esc_url($pmrequests->profile_magic_get_frontend_url('pm_user_profile_page',site_url('/wp-login.php')));?>"><?php esc_html_e('Back to Profile','profilegrid-user-profiles-groups-and-communities');?></a></div>
+      <div class="pg-edit-profile-notice pg-alert-warning pg-alert-info"><?php esc_html_e('There are no profile fields to edit. Profile fields are added by admin to individual User Groups.','profilegrid-user-profiles-groups-and-communities');?> <a href="<?php echo esc_url($pmrequests->profile_magic_get_frontend_url('pm_user_profile_page',site_url('/wp-login.php')));?>"><?php esc_html_e('Back to Profile','profilegrid-user-profiles-groups-and-communities');?></a></div>
       <?php endif;?>
       <?php do_action('profilegrid_edit_user_after_field_html',$edit_uid);?>
   </div>

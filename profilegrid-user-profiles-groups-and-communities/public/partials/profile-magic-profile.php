@@ -155,7 +155,7 @@ if(isset($uid) && !empty($uid))
             $edit_uid = $pmrequests->pm_get_uid_from_profile_slug($edit_uid);
             $gids = maybe_unserialize($pmrequests->profile_magic_get_user_field_value($edit_uid,'pm_group'));
             $gid = $pmrequests->pg_filter_users_group_ids($gids);
-
+            $gid = apply_filters('pg_edit_profile_user_gids', $gid);
             if(!empty($gid))
             {
                 $gid_in = "gid in(".implode(',',$gid).")";

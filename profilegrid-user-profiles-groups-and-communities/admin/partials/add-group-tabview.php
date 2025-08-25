@@ -451,9 +451,7 @@ if ( $id==false || $id==null ) {
                     <li class="
                     <?php
                     if ( $tab=='basics' ) {
-						echo 'pg-active-tab';}
-					?>
-                    "><a href="admin.php?page=pm_add_group&id=<?php echo esc_attr( $id ); ?>&tab=basics"><?php esc_html_e( 'Basics', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></li>
+						echo 'pg-active-tab';}?>"><a href="admin.php?page=pm_add_group&id=<?php echo esc_attr( $id ); ?>&tab=basics"><?php esc_html_e( 'Basics', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></li>
                     <li class="
                     <?php
                     if ( $tab=='membership' ) {

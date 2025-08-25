@@ -515,7 +515,7 @@ endif;
             </div>
             <div class="modal-footer" style="padding:15px;">
                 
-                <input type="button" id="cancel-delete" class="pm-popup-close button " value="<?php esc_attr_e('Cancel', 'profilegrid-user-profiles-groups-and-communities'); ?> " />
+                <input type="button" id="cancel-delete" class="pm-popup-close button" value="&#8592; &nbsp;<?php esc_attr_e('Cancel', 'profilegrid-user-profiles-groups-and-communities'); ?> " />
                 <a href="" class='pm-delete-section-confirm-btn button button-primary'><?php esc_attr_e('Confirm', 'profilegrid-user-profiles-groups-and-communities'); ?></a>
             </div>
         </div>

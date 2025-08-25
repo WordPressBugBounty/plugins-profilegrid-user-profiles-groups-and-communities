@@ -758,7 +758,8 @@ class Profile_Magic_Admin {
 		$col = $dbhandler->get_global_option_value( 'pm_reg_form_cols', 1 );
 
 		$profile_pic                = ( is_object( $user ) ) ? get_user_meta( $uid, 'pm_user_avatar', true ) : false;
-		$groups                     = $dbhandler->get_all_result( 'GROUPS', array( 'id', 'group_name' ) );
+		$groups                     = $dbhandler->get_all_result( 'GROUPS', array( 'id', 'group_name' ), $where = 1, $result_type = 'results', $offset = 0, $limit = false, $sort_by = 'group_name', $descending = false );
+                
 				$pm_profile_privacy = $pmrequests->profile_magic_get_user_field_value( $uid, 'pm_profile_privacy' );
 				$pm_hide_my_profile = $pmrequests->profile_magic_get_user_field_value( $uid, 'pm_hide_my_profile' );
 		if ( empty( $pm_hide_my_profile ) ) {

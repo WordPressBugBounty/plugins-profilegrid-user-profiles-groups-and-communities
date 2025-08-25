@@ -2723,7 +2723,10 @@ class PM_HTML_Creator {
 	public function pm_get_user_blogs_shortcode_posts( $author, $post_type, $pagenum = 1, $limit = 10 ) {
 		$dbhandler  = new PM_DBhandler();
 		$pmrequests = new PM_request();
-
+                $limit = apply_filters('pg_blogs_limit_per_page', $limit);
+                $show_thumbnail = apply_filters('pg_blog_list_true_thumbnail', true);
+                $show_date_comments = apply_filters('pg_blog_list_show_date_comments', true);
+                $show_left_section = apply_filters('pg_blog_list_show_left_sections', true);
 		$offset = ( $pagenum - 1 ) * $limit;
 		$args   = array(
 			'orderby'        => 'date',
@@ -2759,30 +2762,35 @@ class PM_HTML_Creator {
 
 			while ( $query->have_posts() ) :
 				$query->the_post();
-                $comments_count = wp_count_comments();
-
+                                $comments_count = wp_count_comments();
+                                
 				?>
                     <div class="pm-blog-post-wrap pm-dbfl">
+                        <?php if(!empty($show_left_section)){?>
                         <div class="pm-blog-img-wrap pm-difl">
+                            <?php if(!empty($show_thumbnail)){?>
                             <div class="pm-blog-img pm-difl">
-							<?php
-							if ( has_post_thumbnail() ) {
-                                the_post_thumbnail( 'post-thumbnail' );
-							} else {
-								?>
+				<?php
+				if ( has_post_thumbnail() ) {
+                                    the_post_thumbnail( 'post-thumbnail' );
+				} else {?>
                                 <img src="<?php echo esc_url( $path ); ?>" alt="<?php the_title(); ?>" class="pm-user" />
                                 <?php } ?>
                             </div>
+                            <?php } ?>
+                            <?php if(!empty($show_date_comments)){?>
                             <div class="pm-blog-status pm-difl">
                                 <span class="pm-blog-time "><?php printf( esc_html_x( '%s ago', '%s = human-readable time difference', 'profilegrid-user-profiles-groups-and-communities' ), esc_html(human_time_diff( get_the_time( 'U' ), current_time( 'timestamp' ) ) )); ?></span>
                                 <span class="pm-blog-comment"><?php comments_number( esc_html__( 'no Comment', 'profilegrid-user-profiles-groups-and-communities' ), esc_html__( '1 Comment', 'profilegrid-user-profiles-groups-and-communities' ), esc_html__( '% Comments', 'profilegrid-user-profiles-groups-and-communities' ) ); ?></span>
                             </div>
+                            <?php } ?>
                         </div>
-
+                        <?php } ?>
                         <div class="pm-blog-desc-wrap pm-difl">
                             <div class="pm-blog-title">
                                 <a href="<?php the_permalink(); ?>"><span><?php the_title(); ?></span></a>
                             </div>
+                            <?php do_action('pg_user_blog_below_title',get_the_ID() );?>
                             <div class="pm-blog-desc">
                              <?php the_excerpt(); ?>
                             </div>

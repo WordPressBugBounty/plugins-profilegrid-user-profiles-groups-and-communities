@@ -75,7 +75,7 @@
     -moz-animation: pm-fadein .5s linear 1;
     -o-animation: pm-fadein .5s linear 1;
     margin-bottom: 20px;
-    display: inline-block;
+    display:inline-block;
     box-sizing: border-box
 }
 .pmagic a {
@@ -1391,6 +1391,7 @@ div.clearer {
     color: tomato;
     padding: 1em;
     font-size: 1em;
+    margin-bottom: 0px;
     display: none
 }
 .pm-popup-container img#avatar-edit-img {
@@ -1816,7 +1817,7 @@ div#pm_result_pane .pm-loader {
     width: 100%
 }
 .pm-group-view .pm-section .pm-section-content .pm-section-wrapper {
-    padding-left: 4%
+
 }
 .pmagic .pm_frontend_attachment .attachment_icon img {
     width: auto
@@ -3428,6 +3429,15 @@ div#pm_result_pane .pm-loader {
 .csscalc .theme-twentyfourteen .page .entry-content {
     box-sizing: content-box
 }
+
+.theme-twentytwentyfour .entry-content .pmagic{
+    display: inline-flex;
+}
+
+body.theme-blocksy .pmagic{
+    display: flex;
+}
+
 .pmagic .pm-login-box-bottom-container .pm-login-links-box {
     width: 100%;
     padding-bottom: 0
@@ -4160,6 +4170,11 @@ body.theme-twentytwenty-one .pmagic,
 body.theme-twentytwenty-two .pmagic:not(body.theme-twentytwenty-two .pmagic.pg-payment-modal){  
     display: inline-flex;
 }
+
+body.theme-twentytwenty-five .pmagic{
+     display: inline-flex;
+}
+
 body.theme-twentytwenty-one .pmagic{
     justify-content: center;
 }
@@ -4172,6 +4187,10 @@ body.theme-twentytwenty-one .pmagic .pm-users-search-page {
 body.theme-twentytwenty-three .pmagic .pmagic-form#pm_add_blog_post{
     max-width: 800px;
     margin: 0px auto;
+}
+
+.ast-single-post .entry-content .pmagic a{
+    text-decoration: none;
 }
 
 body.theme-twentytwenty-three .pmagic {
@@ -4218,4 +4237,20 @@ body.theme-twentytwenty-two .pmagic .pm-friend-action-bar button{
 
 .pm-group-image-link{
     display:block;
+}
+
+ /*The preview area that wraps #coverimage */
+ 
+#preview-cover-image {
+  position: relative;
+  width: 100%;
+  height: 300px;          
+  overflow: hidden;      
+}
+
+/* Optional: remove cropper gray bg tint entirely */
+
+#preview-cover-image .cropper-container,
+#preview-cover-image .cropper-bg {
+  background: transparent !important;
 }

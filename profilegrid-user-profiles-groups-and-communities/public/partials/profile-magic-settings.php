@@ -134,7 +134,7 @@ else
      
     <ul class="dbfl">
         <?php if($dbhandler->get_global_option_value('pm_show_account_details_settings','1')==1):?>
-        <li class="pm-dbfl pm-border-bt pm-pad10"><a class="pm-dbfl" href="#pg-edit-profile"><?php esc_html_e('Account Details','profilegrid-user-profiles-groups-and-communities');?></a></li>
+        <li class="pm-dbfl pm-border-bt pm-pad10"><a class="pm-dbfl active" href="#pg-edit-profile"><?php esc_html_e('Account Details','profilegrid-user-profiles-groups-and-communities');?></a></li>
         <?php endif;?>
         <?php if($dbhandler->get_global_option_value('pm_show_change_password','1')==1):?>
         <li class="pm-dbfl pm-border-bt pm-pad10"><a class="pm-dbfl" href="#pg-change-password"><?php esc_html_e('Change Password','profilegrid-user-profiles-groups-and-communities');?></a></li>

@@ -698,7 +698,6 @@ class Profile_Magic_Extensions {
             'path'          => 'profilegrid-user-profiles-groups-and-communities-profilegrid-turnstile-antispam-security/profilegrid-turnstile-antispam-security.php',
             'class'         => 'Profilegrid_F12_Integration',
         );
-
         return $list;
     }
 

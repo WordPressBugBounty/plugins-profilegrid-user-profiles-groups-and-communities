@@ -2216,7 +2216,7 @@ class PM_request {
 			<i class="fa fa-star" aria-hidden="true"></i>
 			<i class="fa fa-star" aria-hidden="true"></i>
 			<i class="fa fa-star" aria-hidden="true"></i>
-		</span><?php esc_html_e( ' Stars on ', 'profilegrid-user-profiles-groups-and-communities' ); ?><a target="_blank" href="https://wordpress.org/support/plugin/profilegrid-user-profiles-groups-and-communities/reviews/?rate=5#new-post"><?php esc_html_e( 'WordPress.org', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></p>
+		</span><?php esc_html_e( ' stars on ', 'profilegrid-user-profiles-groups-and-communities' ); ?><a target="_blank" href="https://wordpress.org/support/plugin/profilegrid-user-profiles-groups-and-communities/reviews/?rate=5#new-post"><?php esc_html_e( 'WordPress.org', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></p>
 	</div>
 	</div>
 

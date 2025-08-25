@@ -48,7 +48,7 @@ if((isset($include_blog) && $include_blog=="true") || (isset($wpblog) && $wpblog
 
 ?>
 <div class="pmagic">
-<div id="pg-user-blog" class="pm-difl test">
+<div id="pg-user-blog" class="pm-difl">
          
     <div id="pg-user-blog-container" class="pm-dbfl">
     <?php

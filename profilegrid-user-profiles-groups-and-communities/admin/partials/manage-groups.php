@@ -88,7 +88,7 @@ update_option( 'pg_redirect_to_group_page', '0' );
                               <ul>
                                   <li><a href="https://profilegrid.co/extensions/profilegrid-demo-content/?utm_source=pg_plugin&utm_medium=all_groups_top_bar&utm_campaign=demo_content_promo" target="_blank" class="pg-box-border pg-box-white-bg"><?php esc_html_e('Demo Content', 'profilegrid-user-profiles-groups-and-communities'); ?><span class="material-icons"> system_update_alt </span></a></li>
                                   
-                                  <li><a href="https://profilegrid.co/profilegrid-starter-guide" target="_blank" class="pg-box-border pg-box-white-bg"><?php esc_html_e('Starter Guide', 'profilegrid-user-profiles-groups-and-communities'); ?><span class="material-icons"> lightbulb_outline </span></a></li>
+                                  <!--<li><a href="https://profilegrid.co/profilegrid-starter-guide" target="_blank" class="pg-box-border pg-box-white-bg"><?php esc_html_e('Starter Guide', 'profilegrid-user-profiles-groups-and-communities'); ?><span class="material-icons"> lightbulb_outline </span></a></li>-->
                                   <!--<li><a href="https://profilegrid.co/translate-plugins-profilegrid/" target="_blank" class="pg-box-border pg-box-white-bg"><?php esc_html_e('Translate', 'profilegrid-user-profiles-groups-and-communities'); ?><span class="dashicons dashicons-translation"></span></a></li>-->
                                   <!--<li><a href="https://wordpress.org/support/plugin/profilegrid-user-profiles-groups-and-communities/reviews/?filter=5" target="_blank" class="pg-box-border pg-box-white-bg"><?php esc_html_e('Rate', 'profilegrid-user-profiles-groups-and-communities'); ?><span class="dashicons dashicons-star-filled"></span></a></li>-->
                               </ul> 
@@ -230,38 +230,33 @@ update_option( 'pg_redirect_to_group_page', '0' );
         
 <!-- Group Side banners -->        
 <?php  ?>
-<div class="pg-box-col pg-box-col-md-3">
+<div class="pg-box-col pg-box-col-md-3 pg-group-side-banner-col">
     <div class="pg-group-side-banner pg-box-border pg-box-white-bg">
-
-        <div class="pg-box-row pg-box-text-center">
-            <div class="pg-box-col-12">
-                <div class="pg-sidebanner-image">
-                    <img src="<?php echo esc_url($path . 'images/svg/pg-logo-icon.svg'); ?>">
-                </div>
-            </div>
-        </div>
 
         <div class="pg-box-row">
             <div class="pg-box-col-12">
                 <div class="pg-side-banner-wrap">
                     <div class="pg-side-banner-content">
                         <div class="pg-side-banner-text"></div>
-                        <div class="pg-side-banner-help-text"> <?php esc_html_e('Starter Guide', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
-                        <div class="pg-side-banner-text"><?php esc_html_e('8 minutes read', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
+                        <div class="pg-side-banner-help-text"> <?php esc_html_e('Getting Started?', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
+                        
 
-                        <p> <?php esc_html_e('Recommended read for quick and easy setup.', 'profilegrid-user-profiles-groups-and-communities'); ?>   <a target="_blank" href="https://profilegrid.co/profilegrid-starter-guide/" class=""> <?php esc_html_e('Start Here', 'profilegrid-user-profiles-groups-and-communities'); ?></a></p>
-
-<!--                        <div class="pg-side-banner-button">
-                            <a target="_blank" href="https://profilegrid.co/profilegrid-starter-guide/" class="pg-d-flex pg-box-center"> <?php esc_html_e('View Starter Guide', 'profilegrid-user-profiles-groups-and-communities'); ?> <span class="material-icons"> navigate_next </span></a>			
-                        </div>-->
+                        <p> <?php esc_html_e('Looking for quick answers? Check our Starter Guide or reach out to us directly.', 'profilegrid-user-profiles-groups-and-communities'); ?>   
+                        </p>
+                        <div class="pg-side-banner-buttons">
+                            <a target="_blank" href="https://profilegrid.co/profilegrid-starter-guide/?utm_source=plugin&utm_medium=helpbox" class="button button-primary"> <?php esc_html_e(' Starter Guide', 'profilegrid-user-profiles-groups-and-communities'); ?></a>
+                            <a target="_blank" href="https://wordpress.org/support/plugin/profilegrid-user-profiles-groups-and-communities/" class="button pg-banner-support-btn"> <?php esc_html_e('Create Support Ticket', 'profilegrid-user-profiles-groups-and-communities'); ?></a>
+                            </div>
 
                     </div>
-                    
+                </div>
+                
+                 <div class="pg-side-banner-wrap pg-customize-banner-main">
                         <div class="pg-side-banner-content pg-customize-banner">
                         <div class="pg-side-banner-text"></div>
                         <div class="pg-side-banner-help-text"> <?php esc_html_e('Custom Solution', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
-                        <p class="pg-customize-banner-content">Have us build the exact feature that you need.  <a target="_blank" href="https://profilegrid.co/help-support/customizations/" class=""> <?php esc_html_e('Contact here', 'profilegrid-user-profiles-groups-and-communities'); ?> </a>	</p>
-                         <div class="pg-side-banner-text"></div>
+                        <p class="pg-customize-banner-content">Have us build the exact feature that you need.  	</p>
+                         <a target="_blank" href="https://profilegrid.co/help-support/customizations/?utm_source=plugin&utm_medium=helpbox" class="button pg-banner-support-btn"> <?php esc_html_e('Contact Here', 'profilegrid-user-profiles-groups-and-communities'); ?> </a>
                
 
                     </div>
@@ -277,21 +272,21 @@ update_option( 'pg_redirect_to_group_page', '0' );
 
 
     </div>
+    
 
- <div class="pg-box-link-wrap" ><a href="https://wordpress.org/support/plugin/profilegrid-user-profiles-groups-and-communities/" target="_new" class="pg-support-link-tab">Create Support Ticket</a></div>
+
 </div>
    <?php ?> 
 <!-- Group Side banners End -->  
 
-
-
-    
     </div>
-    
- 
+
     <div class="pg-uim-notice-row pg-box-row">
         <div class="pg-box-col-12">
-            <div class="pg-uim-notice pg-box-w-100 pg-white-bg"><?php esc_html_e('Note: Groups are optional. If you do not wish to create multiple groups, you can use the default group for all user profiles and sign ups.', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
+            <div class="pg-uim-notice pg-box-w-100 pg-white-bg">
+                <strong><?php esc_html_e('Note:', 'profilegrid-user-profiles-groups-and-communities'); ?></strong>
+                <?php esc_html_e(' Groups are optional. If you do not wish to create multiple groups, you can use the default group for all user profiles and sign ups.', 'profilegrid-user-profiles-groups-and-communities'); ?>
+            </div>
         </div>
     </div>
     
@@ -306,7 +301,7 @@ update_option( 'pg_redirect_to_group_page', '0' );
                     <i class="fa fa-star" aria-hidden="true"></i>
                     <i class="fa fa-star" aria-hidden="true"></i>
                     <i class="fa fa-star" aria-hidden="true"></i>
-                </span>  <?php esc_html_e('Stars on', 'profilegrid-user-profiles-groups-and-communities'); ?> <a target="_blank" href="https://wordpress.org/support/plugin/profilegrid-user-profiles-groups-and-communities/reviews/?filter=5">WordPress.org</a></p>
+                </span>  <?php esc_html_e('stars on', 'profilegrid-user-profiles-groups-and-communities'); ?> <a target="_blank" href="https://wordpress.org/support/plugin/profilegrid-user-profiles-groups-and-communities/reviews/?filter=5">WordPress.org</a></p>
         </div>
     </div>
     
