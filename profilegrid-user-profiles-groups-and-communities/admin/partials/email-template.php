@@ -59,9 +59,9 @@ if ( filter_input( INPUT_POST, 'submit_tmpl' ) ) {
           <sup>*</sup></div>
         <div class="uiminput pm_required">
           <input type="text" name="tmpl_name" id="tmpl_name" value="<?php
-			if ( !empty( $row ) ) {
-				echo esc_attr( $row->tmpl_name );}
-			?>" />
+            if ( !empty( $row ) ) {
+                    echo esc_attr( $row->tmpl_name );}
+            ?>" />
           <div class="errortext"></div>
         </div>
         <div class="uimnote"><?php esc_html_e( 'Define a name for this template. Front-end user never sees this. Only for your reference.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
@@ -84,7 +84,7 @@ if ( filter_input( INPUT_POST, 'submit_tmpl' ) ) {
         <div class="uimfield">
           <?php esc_html_e( 'Email Template', 'profilegrid-user-profiles-groups-and-communities' ); ?>
         </div>
-        <div class="uiminput">
+        <div class="uiminput pg-add-email-template-body">
           <?php
 			if ( !empty( $row ) ) {
 				$email_body =  $row->email_body;

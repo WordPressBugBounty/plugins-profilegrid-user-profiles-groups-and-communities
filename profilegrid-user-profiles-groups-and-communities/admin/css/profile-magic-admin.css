@@ -3228,7 +3228,13 @@ tr.pm_import_row td:first-child {
     height: 35px;
 }
 
+form#pm_add_email_template .uiminput.pg-add-email-template-body select.pm_field_list.pg-insert-field-in-email{
+        width: 185px;
+}
 
+form#pm_add_email_template .uiminput.pg-add-email-template-body #wp-email_body-wrap{
+    width: 80%;
+}
 /*
  =======================
 |      Shortcodes       |

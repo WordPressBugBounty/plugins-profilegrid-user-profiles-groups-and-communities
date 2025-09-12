@@ -677,7 +677,7 @@ class Profile_Magic_Admin {
 		$dbhandler = new PM_DBhandler();
 		$exclude   = "and field_type not in('file','user_avatar','heading','paragraph','confirm_pass','user_pass','divider','spacing','birth_date','user_email')";
 		$groups    = $dbhandler->get_all_result( 'GROUPS' );
-		echo '<select name="pm_field_list" class="pm_field_list" onchange="pm_insert_field_in_email(this.value)">';
+		echo '<select name="pm_field_list" class="pm_field_list pg-insert-field-in-email" onchange="pm_insert_field_in_email(this.value)">';
 		echo '<option>' . esc_html__( 'Select A Field', 'profilegrid-user-profiles-groups-and-communities' ) . '</option>';
 		echo '<optgroup label="' . esc_attr__( 'Common Fields', 'profilegrid-user-profiles-groups-and-communities' ) . '" >';
 		echo '<option value="{{user_login}}">' . esc_html__( 'User Name', 'profilegrid-user-profiles-groups-and-communities' ) . '</option>';
