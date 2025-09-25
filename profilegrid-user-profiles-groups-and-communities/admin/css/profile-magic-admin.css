@@ -5027,6 +5027,15 @@ button.pg_pr_action:focus{
     padding-right: 6px;
 }
 
+.pg-escblock-wrap .pg-escsubblock .pg-scblock.pg-sc-parameters-row ul ol{
+    margin: 0px;
+    padding: 0px 12px;
+}
+
+.pg-escblock-wrap .pg-escsubblock .pg-scblock.pg-sc-parameters-row ul ol li:before{
+  color: #dfdfdf;
+}
+
 .pg-scblock-pg-logo {
     margin-top: 20px;
     float: left;

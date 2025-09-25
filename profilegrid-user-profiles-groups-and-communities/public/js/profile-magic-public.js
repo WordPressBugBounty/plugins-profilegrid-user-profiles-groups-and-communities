@@ -199,8 +199,7 @@ function validate_google_url(val)
 }
 
 function validate_linked_in_url(val)
-{
-    if (val != '') {
+{   if (val != '') {
         if (/(ftp|http|https):\/\/?((www|\w\w)\.)?linkedin.com(\w+:{0,1}\w*@)?(\S+)(:([0-9])+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i.test(val)) {
             return true;
         } else {
@@ -1755,3 +1754,23 @@ var parent = jQuery('ul.pm-profile-tab-wrap');
  
  jQuery('#pg-groups').css("display","block");
 }
+
+jQuery(document).ready(function() {
+    jQuery('.pm_linked_in_url, .pm_twitter_url, .pm_youtube_url, .pm_soundcloud_url, .pm_mixcloud_url, .pm_instagram_url, .pm_google_url').each(function(index, element) {
+        var $wrapper = jQuery(element);
+        var $input = $wrapper.find('input');
+
+        $input.on('blur', function() {
+            var val = jQuery(this).val().trim();
+            // Simple URL check: contains at least one dot and no spaces
+            var urlPattern = /^[^\s]+\.[^\s]+$/; // rough check for URL
+            if (val && urlPattern.test(val)) {
+                // Prepend https:// if missing
+                if (!/^https?:\/\//i.test(val)) {
+                    jQuery(this).val('https://' + val);
+                }
+            }
+        });
+    });
+});
+

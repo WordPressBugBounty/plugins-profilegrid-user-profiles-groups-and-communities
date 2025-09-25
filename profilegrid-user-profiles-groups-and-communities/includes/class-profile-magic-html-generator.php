@@ -341,6 +341,11 @@ class PM_HTML_Creator {
                             switch ( $field->field_type ) {
                                 case 'youtube':
                                     preg_match( '%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})%i', $value, $match );
+                                    if(!is_array($match) || !isset($match[1])){
+                                    	$html = '<div class="pm-card-value pm-difl pm_collapsable_' . esc_attr($field->field_type).'"><a href="'. esc_url( $value ).'" target="_blank">'.wp_kses_post( $value ).'</a></div>';
+                                    	echo wp_kses_post(apply_filters('pm_field_card__link_value_html_filter',$html,$uid,$field->field_type,$value,$field));
+	                                    break;
+                                    }
                                     $youtube_id = $match[1];
 									?>
                                     

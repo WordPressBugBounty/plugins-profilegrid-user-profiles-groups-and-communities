@@ -728,7 +728,7 @@ wp_enqueue_style( 'pg-google-fonts', 'https://fonts.googleapis.com/icon?family=M
 						<li>gid (Group IDs) <i>optional</i></li>
 						<li>Ex_uid (Exclude User IDs) <i>optional</i></li>
 						<li>time (Time Period) <i>optional</i>
-							<ul>
+							<ol>
 								<li>this_year</li>
 								<li>this_month</li>
 								<li>this_week</li>
@@ -736,16 +736,16 @@ wp_enqueue_style( 'pg-google-fonts', 'https://fonts.googleapis.com/icon?family=M
 								<li>yesterday</li>
 								<li>today</li>
 								
-							</ul>
+							</ol>
 						</li>
 						
-					  <li>Info (Information Popup)<i>optional</i>
-						<ul>
-								<li>show</li> 
-								 <li>hide</li> 
-							</ul>
+                                                <li>Info (Information Popup) <i>optional</i>
+                                                    <ol>
+                                                        <li>show</li> 
+                                                        <li>hide</li> 
+                                                    </ol>
 					   
-					  </li>
+                                                </li>
 					</ul>
 				</div>
 			</div>
