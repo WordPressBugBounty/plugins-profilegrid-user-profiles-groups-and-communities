@@ -134,12 +134,13 @@ if($dbhandler->get_global_option_value('pm_enable_private_profile')=='1')
     {
        $requested_options = maybe_unserialize($requested[0]->options);
        echo '<div class="pm-dbfl pm-pad10"><div class="pg-alert-warning pg-alert-info">';
-       esc_html_e(sprintf('You sent membership request to join this Group on %s',$requested_options['request_date']),'profilegrid-user-profiles-groups-and-communities'); ?>
+       /* translators: %s: Request date. */
+       printf( esc_html__( 'You sent membership request to join this Group on %s', 'profilegrid-user-profiles-groups-and-communities' ), esc_html( $requested_options['request_date'] ) ); ?>
     <?php if(!empty($leaders)):
         if(isset($leaders['primary'])){$group_admin_id = $leaders['primary'];}else{$group_admin_id = $leaders[0];}
         ?>
     <br />
-    <a onclick="pg_edit_blog_popup('member','message','<?php echo esc_attr($group_admin_id);?>','<?php echo esc_attr($gid);?>')"><?php echo sprintf(esc_html__("Send a message to %s","profilegrid-user-profiles-groups-and-communities"),wp_kses_post($pmrequests->pm_get_group_admin_label($gid)));?></a>
+    <a onclick="pg_edit_blog_popup('member','message','<?php echo esc_attr($group_admin_id);?>','<?php echo esc_attr($gid);?>')"><?php /* translators: %s: Group admin label. */ echo sprintf( esc_html__( 'Send a message to %s', 'profilegrid-user-profiles-groups-and-communities' ), wp_kses_post( $pmrequests->pm_get_group_admin_label( $gid ) ) );?></a>
            <?php
            endif;
        echo '</div></div>';

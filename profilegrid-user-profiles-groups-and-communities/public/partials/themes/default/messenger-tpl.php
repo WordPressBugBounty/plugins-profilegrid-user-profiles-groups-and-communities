@@ -27,7 +27,10 @@ $pmrequests = new PM_request;
 
                 <div class="pm-section-right-panel pm-section-content pm-difl pm_full_width_profile"  style="max-width: 550px;float:right;">
                     <div id="typing_on"></div>
-                    <?php wp_nonce_field('pg_send_new_message'); ?>
+                    <?php
+                    $basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+                    $basic_function->pm_render_nonce_field( 'pg_send_new_message' ); 
+                     ?>
                     <input type="hidden" name="action" value='pm_messenger_send_new_message' /> 
                     <input type="hidden" id="thread_hidden_field" name="tid" value=""/>
                     <textarea id="messenger_textarea" name="content" style="width:80%;height:100px;"

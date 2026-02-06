@@ -75,6 +75,7 @@ class Profile_Magic {
 				$this->define_global_hooks();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
+		$this->define_rest_api_hooks();
 		$this->define_access_hooks();
 				$this->define_notification_hooks();
 		$this->define_smtp_connection();
@@ -142,6 +143,7 @@ class Profile_Magic {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-profile-magic-admin.php';
 
 				require_once plugin_dir_path( dirname( __FILE__ ) ) . 'blocks/class-profile-magic-block.php';
+				require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-profile-magic-rest-api.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the public-facing
@@ -352,6 +354,7 @@ class Profile_Magic {
 				$this->loader->add_action( 'wp_ajax_pm_autocomplete_user_search', $plugin_public, 'pm_autocomplete_user_search' );
 				$this->loader->add_action( 'wp_ajax_pm_messenger_delete_threads', $plugin_public, 'pm_messenger_delete_threads' );
 				$this->loader->add_action( 'wp_ajax_pm_messenger_notification_extra_data', $plugin_public, 'pm_messenger_notification_extra_data' );
+				$this->loader->add_action( 'wp_ajax_pm_unread_message_summary', $plugin_public, 'pm_unread_message_summary' );
 				$this->loader->add_action( 'init', $plugin_public, 'pg_create_post_type' );
 				$this->loader->add_action( 'wp_ajax_pm_load_pg_blogs', $plugin_public, 'pm_load_pg_blogs' );
 				$this->loader->add_action( 'wp_ajax_pm_load_user_blogs_shortcode_posts', $plugin_public, 'pm_load_user_blogs_shortcode_posts' );
@@ -368,6 +371,7 @@ class Profile_Magic {
 				$this->loader->add_action( 'wp_ajax_pg_show_msg_panel', $plugin_public, 'pg_show_msg_panel' );
 				$this->loader->add_action( 'wp_ajax_pg_delete_msg', $plugin_public, 'pg_delete_msg' );
 				$this->loader->add_action( 'wp_ajax_pm_messenger_delete_threads_popup', $plugin_public, 'pg_msg_delete_thread_popup_html' );
+				$this->loader->add_action( 'wp_ajax_pm_dismiss_unread_message_toast', $plugin_public, 'pm_dismiss_unread_message_toast' );
 
 				$this->loader->add_action( 'profile_magic_profile_tab', $plugin_public, 'pm_right_side_options', 10, 2 );
 
@@ -410,6 +414,7 @@ class Profile_Magic {
 				$this->loader->add_action( 'init', $plugin_public, 'pg_set_toolbar', 100 );
 				$this->loader->add_filter( 'get_comment_author_link', $plugin_public, 'pg_comment_link_to_profile', 999999999, 3 );
 				$this->loader->add_action( 'wp_ajax_pm_remove_attachment', $plugin_public, 'pm_remove_file_attachment' );
+				$this->loader->add_action( 'wp_footer', $plugin_public, 'pg_unread_message_toast_html' );
 
 				$this->loader->add_action( 'wp_ajax_pm_edit_group_popup_html', $plugin_public, 'pm_edit_group_popup_html' );
 				$this->loader->add_action( 'wp_ajax_pm_save_post_status', $plugin_public, 'pm_save_post_status' );
@@ -442,7 +447,7 @@ class Profile_Magic {
 
 				$this->loader->add_action( 'rm_submission_completed', $plugin_public, 'profile_magic_rm_form_submission', 10, 3 );
 				$this->loader->add_action( 'rm_payment_completed', $plugin_public, 'profile_magic_rm_form_submission_payment_completed', 10, 3 );
-                                $this->loader->add_action( 'profile_magic_profile_settings_tab', $plugin_public, 'pg_rm_registration_tab', 10, 2 );
+				$this->loader->add_action( 'profile_magic_profile_settings_tab', $plugin_public, 'pg_rm_registration_tab', 10, 2 );
                                 $this->loader->add_action( 'rm_payment_completed', $plugin_public, 'profile_magic_rm_form_submission_payment_completed', 10, 3 );
 				$this->loader->add_action( 'profile_magic_profile_settings_tab', $plugin_public, 'pg_rm_registration_tab', 10, 2 );
 				$this->loader->add_action( 'profile_magic_profile_settings_tab_content', $plugin_public, 'pg_rm_registration_tab_content', 10, 2 );
@@ -456,11 +461,13 @@ class Profile_Magic {
 				$this->loader->add_action( 'profile_magic_profile_settings_tab_content', $plugin_public, 'pg_rm_downloads_tab_content', 10, 2 );
 				$this->loader->add_action( 'profile_magic_profile_settings_tab', $plugin_public, 'pg_rm_addresses_tab', 10, 2 );
 				$this->loader->add_action( 'profile_magic_profile_settings_tab_content', $plugin_public, 'pg_rm_addresses_tab_content', 10, 2 );
+				$this->loader->add_action( 'profile_magic_profile_settings_tab', $plugin_public, 'pg_group_membership_settings_tab', 10, 2 );
+				$this->loader->add_action( 'profile_magic_profile_settings_tab_content', $plugin_public, 'pg_group_membership_settings_tab_content', 10, 2 );
 				$this->loader->add_filter( 'lostpassword_url', $plugin_public, 'pg_forget_password_page', 10000000000000000, 2 );
 				$this->loader->add_action( 'pm_send_message_notification', $plugin_public, 'pm_send_message_notification', 10, 2 );
 				$this->loader->add_filter( 'profile_magic_get_frontend_url', $plugin_public, 'pg_get_group_page_link', 10, 3 );
 				$this->loader->add_filter( 'rm_profile_image', $plugin_public, 'pgrm_profile_image_url', 10, 2 );
-                                $this->loader->add_action( 'pg_user_leave_group', $plugin_public, 'pg_send_notification_on_leave_group', 10, 2 );
+				$this->loader->add_action( 'pg_user_leave_group', $plugin_public, 'pg_send_notification_on_leave_group', 10, 2 );
 				$this->loader->add_action( 'profile_magic_profile_tabs', $plugin_public, 'profile_magic_profile_tabs', 10, 3 );
 				$this->loader->add_action( 'profile_magic_profile_tab_content_pg-about', $plugin_public, 'pm_profile_about_tab_content', 10, 5 );
 				$this->loader->add_action( 'profile_magic_profile_tab_content_pg-groups', $plugin_public, 'pm_profile_groups_tab_content', 10, 5 );
@@ -472,10 +479,19 @@ class Profile_Magic {
 				$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'pg_merge_all_scripts_header', 99999999999 );
 				$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'pg_merge_all_scripts_footer', 99999999999999 );
 				$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'pg_merge_all_css_footer', 9999999999999999 );
+				$this->loader->add_action( 'profilegrid_payment_complete', $plugin_public, 'pg_log_payment_complete', 10, 2 );
+				$this->loader->add_action( 'woo_wallet_payment_processed', $plugin_public, 'pg_log_woo_wallet_payment', 10, 2 );
+				$this->loader->add_action( 'woocommerce_payment_complete', $plugin_public, 'pg_log_mycred_payment', 10, 1 );
                                 $this->loader->add_filter('pm_get_all_groups_data_additional', $plugin_public, 'pg_filter_hide_groups_on_group_card',99999,1);
                                 $this->loader->add_filter('body_class', $plugin_public,'add_theme_class_to_body',999999,1);
                                 $this->loader->add_filter('comment_form_defaults',$plugin_public, 'pm_change_comment_form_edit_profile_link',99999,1);
 
+	}
+	
+		private function define_rest_api_hooks() {
+		$plugin_rest_api = new Profile_Magic_Rest_API( $this->get_profile_magic(), $this->get_version() );
+		$this->loader->add_action( 'rest_api_init', $plugin_rest_api, 'register_routes' );
+		$this->loader->add_action( 'admin_menu', $plugin_rest_api, 'register_settings_page', 20 );
 	}
 
 	/**

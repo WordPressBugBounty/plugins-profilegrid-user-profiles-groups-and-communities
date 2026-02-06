@@ -34,7 +34,7 @@ if(!isset($gid) || empty($gid))
 }
 $current_user = wp_get_current_user();
 $row = $dbhandler->get_row('GROUPS',$gid);
-$pmgroupoption = maybe_unserialize($row->group_options);
+$pmgroupoption = isset($row->group_options) ? maybe_unserialize($row->group_options) : array();
 $is_require_admin_approval = $dbhandler->get_global_option_value('pm_group_update_require_admin_approval',0);
 $request_obj = $pm_sanitizer->sanitize($_REQUEST);
 if(isset($request_obj["action"]) && $request_obj["action"]!='process')
@@ -114,7 +114,7 @@ if(isset($_POST['edit_group']))
             $post = $pmrequests->sanitize_request($_POST,$identifier,$exclude);
             if(isset($_FILES['group_icon'])){
                 $filefield = $_FILES['group_icon'];
-                $allowed_ext ='jpg|jpeg|png|gif';
+                $allowed_ext ='jpg|jpeg|png|gif|webp|avif';
                 if(isset($filefield) && !empty($filefield))
                 {
                         $attachment_id = $pmrequests->make_upload_and_get_attached_id($filefield,$allowed_ext);
@@ -158,7 +158,14 @@ if(isset($_POST['pg_join_group']))
     $is_paid_group = $pmrequests->profile_magic_check_paid_group($pg_join_gid);
     if($is_paid_group>0)
     {
-        $html_creator->pg_join_paid_group_html($pg_join_gid, $pg_uid);
+        $message = apply_filters( 'profile_magic_check_payment_config','');
+            if($message == 'disabled')
+            {
+                esc_html_e('Payment system is not configured to accept payments. Please configure at least one payment processor for this to work.','profilegrid-user-profiles-groups-and-communities');
+            }else{
+                $html_creator->pg_join_paid_group_html($pg_join_gid, $pg_uid);
+            }
+        
     }
     else
     {

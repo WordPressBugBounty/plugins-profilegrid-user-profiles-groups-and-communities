@@ -124,6 +124,7 @@ class Profile_Magic_access_options {
 								$group_name = $groupinfo->group_name;
 							} else {
 								$group_name = '';}
+							// translators: 1: group page URL, 2: group name.
 							$err          = __( 'Only members of <a href="%1$s" target="_blank">%2$s</a> group can view this page.', 'profilegrid-user-profiles-groups-and-communities' );
 								 $error   =  sprintf( $err, $group_page_link, $group_name );
 								 $content = $this->profile_magic_content_access_message( $error );
@@ -144,6 +145,7 @@ class Profile_Magic_access_options {
 
 							$author_profile_url = $pmrequests->pm_get_user_profile_url( $author_id );
 							$author_name        = $pmrequests->pm_get_display_name( $author_id );
+							// translators: 1: profile URL, 2: display name.
 							$err                = __( 'Only those members who are friends of <a href="%1$s" target="_blank">%2$s</a> can view this page.', 'profilegrid-user-profiles-groups-and-communities' );
 							$error              =  sprintf( $err, $author_profile_url, $author_name );
 							$content            = $this->profile_magic_content_access_message( $error );
@@ -162,6 +164,7 @@ class Profile_Magic_access_options {
 
                                             $author_profile_url = $pmrequests->pm_get_user_profile_url( $author_id );
                                             $author_name        = $pmrequests->pm_get_display_name( $author_id );
+                                            // translators: 1: profile URL, 2: display name.
                                             $err                = __( 'This content is restricted. Please contact <a href="%1$s" target="_blank">%2$s</a> for more details.', 'profilegrid-user-profiles-groups-and-communities' );
                                             $error              =  sprintf( $err, $author_profile_url, $author_name );
                                             $content            = $this->profile_magic_content_access_message( $error );
@@ -207,6 +210,7 @@ class Profile_Magic_access_options {
 							$string = $string . '<a href="' . $group_page_link . '" target="_blank">' . $group_name . '</a>, ';
 						}
 
+									// translators: %s: list of group links.
 									$err    = __( 'Only members of %s group(s) can view this page.', 'profilegrid-user-profiles-groups-and-communities' );
 									$string = rtrim( $string, ', ' );
 									$error  =  sprintf( $err, $string );

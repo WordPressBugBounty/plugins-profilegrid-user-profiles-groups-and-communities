@@ -243,10 +243,12 @@ class PM_Emails {
 		$headers           .= 'From:' . $from_email_address . "\r\n";
 		$user_email         = $email_id;
 		$group_name         = $dbhandler->get_value( 'GROUPS', 'group_name', $gid );
+		// translators: %s: group name.
 		$subject            = sprintf( __( 'Invitation to Join Group - %s', 'profilegrid-user-profiles-groups-and-communities' ), $group_name );
 		$registration_url   = $pmrequests->profile_magic_get_frontend_url( 'pm_registration_page', '' );
 		$registration_url   = add_query_arg( 'gid', $gid, $registration_url );
 		$group_admin_label  = $pmrequests->pm_get_group_admin_label( $gid );
+		// translators: 1: group admin label, 2: group name, 3: registration URL.
 		$message            = sprintf( __( 'Hello,<br /><br />You have been invited by a %1$s to join group %2$s. Please visit this link to sign up:<br /><br /> %3$s <br /><br /> Regards.', 'profilegrid-user-profiles-groups-and-communities' ), $group_admin_label, $group_name, $registration_url );
 		$subject = apply_filters('pm_send_invite_group_email_subject', $subject,$gid);
                 $message = apply_filters('pm_send_invite_group_email_content', $message,$gid);

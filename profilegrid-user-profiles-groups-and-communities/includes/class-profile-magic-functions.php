@@ -764,6 +764,39 @@ class Profile_Magic_Basic_Functions {
         }
     }
 
+    /**
+     * Wrapper over wp_nonce_field() for templates.
+     *
+     * @param string $action Nonce action.
+     * @param string $name   Optional nonce field name.
+     */
+    public function pm_render_nonce_field( $action, $name = '' ) {
+        $field_name = ! empty( $name ) ? $name : '_wpnonce';
+        $nonce      = wp_create_nonce( $action );
+        echo '<input type="hidden" name="' . esc_attr( $field_name ) . '" value="' . esc_attr( $nonce ) . '" />';
+    }
+
+    /**
+     * Check if a user is a manager/leader for a group.
+     *
+     * @param int $user_id User ID being checked.
+     * @param int $gid     Group ID.
+     * @return bool
+     */
+    public function pm_user_is_group_manager( $user_id, $gid ) {
+        $user_id = absint( $user_id );
+        $gid     = absint( $gid );
+        if ( 0 === $user_id || 0 === $gid ) {
+            return false;
+        }
+
+        $pmrequests = new PM_request();
+        $is_leader  = $pmrequests->pg_check_in_single_group_is_user_group_leader( $user_id, $gid );
+
+        return (bool) apply_filters( 'pm_user_is_group_manager', $is_leader, $user_id, $gid );
+    }
+
 
 
 }
+

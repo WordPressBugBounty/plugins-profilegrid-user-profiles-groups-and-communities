@@ -2377,6 +2377,7 @@ span.smtp_success {
         float: left;
         border-radius: 0px;
         padding: 20px;
+        line-height: 0px;
     }
     .uimagic .cancel {
         display: none;
@@ -3699,90 +3700,67 @@ body.toplevel_page_pm_manage_groups #dolly {
 }*/
 
 
-#toplevel_page_pm_manage_groups ul li:nth-child(2) a::before {
+#toplevel_page_pm_manage_groups ul li a[href*="page=pm_manage_groups"]::before {
     font-family: dashicons;
     content: "\f307";
     vertical-align: text-top;
     margin-right: 5px;
 }
 
-#toplevel_page_pm_manage_groups ul li:nth-child(3) a::before {
+#toplevel_page_pm_manage_groups ul li a[href*="page=pm_user_manager"]::before {
     font-family: dashicons;
     content: "\f110";
     vertical-align: text-top;
     margin-right: 5px;
 }
 
-#toplevel_page_pm_manage_groups ul li:nth-child(4) a::before {
+#toplevel_page_pm_manage_groups ul li a[href*="page=pm_requests_manager"]::before {
     font-family: dashicons;
     content: "\f16d";
     vertical-align: text-top;
     margin-right: 5px;
 }
 
-#toplevel_page_pm_manage_groups ul li:nth-child(5) a::before {
+#toplevel_page_pm_manage_groups ul li a[href*="page=pm_email_templates"]::before {
     font-family: dashicons;
     content: "\f465";
     vertical-align: text-top;
     margin-right: 5px;
 }
 
-#toplevel_page_pm_manage_groups ul li:nth-child(6) a::before {
+#toplevel_page_pm_manage_groups ul li a[href*="page=pm_group_membership_payments"]::before {
+    font-family: dashicons;
+    content: "\f174";
+    vertical-align: text-top;
+    margin-right: 5px;
+}
+
+#toplevel_page_pm_manage_groups ul li a[href*="page=pm_shortcodes"]::before {
     font-family: dashicons;
     content: "\f150";
     vertical-align: text-top;
     margin-right: 5px;
 }
 
-#toplevel_page_pm_manage_groups ul li:nth-child(7) a::before {
+#toplevel_page_pm_manage_groups ul li a[href*="page=pm_settings"]::before {
     font-family: dashicons;
     content: "\f111";
     vertical-align: text-top;
     margin-right: 5px;
 }
-#toplevel_page_pm_manage_groups ul li:nth-child(8) a::before {
+
+#toplevel_page_pm_manage_groups ul li a[href*="page=pm_api_settings"]::before {
     font-family: dashicons;
-    content: "\f106";
+    content: "\f540";
     vertical-align: text-top;
     margin-right: 5px;
 }
 
-#toplevel_page_pm_manage_groups ul li:nth-child(9) a::before {
+#toplevel_page_pm_manage_groups ul li a[href*="page=pm_extensions"]::before {
     font-family: dashicons;
     content: "\f106";
     vertical-align: text-top;
     margin-right: 5px;
-}
-
-#toplevel_page_pm_manage_groups ul li:nth-child(10) a::before {
-    font-family: dashicons;
-    content: "\f106";
-    vertical-align: text-top;
-    margin-right: 5px;
-}
-
-#toplevel_page_pm_manage_groups ul li:nth-child(11) a::before {
-    font-family: dashicons;
-    content: "\f106";
-    vertical-align: text-top;
-    margin-right: 5px;
-}
-
-#toplevel_page_pm_manage_groups ul li:nth-child(12) a::before {
-    font-family: dashicons;
-    content: "\f106";
-    vertical-align: text-top;
-    margin-right: 5px;
-}
-
-
-
-#toplevel_page_pm_manage_groups ul li:nth-last-child(1) a::before{
-    font-family: dashicons;
-    content: "\f106";
-    vertical-align: text-top;
-    margin-right: 5px;
-
 }
 
 /*#toplevel_page_pm_manage_groups ul li:nth-child(8) a::before {
@@ -5166,8 +5144,8 @@ button.pg_pr_action:focus{
     background: #fff;
 }
 .pm-setting-wrapper .pm_settings_option .uimrow {
-    width: 250px;
-    flex-basis: 250px;
+    width: 270px;
+    flex-basis: 270px;
     flex-grow: 1;
     max-width: 300px;
 }

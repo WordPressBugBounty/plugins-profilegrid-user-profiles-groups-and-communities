@@ -13,6 +13,13 @@ class PM_HTML_Creator {
 	private $version;
 
 	/**
+	 * Basic functions helper.
+	 *
+	 * @var Profile_Magic_Basic_Functions
+	 */
+	private $basic_functions;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -23,6 +30,7 @@ class PM_HTML_Creator {
 
 		$this->profile_magic = $profile_magic;
 		$this->version       = $version;
+		$this->basic_functions = new Profile_Magic_Basic_Functions( $profile_magic, $version );
 
 	}
 
@@ -425,6 +433,11 @@ class PM_HTML_Creator {
                                     $html = '<div class="pm-card-value pm-difl pm_collapsable_' . esc_attr($field->field_type).'">'. esc_html__('Yes','profilegrid-user-profiles-groups-and-communities').'</div>';
                                     echo wp_kses_post($html);
                                     break;
+                                case 'description':
+                                    $formatted = wpautop( $value );
+                                    $html = '<div class="pm-card-value pm-difl pm_collapsable_' . esc_attr($field->field_type).'">' . wp_kses_post( $formatted ) . '</div>';
+                                    echo wp_kses_post( apply_filters( 'pm_field_card_value_html_filter', $html, $uid, $field->field_type, $value, $field ) );
+                                    break;
                                 default:
                                     $html = '<div class="pm-card-value pm-difl pm_collapsable_' . esc_attr($field->field_type).'">'.wp_kses_post( $value ).'</div>';
                                     echo wp_kses_post(apply_filters('pm_field_card_value_html_filter',$html,$uid,$field->field_type,$value,$field));
@@ -528,6 +541,7 @@ class PM_HTML_Creator {
 								?>
                             <div class="pm-blog-status pm-difl">
                                <?php if ( $dbhandler->get_global_option_value( 'pm_show_user_blog_post_time', '1' )=='1' ) : ?>
+                                <?php // translators: %s: human readable time difference. ?>
                                 <span class="pm-blog-time "><?php printf( esc_html_x( '%s ago', '%s = human-readable time difference', 'profilegrid-user-profiles-groups-and-communities' ), esc_html(human_time_diff( get_the_time( 'U' ), current_time( 'timestamp' ) )) ); ?></span>
                                <?php endif; ?>
                                 <?php if ( $dbhandler->get_global_option_value( 'pm_show_user_blog_post_comment_count', '1' )=='1' ) : ?>
@@ -575,6 +589,8 @@ class PM_HTML_Creator {
 				 echo '</div>';
 			 } else {
 				 echo "<div class='pg-alert-warning pg-alert-info'>";
+				 // translators: %s: display name.
+				 /* translators: %s: Display name. */
 				 echo sprintf( esc_html__( 'Sorry, %s has not made any blog posts yet.', 'profilegrid-user-profiles-groups-and-communities' ), wp_kses_post($displayname) );
 				 echo '</div>';
 			 }
@@ -647,7 +663,7 @@ class PM_HTML_Creator {
                 <div id="typing_on"  class="pm-user-description-row pm-dbfl pm-border"><div class="pm-typing-inner"><img height="9px" width="40px" src="<?php echo esc_url( $path ); ?>"/></div></div>
              
                 <div class="pm-dbfl pm-chat-messenger-box">
-				<?php wp_nonce_field( 'pg_send_new_message' ); ?>
+				<?php $this->basic_functions->pm_render_nonce_field( 'pg_send_new_message' ); ?>
                       <input type="hidden" name="action" value='pm_messenger_send_new_message' /> 
                     <input type="hidden" id="thread_hidden_field" name="tid" value=""/>
                     <div class="emoji-container">
@@ -767,6 +783,7 @@ class PM_HTML_Creator {
 					//$error = __( '<div class="pg-alert-warning pg-alert-info">You do not have any friends yet. You can add friends by sending friendship requests to people from their user profiles.</div> ', 'profilegrid-user-profiles-groups-and-communities' );
 				} else {
 					$display_name = $pmrequests->pm_get_display_name( $uid );
+					/* translators: %s: Display name. */
 					$error        = '<span class="pg-alert-warning pg-alert-info">'. sprintf( __( '%s does not have any friends yet.', 'profilegrid-user-profiles-groups-and-communities' ), $display_name ).'</span>';
 				}
 				break;
@@ -865,11 +882,11 @@ class PM_HTML_Creator {
                            <div class="pmradio">
                                <div class="pm-radio-option">
                                    <input type="radio" name="pm_blog_select_type" id="pm_blog_select_type" value="this_page" checked="checked">
-							<?php esc_html_e( sprintf( 'Select blogs on this page(%s)', $single ), 'profilegrid-user-profiles-groups-and-communities' ); ?>
+							<?php /* translators: %s: Number of blogs on current page. */ printf( esc_html__( 'Select blogs on this page(%s)', 'profilegrid-user-profiles-groups-and-communities' ), esc_html( $single ) ); ?>
                                </div>
                                 <div class="pm-radio-option">
                                 <input type="radio" name="pm_blog_select_type" id="pm_blog_select_type" value="all">
-							<?php esc_html_e( sprintf( 'Select All(%s)', $total ), 'profilegrid-user-profiles-groups-and-communities' ); ?>                
+							<?php /* translators: %s: Total number of blogs. */ printf( esc_html__( 'Select All(%s)', 'profilegrid-user-profiles-groups-and-communities' ), esc_html( $total ) ); ?>                
                                 </div>
                                
                             </div>
@@ -924,9 +941,9 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pg_submit_post_status()"><?php esc_html_e( 'Update', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a onclick="pg_edit_popup_close()" class="pm-remove"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_save_post_status" />
+            <input type="hidden" name="action" value="pm_save_post_status" />
             <input type="hidden" name="pg_action" id="pg_action" value="pm_save_post_status" />
-		 <?php wp_nonce_field( 'save_pm_post_status' ); ?>
+		 <?php $this->basic_functions->pm_render_nonce_field( 'save_pm_post_status' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $post_id ); ?>" />
         </form>
             <?php
@@ -936,10 +953,12 @@ class PM_HTML_Creator {
 		$path =  plugins_url( '../public/partials/images/popup-close.png', __FILE__ );
 		if ( is_array( $post_status ) ) {
 			$title   = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
-			$content = __( sprintf( 'Status of<b> %d</b> blog post(s) was changed successfully.', $post_status['count'] ), 'profilegrid-user-profiles-groups-and-communities' );
+			/* translators: %d: Number of blog posts. */
+			$content = sprintf( __( 'Status of<b> %d</b> blog post(s) was changed successfully.', 'profilegrid-user-profiles-groups-and-communities' ), $post_status['count'] );
 		} else {
             ( $post_status=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
-			$content                          = __( sprintf( 'The status of post was successfully changed to %s ', $post_status ), 'profilegrid-user-profiles-groups-and-communities' );
+			/* translators: %s: New post status. */
+			$content                          = sprintf( __( 'The status of post was successfully changed to %s ', 'profilegrid-user-profiles-groups-and-communities' ), $post_status );
 		}
 		?>
             <div class="pm-popup-title pm-dbfl pm-bg-lt pm-pad10 pm-border-bt">
@@ -998,22 +1017,22 @@ class PM_HTML_Creator {
                         <div class="pm-field-input">
                <div class="pmradio">
                    <div class="pm-radio-option">
-                    <input type="radio" name="pm_content_access" id="pm_content_access-rtest" value="1" <?php checked( '1', $pm_content_access ); ?>/>
-                    <label> <?php esc_html_e( 'Public', 'profilegrid-user-profiles-groups-and-communities' ); ?></label>
+                    <input type="radio" name="pm_content_access" id="pm_content_access_popup_1" value="1" <?php checked( '1', $pm_content_access ); ?>/>
+                    <label for="pm_content_access_popup_1"> <?php esc_html_e( 'Public', 'profilegrid-user-profiles-groups-and-communities' ); ?></label>
                    </div>
                     <div class="pm-radio-option">
-                    <input type="radio" name="pm_content_access" id="pm_content_access" value="2" <?php checked( '2', $pm_content_access ); ?> />
-                    <label> <?php esc_html_e( 'Logged In Users', 'profilegrid-user-profiles-groups-and-communities' ); ?></label> 
+                    <input type="radio" name="pm_content_access" id="pm_content_access_popup_2" value="2" <?php checked( '2', $pm_content_access ); ?> />
+                    <label for="pm_content_access_popup_2"> <?php esc_html_e( 'Logged In Users', 'profilegrid-user-profiles-groups-and-communities' ); ?></label> 
                    </div>
                    
                    <div class="pm-radio-option">
-                    <input type="radio" name="pm_content_access" id="pm_content_access" value="5" <?php checked( '5', $pm_content_access ); ?> />
-                    <label> <?php esc_html_e( 'Only Group Members', 'profilegrid-user-profiles-groups-and-communities' ); ?></label> 
+                    <input type="radio" name="pm_content_access" id="pm_content_access_popup_5" value="5" <?php checked( '5', $pm_content_access ); ?> />
+                    <label for="pm_content_access_popup_5"> <?php esc_html_e( 'Only Group Members', 'profilegrid-user-profiles-groups-and-communities' ); ?></label> 
                    </div>
                    
                     <div class="pm-radio-option">
-                    <input type="radio" name="pm_content_access" id="pm_content_access" value="3" <?php checked( '3', $pm_content_access ); ?> />
-                    <label> <?php esc_html_e( "Only Author's Friends", 'profilegrid-user-profiles-groups-and-communities' ); ?></label> 
+                    <input type="radio" name="pm_content_access" id="pm_content_access_popup_3" value="3" <?php checked( '3', $pm_content_access ); ?> />
+                    <label for="pm_content_access_popup_3"> <?php esc_html_e( "Only Author's Friends", 'profilegrid-user-profiles-groups-and-communities' ); ?></label> 
                    </div>
                    
                     
@@ -1029,8 +1048,8 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pg_submit_post_access_content()"><?php esc_html_e( 'Update', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a onclick="pg_edit_popup_close()" class="pm-remove"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_save_post_content_access_level" />
-		 <?php wp_nonce_field( 'save_pm_post_content_access_level' ); ?>
+            <input type="hidden" name="action" value="pm_save_post_content_access_level" />
+		 <?php $this->basic_functions->pm_render_nonce_field( 'save_pm_post_content_access_level' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $post_id ); ?>" />
             <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
         </form>
@@ -1042,7 +1061,8 @@ class PM_HTML_Creator {
 
 		if ( is_array( $post_status ) ) {
 			$title   = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
-			$content = __( sprintf( 'Access level of <b>%d</b> blog post(s) was changed successfully.', $post_status['count'] ), 'profilegrid-user-profiles-groups-and-communities' );
+			/* translators: %d: Number of blog posts. */
+			$content = sprintf( __( 'Access level of <b>%d</b> blog post(s) was changed successfully.', 'profilegrid-user-profiles-groups-and-communities' ), $post_status['count'] );
 		} else {
 			( $post_status=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
 			switch ( $post_status ) {
@@ -1062,7 +1082,8 @@ class PM_HTML_Creator {
 					$new_status = __( 'Public', 'profilegrid-user-profiles-groups-and-communities' );
 					break;
 			}
-			$content = __( sprintf( 'The post will now be visible to %s', $new_status ), 'profilegrid-user-profiles-groups-and-communities' );
+			/* translators: %s: New visibility label. */
+			$content = sprintf( __( 'The post will now be visible to %s', 'profilegrid-user-profiles-groups-and-communities' ), $new_status );
 		}
 
 		?>
@@ -1163,8 +1184,8 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pg_submit_edit_blog_post()"><?php esc_html_e( 'Update', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a onclick="pg_edit_popup_close()" class="pm-remove"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_save_edit_blog_post" />
-		 <?php wp_nonce_field( 'save_pm_edit_blog_post' ); ?>
+            <input type="hidden" name="action" value="pm_save_edit_blog_post" />
+		 <?php $this->basic_functions->pm_render_nonce_field( 'save_pm_edit_blog_post' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
             
         </form>
@@ -1238,7 +1259,12 @@ class PM_HTML_Creator {
 																																																									?>
                             </textarea>          
                             <div class="errortext" style="display:none;"></div>
-                            <div id="pg_text_counter"><?php esc_html_e( sprintf( '%d characters left', $char_limit ), 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+                            <div id="pg_text_counter">
+                                <?php
+                                /* translators: %d: Remaining character limit. */
+                                printf( esc_html__( '%d characters left', 'profilegrid-user-profiles-groups-and-communities' ), $char_limit );
+                                ?>
+                            </div>
                         </div>
 
                 </div>
@@ -1290,8 +1316,8 @@ class PM_HTML_Creator {
                 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a onclick="pg_edit_popup_close()" class="pm-remove"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_save_admin_note_content" />
-             <?php wp_nonce_field( 'save_pm_admin_note_content' ); ?>
+            <input type="hidden" name="action" value="pm_save_admin_note_content" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'save_pm_admin_note_content' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $post_id ); ?>" />
            
         </form>
@@ -1325,8 +1351,8 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pm_delete_admin_note()"><?php esc_html_e( 'Yes', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a onclick="pg_edit_popup_close()" class="pm-remove"><?php esc_html_e( 'No', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_delete_admin_note" />
-             <?php wp_nonce_field( 'delete_pm_admin_note' ); ?>
+            <input type="hidden" name="action" value="pm_delete_admin_note" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'delete_pm_admin_note' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $postid ); ?>" />
          </form>
             
@@ -1372,7 +1398,8 @@ class PM_HTML_Creator {
 	public function save_admin_note_success_popup( $post_status ) {
 		if ( is_array( $post_status ) ) {
 			$title   = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
-			$content = __( sprintf( 'The Manager Note of <b>%d</b> blog post(s) was added successfully.', $post_status['count'] ), 'profilegrid-user-profiles-groups-and-communities' );
+			/* translators: %d: Number of blog posts. */
+			$content = sprintf( __( 'The Manager Note of <b>%d</b> blog post(s) was added successfully.', 'profilegrid-user-profiles-groups-and-communities' ), $post_status['count'] );
 		} else {
 			( $post_status=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
 			$content                          = __( 'The Manager Note was added successfully to the post.', 'profilegrid-user-profiles-groups-and-communities' );
@@ -1453,7 +1480,7 @@ class PM_HTML_Creator {
                         </div>
 					<?php if ( $type=='blog' ) : ?>
                         <div class="pm-field-input pm-difl">
-                           <textarea name="pm_author_message" id="pm_author_message" ><?php esc_html_e( sprintf( 'About your blog post: %s', $post->post_title ), 'profilegrid-user-profiles-groups-and-communities' ); ?></textarea>          
+                           <textarea name="pm_author_message" id="pm_author_message" ><?php /* translators: %s: Blog post title. */ printf( esc_html__( 'About your blog post: %s', 'profilegrid-user-profiles-groups-and-communities' ), esc_html( $post->post_title ) ); ?></textarea>          
                             <div class="errortext" style="display:none;"></div>
                             
                         </div>   
@@ -1472,8 +1499,8 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pg_submit_author_message()"><?php esc_html_e( 'Send', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a onclick="pg_edit_popup_close()" class="pm-remove"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_send_message_to_author" />
-		 <?php wp_nonce_field( 'send_pm_message_to_author' ); ?>
+            <input type="hidden" name="action" value="pm_send_message_to_author" />
+		 <?php $this->basic_functions->pm_render_nonce_field( 'send_pm_message_to_author' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $post_id ); ?>" />
             <input type="hidden" id="type" name="type" value="<?php echo esc_attr( $type ); ?>" />
            
@@ -1486,11 +1513,13 @@ class PM_HTML_Creator {
 		$pm_request = new PM_request();
 		if ( is_array( $post_status ) ) {
 			$title   = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
-			$content = __( sprintf( 'Your message was successfully sent to <b>%d</b> recipient(s).', $post_status['count'] ), 'profilegrid-user-profiles-groups-and-communities' );
+			/* translators: %d: Number of recipients. */
+			$content = sprintf( __( 'Your message was successfully sent to <b>%d</b> recipient(s).', 'profilegrid-user-profiles-groups-and-communities' ), $post_status['count'] );
 		} else {
 			( $post_status=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
 			$display_name                     = $pm_request->profile_magic_get_user_field_value( $post_status, 'display_name' );
-			$content                          = __( sprintf( 'Your Message to <b> %s </b> was sent successfully.', $display_name ), 'profilegrid-user-profiles-groups-and-communities' );
+			/* translators: %s: Recipient display name. */
+			$content                          = sprintf( __( 'Your Message to <b> %s </b> was sent successfully.', 'profilegrid-user-profiles-groups-and-communities' ), $display_name );
 		}
 		?>
             <div class="pm-popup-title pm-dbfl pm-bg-lt pm-pad10 pm-border-bt">
@@ -1610,6 +1639,7 @@ class PM_HTML_Creator {
                      <div class="pm-dbfl pg-info-message">        
                     
 							<?php
+                            /* translators: %s: Maximum number of users that can be added. */
                             echo sprintf(wp_kses(__( 'You can simultaneously add upto <strong>%s</strong> to your group using this method.', 'profilegrid-user-profiles-groups-and-communities' ), array( 'strong' => array() )),esc_html( '10 users' ) );
 							?>
                                          
@@ -1632,8 +1662,8 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pg_invite_user()"><?php esc_html_e( 'Invite', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a onclick="pg_edit_popup_close()" class="pm-remove"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_invite_user" />
-             <?php wp_nonce_field( 'invite_pm_user' ); ?>
+            <input type="hidden" name="action" value="pm_invite_user" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'invite_pm_user' ); ?>
             <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
            
         </form>
@@ -1701,9 +1731,9 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pm_remove_user_from_group()"><?php esc_html_e( 'Yes', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'No', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_remove_user_from_group" />
-             <?php wp_nonce_field( 'remove_pm_user_from_group' ); ?>
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
+            <input type="hidden" name="action" value="pm_remove_user_from_group" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'remove_pm_user_from_group' ); ?>
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
            <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
             </form>
             <?php
@@ -1725,7 +1755,8 @@ class PM_HTML_Creator {
                     <div class="pm-col">
 					<?php
 						$user = get_user_by( 'ID', $id );
-						esc_html_e( sprintf( 'You are going to remove <strong>%s</strong> from the Group Manager List. The user will still remain a member of the group. Do you wish to proceed?', $user->user_login ), 'profilegrid-user-profiles-groups-and-communities' );
+						/* translators: %s: Username being removed from group manager list. */
+						printf( wp_kses_post( __( 'You are going to remove <strong>%s</strong> from the Group Manager List. The user will still remain a member of the group. Do you wish to proceed?', 'profilegrid-user-profiles-groups-and-communities' ) ), esc_html( $user->user_login ) );
 					?>
                                 
                     </div>
@@ -1736,9 +1767,9 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pm_remove_admin_from_group()"><?php esc_html_e( 'Yes', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'No', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_remove_admin" />
-             <?php wp_nonce_field( 'remove_pm_admin_from_group' ); ?>
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
+            <input type="hidden" name="action" value="pm_remove_admin" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'remove_pm_admin_from_group' ); ?>
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
            <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
                  </form>
             <?php
@@ -1749,7 +1780,8 @@ class PM_HTML_Creator {
 		$pm_request = new PM_request();
 		if ( is_array( $post_status ) ) {
 			$title   = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
-			$content = __( sprintf( '<b>%d</b> User(s) were removed from the group successfully.', $post_status['count'] ), 'profilegrid-user-profiles-groups-and-communities' );
+			/* translators: %d: Number of users. */
+			$content = sprintf( __( '<b>%d</b> User(s) were removed from the group successfully.', 'profilegrid-user-profiles-groups-and-communities' ), $post_status['count'] );
 		} else {
 			( $post_status=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
 			$content                          = __( 'User successfully removed.', 'profilegrid-user-profiles-groups-and-communities' );
@@ -1787,6 +1819,18 @@ class PM_HTML_Creator {
 	}
 
 	public function deactivate_user_popup( $id, $gid ) {
+		$gid              = absint( $gid );
+		$current_user_id  = get_current_user_id();
+        $basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+		// SECURITY: only privileged users should see the deactivate controls/nonce.
+		if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) && ! $basic_function->pm_user_is_group_manager( $current_user_id, $gid ) ) {
+			echo '<div class="pm-dbfl pm-pad10 pg-group-setting-popup-wrap"><div class="pmrow"><div class="pm-col">';
+			esc_html_e( 'You are not authorized to perform this action.', 'profilegrid-user-profiles-groups-and-communities' );
+			echo '</div></div></div>';
+			return;
+		}
+		$id                          = absint( $id );
+		$postid                      = $id;
         $path                        =  plugins_url( '../public/partials/images/popup-close.png', __FILE__ );
 		( $postid=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Confirm', 'profilegrid-user-profiles-groups-and-communities' );
 		?>
@@ -1813,9 +1857,9 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pm_deactivate_user_from_group()"><?php esc_html_e( 'Yes', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'No', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_deactivate_user_from_group" />
-             <?php wp_nonce_field( 'deactivate_pm_user_from_group' ); ?>
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
+            <input type="hidden" name="action" value="pm_deactivate_user_from_group" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'deactivate_pm_user_from_group' ); ?>
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
             <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
          </form>
             
@@ -1828,7 +1872,8 @@ class PM_HTML_Creator {
 		( $post_status=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
 		if ( is_array( $post_status ) ) {
 			$title   = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
-			$content = __( sprintf( '<b>%d</b> User(s) were Suspended from the group successfully.', $post_status['count'] ), 'profilegrid-user-profiles-groups-and-communities' );
+			/* translators: %d: Number of users. */
+			$content = sprintf( __( '<b>%d</b> User(s) were Suspended from the group successfully.', 'profilegrid-user-profiles-groups-and-communities' ), $post_status['count'] );
 		} else {
 			( $post_status=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Success!', 'profilegrid-user-profiles-groups-and-communities' );
 			$content                          = __( 'User successfully Suspended.', 'profilegrid-user-profiles-groups-and-communities' );
@@ -1897,7 +1942,7 @@ class PM_HTML_Creator {
                          </div>
                      </div>
                      <div class="pm-field-input pm-dbfr">
-                         <a onclick="pg_password_auto_generate('pm_new_pass')"><?php esc_html_e( 'Autogenerate' ); ?></a>
+                         <a onclick="pg_password_auto_generate('pm_new_pass')"><?php esc_html_e( 'Autogenerate', 'profilegrid-user-profiles-groups-and-communities' ); ?></a>
                      </div>  
                     
                  <div class="pg-email-password pm-dbfl">
@@ -1920,9 +1965,9 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a id="pm_member_reset_password_link" class="pg-setting-disabled"><?php esc_html_e( 'Reset', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_reset_user_password" />
-             <?php wp_nonce_field( 'reset_pm_user_password' ); ?>
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
+            <input type="hidden" name="action" value="pm_reset_user_password" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'reset_pm_user_password' ); ?>
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
            <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
          </form>
             
@@ -2012,8 +2057,8 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pg_submit_post_status()"><?php esc_html_e( 'Update', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_save_post_status" />
-		 <?php wp_nonce_field( 'save_pm_post_status' ); ?>
+            <input type="hidden" name="action" value="pm_save_post_status" />
+		 <?php $this->basic_functions->pm_render_nonce_field( 'save_pm_post_status' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $post_id ); ?>" />
         </form>
             <?php
@@ -2076,8 +2121,8 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pg_submit_post_access_content()"><?php esc_html_e( 'Update', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_save_post_content_access_level" />
-		 <?php wp_nonce_field( 'save_pm_post_content_access_level' ); ?>
+            <input type="hidden" name="action" value="pm_save_post_content_access_level" />
+		 <?php $this->basic_functions->pm_render_nonce_field( 'save_pm_post_content_access_level' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $post_id ); ?>" />
             <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
         </form>
@@ -2118,7 +2163,12 @@ class PM_HTML_Creator {
 																																																									?>
                             </textarea>          
                             <div class="errortext" style="display:none;"></div>
-                            <div id="pg_text_counter"><?php printf( wp_kses_post( __( '<b>%d</b> characters left', 'profilegrid-user-profiles-groups-and-communities' ) ), esc_html( $char_limit ) ); ?></div>
+                            <div id="pg_text_counter">
+                                <?php
+                                /* translators: %d: Remaining character limit. */
+                                printf( wp_kses_post( __( '<b>%d</b> characters left', 'profilegrid-user-profiles-groups-and-communities' ) ), esc_html( $char_limit ) );
+                                ?>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2170,8 +2220,8 @@ class PM_HTML_Creator {
                 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_save_admin_note_content" />
-             <?php wp_nonce_field( 'save_pm_admin_note_content' ); ?>
+            <input type="hidden" name="action" value="pm_save_admin_note_content" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'save_pm_admin_note_content' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $post_id ); ?>" />
            
         </form>
@@ -2212,7 +2262,7 @@ class PM_HTML_Creator {
                                 <label><?php esc_html_e( 'To:', 'profilegrid-user-profiles-groups-and-communities' ); ?></label>
                         </div>
                         <div class="pm-field-input pm-difl pm-popup-title">
-						<?php esc_html_e( sprintf( '%d Recipient(s)', $count ), 'profilegrid-user-profiles-groups-and-communities' ); ?>
+                        <?php /* translators: %d: Number of recipients. */ printf( esc_html__( '%d Recipient(s)', 'profilegrid-user-profiles-groups-and-communities' ), $count ); ?>
                         </div>
                     </div>
                 </div>
@@ -2237,8 +2287,8 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pg_submit_author_message()"><?php esc_html_e( 'Send', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_send_message_to_author" />
-		 <?php wp_nonce_field( 'send_pm_message_to_author' ); ?>
+            <input type="hidden" name="action" value="pm_send_message_to_author" />
+		 <?php $this->basic_functions->pm_render_nonce_field( 'send_pm_message_to_author' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $author_id ); ?>" />
             <input type="hidden" id="type" name="type" value="<?php echo esc_attr( $type ); ?>" />
            
@@ -2278,16 +2328,26 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pm_remove_user_from_group()"><?php esc_html_e( 'Yes', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_remove_user_from_group" />
-             <?php wp_nonce_field( 'remove_pm_user_from_group' ); ?>
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo esc_attr( $post_id ); ?>" />
-            <input type="hidden" id="user_id" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
+            <input type="hidden" name="action" value="pm_remove_user_from_group" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'remove_pm_user_from_group' ); ?>
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( $post_id ); ?>" />
+            <input type="hidden" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
             </form>
             
             <?php
 	}
 
 	public function deactivate_bulk_user_popup( $id, $gid ) {
+		$gid              = absint( $gid );
+		$current_user_id  = get_current_user_id();
+        $basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+		// SECURITY: only privileged users should see the deactivate controls/nonce.
+		if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) && ! $basic_function->pm_user_is_group_manager( $current_user_id, $gid ) ) {
+			echo '<div class="pm-dbfl pm-pad10 pg-group-setting-popup-wrap"><div class="pmrow"><div class="pm-col">';
+			esc_html_e( 'You are not authorized to perform this action.', 'profilegrid-user-profiles-groups-and-communities' );
+			echo '</div></div></div>';
+			return;
+		}
 		$pm_request            = new PM_request();
 		$path                  =  plugins_url( '../public/partials/images/popup-close.png', __FILE__ );
 		$post_id               = $pm_request->pm_encrypt_decrypt_pass( 'encrypt', maybe_serialize( $id ) );
@@ -2319,9 +2379,9 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pm_deactivate_user_from_group()"><?php esc_html_e( 'Yes', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'No', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_deactivate_user_from_group" />
-             <?php wp_nonce_field( 'deactivate_pm_user_from_group' ); ?>
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo esc_attr( $post_id ); ?>" />
+            <input type="hidden" name="action" value="pm_deactivate_user_from_group" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'deactivate_pm_user_from_group' ); ?>
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( $post_id ); ?>" />
             <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
          </form>
             
@@ -2410,7 +2470,7 @@ class PM_HTML_Creator {
 				$html ='';
                 break;
 		}
-		echo $html;
+		echo wp_kses_post( $html );
 	}
 
 	public function pg_remove_group_in_user_profile_popup( $id, $gid ) {
@@ -2436,6 +2496,7 @@ class PM_HTML_Creator {
 				<?php if ( $is_leader ) : ?>
                      <div class="pm-col">
                         <?php
+                            /* translators: 1: Group manager label, 2: Group manager label, 3: Group manager label, 4: Group manager label. */
                             echo sprintf( esc_html__( 'You are currently %1$s of this group. Leaving the group will remove your %2$s privileges along with group membership. To regain %3$s privileges in future, another %4$s must assign you the role first. Do you wish to proceed?', 'profilegrid-user-profiles-groups-and-communities' ), esc_html( $group_manager_label ), esc_html( $group_manager_label ), esc_html( $group_manager_label ), esc_html( $group_manager_label ) );
 						?>
                                 
@@ -2443,6 +2504,7 @@ class PM_HTML_Creator {
                     <?php else : ?>
                     <div class="pm-col">
                         <?php
+                            /* translators: %s: Group name. */
                             echo sprintf( esc_html__( 'You are about to leave %s group. You will no longer have access to Group updates or Group related information. Do you wish to continue?', 'profilegrid-user-profiles-groups-and-communities' ), esc_html( $groupinfo->group_name ) );
 						?>
                                 
@@ -2457,9 +2519,9 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pg_remove_user_group('<?php echo esc_attr( $id ); ?>','<?php echo esc_attr( $gid ); ?>')"><?php esc_html_e( 'Yes', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'No', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_remove_user_from_group" />
-             <?php wp_nonce_field( 'remove_pm_user_from_group' ); ?>
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
+            <input type="hidden" name="action" value="pm_remove_user_from_group" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'remove_pm_user_from_group' ); ?>
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
            <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
             </form>
             <?php
@@ -2520,9 +2582,9 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pg_decline_join_request('<?php echo esc_attr( $id ); ?>','<?php echo esc_attr( $gid ); ?>')"><?php esc_html_e( 'Decline', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_decline_join_request" />
-             <?php wp_nonce_field( 'decline_pm_join_request' ); ?>
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
+            <input type="hidden" name="action" value="pm_decline_join_request" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'decline_pm_join_request' ); ?>
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
            <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
             </form>
             <?php
@@ -2585,9 +2647,9 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pg_approve_join_request('<?php echo esc_attr( $id ); ?>','<?php echo esc_attr( $gid ); ?>')"><?php esc_html_e( 'Approve', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_decline_join_request" />
-             <?php wp_nonce_field( 'decline_pm_join_request' ); ?>
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
+            <input type="hidden" name="action" value="pm_decline_join_request" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'decline_pm_join_request' ); ?>
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( $id ); ?>" />
            <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
             </form>
             <?php
@@ -2648,9 +2710,9 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pm_decline_bulk_join_group_requests()"><?php esc_html_e( 'Decline', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_decline_bulk_join_group_requests" />
-             <?php wp_nonce_field( 'decline_pm_bulk_join_group_requests' ); ?>
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo esc_attr( $post_id ); ?>" />
+            <input type="hidden" name="action" value="pm_decline_bulk_join_group_requests" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'decline_pm_bulk_join_group_requests' ); ?>
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( $post_id ); ?>" />
          </form>
             
             <?php
@@ -2686,9 +2748,9 @@ class PM_HTML_Creator {
                 <div class="pg-group-setting-bt pm-difl"><a onclick="pm_approve_bulk_join_group_requests()"><?php esc_html_e( 'Approve', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
                 <div class="pg-group-setting-bt pg-group-setting-close-btn pm-difl"><a class="pm-remove" onclick="pg_edit_popup_close()"><?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></div> 
             </div>
-            <input type="hidden" name="action" id="action" value="pm_approve_bulk_join_group_requests" />
-             <?php wp_nonce_field( 'approve_pm_bulk_join_group_requests' ); ?>
-            <input type="hidden" id="user_id" name="user_id" value="<?php echo esc_attr( $post_id ); ?>" />
+            <input type="hidden" name="action" value="pm_approve_bulk_join_group_requests" />
+             <?php $this->basic_functions->pm_render_nonce_field( 'approve_pm_bulk_join_group_requests' ); ?>
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( $post_id ); ?>" />
            
             
             <?php
@@ -2823,6 +2885,7 @@ class PM_HTML_Creator {
 				} else {
 					$displayname = $pmrequests->pm_get_display_name( $author[0] );
 					echo "<div class='pg-alert-warning pg-alert-info'> ";
+					 /* translators: %s: Display name. */
 					 echo sprintf( esc_html__( 'There are no user blog posts from %s yet.', 'profilegrid-user-profiles-groups-and-communities' ), wp_kses_post($displayname) );
 					echo '</div>';
 				}
@@ -2895,7 +2958,7 @@ class PM_HTML_Creator {
                 <div id="typing_on"  class="pm-user-description-row pm-dbfl pm-border"><div class="pm-typing-inner"><img height="9px" width="40px" src="<?php echo esc_url( $path ); ?>"/></div></div>
              
                 <div class="pm-dbfl pm-chat-messenger-box">
-				<?php wp_nonce_field( 'pg_send_new_message' ); ?>
+				<?php $this->basic_functions->pm_render_nonce_field( 'pg_send_new_message' ); ?>
                       <input type="hidden" name="action" value='pm_messenger_send_new_message' /> 
                     <input type="hidden" id="thread_hidden_field" name="tid" value=""/>
                     <div class="emoji-container">
@@ -2946,4 +3009,3 @@ class PM_HTML_Creator {
 
 
 }
-?>

@@ -26,6 +26,7 @@ if ( isset( $_GET['selected'] ) ) {
 			if ( $count_selected>1 ) {
 				$msg = __( 'One or more email templates you are trying to delete are being used for notifications by a group. Please disassociate them before attempting to delete.', 'profilegrid-user-profiles-groups-and-communities' );
 			} else {
+				// translators: %s: group name using the email template.
 				$msg = sprintf( __( 'The Email Template you are trying to delete is being used for notifications by group %s. Disassociate the template before deleting.', 'profilegrid-user-profiles-groups-and-communities' ), $exist_tmpl );
 			}
 		} else {

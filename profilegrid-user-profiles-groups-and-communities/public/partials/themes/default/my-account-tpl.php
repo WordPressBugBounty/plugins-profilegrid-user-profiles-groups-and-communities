@@ -75,7 +75,10 @@
       
     <div class="buttonarea pm-full-width-container">
         <div class="all_errors" style="display:none;"></div>
-        <?php wp_nonce_field('pm_my_account_settings_form'); ?>
+        <?php 
+        $basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+            $basic_function->pm_render_nonce_field( 'pm_my_account_settings_form' ); 
+        ?>
       <input type="submit" value="<?php esc_attr_e('Submit','profilegrid-user-profiles-groups-and-communities');?>" name="my_account_submit">
     </div>
   </form>

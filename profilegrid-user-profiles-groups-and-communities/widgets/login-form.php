@@ -1,5 +1,6 @@
 <?php
 $dbhandler = new PM_DBhandler;
+$basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
 //$textdomain = $this->profile_magic;
 $path =  plugin_dir_url(__FILE__);
 $pmrequests = new PM_request;
@@ -47,7 +48,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     wp_logout();
  
     // Redirect or display a message after logout.
-    wp_redirect(home_url()); // You can change the URL to your desired redirect location.
+    wp_safe_redirect(home_url()); // You can change the URL to your desired redirect location.
     exit;
 }
 
@@ -75,6 +76,8 @@ if(isset($post['pg_widget_login_form_submit']))
 
                     $username = $post['user_login'];
                     $password = $post['user_pass'];
+                    $remeberme = isset($post['rememberme']) ? true : false;
+                    
                     $secure_cookie = is_ssl();
 
                     if (filter_var($username, FILTER_VALIDATE_EMAIL)) 
@@ -90,7 +93,7 @@ if(isset($post['pg_widget_login_form_submit']))
                     {
                             if(wp_check_password( $password, $user->data->user_pass, $user->ID))
                             {
-                                    $creds = array('user_login' => $user->data->user_login, 'user_password' => $password);
+                                    $creds = array('user_login' => $user->data->user_login, 'user_password' => $password, 'remember'=> $remeberme);
                                     $user = wp_signon( $creds, $secure_cookie );
                                     //wp_safe_redirect('/members/'.$user->data->user_login.'/courses');
                                     $pm_redirect_after_login = $dbhandler->get_global_option_value('pm_redirect_after_login','0');
@@ -216,29 +219,35 @@ else:
 		
  
 <!-----Form Starts----->
-  <form class="pmagic-form pm-dbfl pm-bg-lt" method="post" action="" id="pm_widget-login_form" name="pm_widget-login_form">
-  <?php wp_nonce_field('pm_widget-login_form'); ?>
-      <div class="pm_widget-login-row pm-difl">
-          <label for="<?php echo esc_attr('user_login');?>" class="pm-dbfl"><?php esc_html_e('Email or Username','profilegrid-user-profiles-groups-and-communities');?></label>
-          <input type="text" name="<?php echo esc_attr('user_login');?>" id="<?php echo esc_attr('user_login');?>" placeholder="<?php esc_attr_e('Email or Username','profilegrid-user-profiles-groups-and-communities');?>" required="required">
-         </div>
-            <div class="pm_widget-login-row pm-difl">
-        <label for="<?php echo esc_attr('user_pass');?>" class="pm-dbfl"><?php esc_html_e('Password','profilegrid-user-profiles-groups-and-communities');?></label>
-        <input type="password" name="<?php echo esc_attr('user_pass');?>" id="<?php echo esc_attr('user_pass');?>" placeholder="<?php esc_attr_e('Password','profilegrid-user-profiles-groups-and-communities');?>" required="required">
-            </div>
-            <?php do_action('profile_magic_show_captcha_in_login');?>
-            <div class="pm-login-box-bottom-container pm-dbfl">
-                <input type="submit" value="<?php esc_attr_e('Login','profilegrid-user-profiles-groups-and-communities');?>" name="pg_widget_login_form_submit" class="">
-                <?php if($register_link):?>
-                <a href="<?php echo esc_url($registration_url);?>" class="pm-difl pg-registration-button"><?php esc_html_e('Register','profilegrid-user-profiles-groups-and-communities');?> </a> 
-                <?php endif; ?>
-                <div class="pm-login-links-box pm-dbfl">
-                    <a href="<?php echo esc_url($forget_password_url);?>"><?php esc_html_e('Forgot Password?','profilegrid-user-profiles-groups-and-communities');?></a>
-                </div>
-            </div>
+    <form class="pmagic-form pm-dbfl pm-bg-lt" method="post" action="" id="pm_widget-login_form" name="pm_widget-login_form">
+    <?php $basic_function->pm_render_nonce_field( 'pm_widget-login_form' ); ?>
+        <div class="pm_widget-login-row pm-difl">
+            <label for="<?php echo esc_attr('user_login');?>" class="pm-dbfl"><?php esc_html_e('Email or Username','profilegrid-user-profiles-groups-and-communities');?></label>
+            <input type="text" name="<?php echo esc_attr('user_login');?>" id="<?php echo esc_attr('user_login');?>" placeholder="<?php esc_attr_e('Email or Username','profilegrid-user-profiles-groups-and-communities');?>" required="required">
+        </div>
+        <div class="pm_widget-login-row pm-difl">
+            <label for="<?php echo esc_attr('user_pass');?>" class="pm-dbfl"><?php esc_html_e('Password','profilegrid-user-profiles-groups-and-communities');?></label>
+            <input type="password" name="<?php echo esc_attr('user_pass');?>" id="<?php echo esc_attr('user_pass');?>" placeholder="<?php esc_attr_e('Password','profilegrid-user-profiles-groups-and-communities');?>" required="required">
+        </div>
+        <div class="pg-login-remember">
+            <label>
+            <input name="<?php echo esc_attr('rememberme');?>" type="checkbox" id="pg-rememberme" value="1" />
+            <?php esc_html_e('Remember Me','profilegrid-user-profiles-groups-and-communities');?>
+            </label>
+        </div>
+              <?php do_action('profile_magic_show_captcha_in_login');?>
+              <div class="pm-login-box-bottom-container pm-dbfl">
+                  <input type="submit" value="<?php esc_attr_e('Login','profilegrid-user-profiles-groups-and-communities');?>" name="pg_widget_login_form_submit" class="">
+                  <?php if($register_link):?>
+                  <a href="<?php echo esc_url($registration_url);?>" class="pm-difl pg-registration-button"><?php esc_html_e('Register','profilegrid-user-profiles-groups-and-communities');?> </a> 
+                  <?php endif; ?>
+                  <div class="pm-login-links-box pm-dbfl">
+                      <a href="<?php echo esc_url($forget_password_url);?>"><?php esc_html_e('Forgot Password?','profilegrid-user-profiles-groups-and-communities');?></a>
+                  </div>
+              </div>
 
-  </form>
-  <?php endif;?>
+    </form>
+    <?php endif;?>
    </div>
 </div>
 

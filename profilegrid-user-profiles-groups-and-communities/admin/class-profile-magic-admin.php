@@ -68,7 +68,8 @@ class Profile_Magic_Admin {
 	public function pg_activation_redirect() {
     	if (get_option('pg_redirect_to_group_page', false)) {
             delete_option('pg_redirect_to_group_page');
-            exit(wp_redirect(admin_url( 'admin.php?page=pm_manage_groups' )));
+            wp_safe_redirect( esc_url_raw( admin_url( 'admin.php?page=pm_manage_groups' ) ) );
+            exit;
         }
     }
 
@@ -208,7 +209,9 @@ class Profile_Magic_Admin {
 			$error['completeness_no_fields']    = __( 'Sorry, there are no fields like this here.', 'profilegrid-user-profiles-groups-and-communities' );
 
 			$error['change_group']   = __( 'You are changing the group of this user. All data associated with profile fields of old group will be hidden and the user will have to edit and fill profile fields associated with the new group. Do you wish to continue?', 'profilegrid-user-profiles-groups-and-communities' );
-			$error['allow_file_ext'] = $dbhandler->get_global_option_value( 'pm_allow_file_types', 'jpg|jpeg|png|gif' );
+			$allow_file_ext          = $dbhandler->get_global_option_value( 'pm_allow_file_types', 'jpg|jpeg|png|gif|webp|avif' );
+			$allow_file_ext          = implode( '|', array_unique( array_filter( explode( '|', strtolower( $allow_file_ext . '|webp|avif' ) ) ) ) );
+			$error['allow_file_ext'] = $allow_file_ext;
 			wp_localize_script( $this->profile_magic, 'pm_error_object', $error );
                         wp_localize_script(
 				$this->profile_magic,
@@ -226,8 +229,11 @@ class Profile_Magic_Admin {
 			if ( ! isset( $upload_requirements['pg_cover_photo_minimum_width'] ) || empty( $upload_requirements['pg_cover_photo_minimum_width'] ) ) {
 					$upload_requirements['pg_cover_photo_minimum_width'] = '800';
 			}
+					// translators: %1$d: max bytes.
 					$upload_requirements['error_max_profile_filesize'] = sprintf( __( 'Image size exceeds the maximum limit. Maximum allowed image size is %1$d byte.', 'profilegrid-user-profiles-groups-and-communities' ), $upload_requirements['pg_profile_image_max_file_size'] );
+					// translators: 1: min width, 2: min height.
 					$upload_requirements['error_min_profile_width']    = sprintf( __( 'Image dimensions are too small. Minimum size is %1$d by %2$d pixels.', 'profilegrid-user-profiles-groups-and-communities' ), $upload_requirements['pg_profile_photo_minimum_width'], $upload_requirements['pg_profile_photo_minimum_width'] );
+					// translators: 1: min width, 2: min height.
 					$upload_requirements['error_min_cover_width']      = sprintf( __( 'Image dimensions are too small. Minimum size is %1$d by %2$d pixels.', 'profilegrid-user-profiles-groups-and-communities' ), $upload_requirements['pg_cover_photo_minimum_width'],300 );
 					wp_localize_script( $this->profile_magic, 'pm_upload_object', $upload_requirements );
 					// endif;
@@ -256,6 +262,7 @@ class Profile_Magic_Admin {
 		add_submenu_page( 'pm_manage_groups_hide', __( 'Email Preview', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Email Preview', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_email_preview', array( $this, 'pm_email_preview' ) );
 		add_submenu_page( 'pm_manage_groups_hide', __( 'Analytics', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Analytics', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_analytics', array( $this, 'pm_analytics' ) );
 		add_submenu_page( 'pm_manage_groups_hide', __( 'Membership', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Membership', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_membership', array( $this, 'pm_membership' ) );
+		add_submenu_page( 'pm_manage_groups', __( 'Membership Payments', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Payments', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_group_membership_payments', array( $this, 'pm_group_membership_payments' ) );
 		add_submenu_page( 'pm_manage_groups', __( 'Shortcodes', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Shortcodes', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_shortcodes', array( $this, 'pm_shortcodes' ) );
                 add_submenu_page( 'pm_manage_groups', __( 'Global Settings', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Global Settings', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_settings', array( $this, 'pm_settings' ) );
 		add_submenu_page( 'pm_manage_groups_hide', __( 'General Settings', 'profilegrid-user-profiles-groups-and-communities' ), __( 'General Settings', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_general_settings', array( $this, 'pm_general_settings' ) );
@@ -298,6 +305,270 @@ class Profile_Magic_Admin {
 
 	public function pm_offers() {
 		include 'partials/pg-offers.php';
+	}
+
+	public function pm_group_membership_payments() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$pmrequests = new PM_request();
+		$dbhandler  = new PM_DBhandler();
+
+		$status_filter    = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
+		$processor_filter = isset( $_GET['processor'] ) ? sanitize_text_field( wp_unslash( $_GET['processor'] ) ) : '';
+		$group_filter     = isset( $_GET['group'] ) ? absint( $_GET['group'] ) : 0;
+		$user_search      = isset( $_GET['user'] ) ? sanitize_text_field( wp_unslash( $_GET['user'] ) ) : '';
+		$orderby          = isset( $_GET['orderby'] ) ? sanitize_key( $_GET['orderby'] ) : 'posted_date';
+		$order            = isset( $_GET['order'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_GET['order'] ) ) ) : 'DESC';
+		$order            = ( 'ASC' === $order ) ? 'ASC' : 'DESC';
+		$paged            = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1;
+		$per_page         = apply_filters( 'pg_group_membership_payments_per_page', 20 );
+
+		$query_args = array(
+			'paged'     => $paged,
+			'per_page'  => $per_page,
+			'status'    => $status_filter,
+			'processor' => $processor_filter,
+			'group'     => $group_filter,
+			'search'    => $user_search,
+			'orderby'   => $orderby,
+			'order'     => $order,
+		);
+
+		$payments = $pmrequests->pg_get_group_membership_payments( $query_args );
+		$items    = isset( $payments['items'] ) ? $payments['items'] : array();
+		$total    = isset( $payments['total'] ) ? (int) $payments['total'] : 0;
+
+		$total_pages = ( $per_page > 0 ) ? ceil( $total / $per_page ) : 1;
+
+		$group_names = array();
+		$user_names  = array();
+		if ( ! empty( $items ) ) {
+			$unique_groups = array_unique( array_map( 'intval', wp_list_pluck( $items, 'gid' ) ) );
+			foreach ( $unique_groups as $gid ) {
+				if ( $gid > 0 ) {
+					$group_names[ $gid ] = $dbhandler->get_value( 'GROUPS', 'group_name', $gid, 'id' );
+				}
+			}
+
+			$unique_users = array_unique( array_map( 'intval', wp_list_pluck( $items, 'uid' ) ) );
+			if ( ! empty( $unique_users ) ) {
+				$user_query = new WP_User_Query(
+					array(
+						'include' => $unique_users,
+						'fields'  => array( 'ID', 'display_name', 'user_email' ),
+					)
+				);
+				foreach ( $user_query->get_results() as $user ) {
+					$user_names[ $user->ID ] = $user->display_name ? $user->display_name : $user->user_email;
+				}
+			}
+		}
+
+		$status_options    = $pmrequests->pg_get_payment_distinct_values( 'status' );
+		$processor_options = $pmrequests->pg_get_payment_distinct_values( 'pay_processor' );
+		$group_options     = $dbhandler->get_all_result( 'GROUPS', array( 'id', 'group_name' ), 1, 'results', 0, false, 'group_name', false );
+
+		$build_sort_url = function( $column ) use ( $status_filter, $processor_filter, $group_filter, $user_search, $orderby, $order, $paged ) {
+			$sort_order = ( $orderby === $column && 'ASC' === $order ) ? 'DESC' : 'ASC';
+			$params     = array(
+				'page'      => 'pm_group_membership_payments',
+				'status'    => $status_filter,
+				'processor' => $processor_filter,
+				'group'     => $group_filter,
+				'user'      => $user_search,
+				'orderby'   => $column,
+				'order'     => $sort_order,
+				'paged'     => $paged,
+			);
+			return esc_url( add_query_arg( array_filter( $params, 'strlen' ), admin_url( 'admin.php' ) ) );
+		};
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Membership Payments', 'profilegrid-user-profiles-groups-and-communities' ); ?></h1>
+			<form method="get" class="pg-filter-form">
+				<input type="hidden" name="page" value="pm_group_membership_payments" />
+				<div class="tablenav top">
+					<div class="alignleft actions">
+						<label for="pg-payment-status" class="screen-reader-text"><?php esc_html_e( 'Filter by status', 'profilegrid-user-profiles-groups-and-communities' ); ?></label>
+						<select name="status" id="pg-payment-status">
+							<option value=""><?php esc_html_e( 'All Statuses', 'profilegrid-user-profiles-groups-and-communities' ); ?></option>
+							<?php foreach ( $status_options as $status_option ) : ?>
+								<option value="<?php echo esc_attr( $status_option ); ?>" <?php selected( $status_filter, $status_option ); ?>><?php echo esc_html( ucfirst( $status_option ) ); ?></option>
+							<?php endforeach; ?>
+						</select>
+
+						<label for="pg-payment-processor" class="screen-reader-text"><?php esc_html_e( 'Filter by processor', 'profilegrid-user-profiles-groups-and-communities' ); ?></label>
+						<select name="processor" id="pg-payment-processor">
+							<option value=""><?php esc_html_e( 'All Processors', 'profilegrid-user-profiles-groups-and-communities' ); ?></option>
+							<?php foreach ( $processor_options as $processor_option ) : ?>
+								<option value="<?php echo esc_attr( $processor_option ); ?>" <?php selected( $processor_filter, $processor_option ); ?>><?php echo esc_html( $pmrequests->pg_get_payment_processor_label( $processor_option ) ); ?></option>
+							<?php endforeach; ?>
+						</select>
+
+						<label for="pg-payment-group" class="screen-reader-text"><?php esc_html_e( 'Filter by group', 'profilegrid-user-profiles-groups-and-communities' ); ?></label>
+						<select name="group" id="pg-payment-group">
+							<option value="0"><?php esc_html_e( 'All Groups', 'profilegrid-user-profiles-groups-and-communities' ); ?></option>
+							<?php if ( ! empty( $group_options ) ) : ?>
+								<?php foreach ( $group_options as $group ) : ?>
+									<option value="<?php echo esc_attr( $group->id ); ?>" <?php selected( $group_filter, (int) $group->id ); ?>><?php echo esc_html( $group->group_name ); ?></option>
+								<?php endforeach; ?>
+							<?php endif; ?>
+						</select>
+
+						<label for="pg-payment-user" class="screen-reader-text"><?php esc_html_e( 'Filter by user', 'profilegrid-user-profiles-groups-and-communities' ); ?></label>
+						<input type="search" name="user" id="pg-payment-user" value="<?php echo esc_attr( $user_search ); ?>" placeholder="<?php esc_attr_e( 'Search user...', 'profilegrid-user-profiles-groups-and-communities' ); ?>" />
+
+						<?php submit_button( __( 'Filter', 'profilegrid-user-profiles-groups-and-communities' ), 'secondary', '', false ); ?>
+					</div>
+					<div class="tablenav-pages">
+						<?php
+						$pagination_links = paginate_links(
+							array(
+								'base'      => esc_url(
+									add_query_arg(
+										array(
+											'page'      => 'pm_group_membership_payments',
+											'status'    => $status_filter,
+											'processor' => $processor_filter,
+											'group'     => $group_filter,
+											'user'      => $user_search,
+											'orderby'   => $orderby,
+											'order'     => $order,
+											'paged'     => '%#%',
+										),
+										admin_url( 'admin.php' )
+									)
+								),
+								'format'    => '',
+								'current'   => $paged,
+								'total'     => max( 1, $total_pages ),
+								'add_args'  => false,
+								'prev_text' => __( '&laquo;', 'profilegrid-user-profiles-groups-and-communities' ),
+								'next_text' => __( '&raquo;', 'profilegrid-user-profiles-groups-and-communities' ),
+							)
+						);
+						if ( ! empty( $pagination_links ) ) {
+							echo wp_kses_post( $pagination_links );
+						}
+						?>
+					</div>
+				</div>
+			</form>
+
+			<table class="widefat fixed striped">
+				<thead>
+					<tr>
+						<th scope="col"><a href="<?php echo esc_url( $build_sort_url( 'user' ) ); ?>"><?php esc_html_e( 'Member', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></th>
+						<th scope="col"><a href="<?php echo esc_url( $build_sort_url( 'group' ) ); ?>"><?php esc_html_e( 'Group', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></th>
+						<th scope="col"><a href="<?php echo esc_url( $build_sort_url( 'amount' ) ); ?>"><?php esc_html_e( 'Amount', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></th>
+						<th scope="col"><a href="<?php echo esc_url( $build_sort_url( 'processor' ) ); ?>"><?php esc_html_e( 'Gateway', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></th>
+						<th scope="col"><a href="<?php echo esc_url( $build_sort_url( 'status' ) ); ?>"><?php esc_html_e( 'Status', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></th>
+						<th scope="col"><a href="<?php echo esc_url( $build_sort_url( 'posted_date' ) ); ?>"><?php esc_html_e( 'Date', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php if ( empty( $items ) ) : ?>
+						<tr>
+							<td colspan="6"><?php esc_html_e( 'No payments found.', 'profilegrid-user-profiles-groups-and-communities' ); ?></td>
+						</tr>
+					<?php else : ?>
+						<?php foreach ( $items as $item ) : ?>
+							<?php
+							$user_label  = isset( $user_names[ $item->uid ] ) ? $user_names[ $item->uid ] : sprintf( __( 'User #%d', 'profilegrid-user-profiles-groups-and-communities' ), $item->uid );
+							$group_label = isset( $group_names[ $item->gid ] ) ? $group_names[ $item->gid ] : sprintf( __( 'Group #%d', 'profilegrid-user-profiles-groups-and-communities' ), $item->gid );
+							$group_amount = $pmrequests->profile_magic_check_paid_group( (int) $item->gid );
+							if ( is_numeric( $group_amount ) ) {
+								$amount = number_format_i18n( (float) $group_amount, 2 );
+							} elseif ( is_numeric( $item->amount ) ) {
+								$amount = number_format_i18n( (float) $item->amount, 2 );
+							} else {
+								$amount = $item->amount;
+							}
+							$currency    = ! empty( $item->currency ) ? strtoupper( $item->currency ) : '';
+							$date     = '';
+							$raw_date = isset( $item->posted_date ) ? $item->posted_date : '';
+							if ( ! empty( $raw_date ) && $raw_date !== '0000-00-00' && $raw_date !== '0000-00-00 00:00:00' ) {
+								if ( is_numeric( $raw_date ) ) {
+									$timestamp = (int) $raw_date;
+									if ( $timestamp > 0 ) {
+										$date = wp_date( get_option( 'date_format' ), $timestamp, wp_timezone() );
+									}
+								} else {
+									$timestamp = strtotime( $raw_date );
+									if ( $timestamp && $timestamp > 0 ) {
+										$date = mysql2date( get_option( 'date_format' ), $raw_date, true );
+									}
+								}
+							}
+							if ( empty( $date ) ) {
+								$timestamp = 0;
+								$raw_log   = isset( $item->log ) ? $item->log : '';
+								if ( ! empty( $raw_log ) ) {
+									$log_data = maybe_unserialize( $raw_log );
+									if ( is_string( $log_data ) ) {
+										$decoded = json_decode( $log_data, true );
+										if ( json_last_error() === JSON_ERROR_NONE ) {
+											$log_data = $decoded;
+										}
+									}
+									if ( is_object( $log_data ) ) {
+										$log_data = (array) $log_data;
+									}
+									if ( is_array( $log_data ) ) {
+										$date_keys = array( 'payment_date', 'payment_date_time', 'create_time', 'created', 'created_at', 'time_created', 'timestamp', 'date', 'payment_time' );
+										foreach ( $date_keys as $date_key ) {
+											if ( ! empty( $log_data[ $date_key ] ) ) {
+												$candidate = $log_data[ $date_key ];
+												if ( is_numeric( $candidate ) ) {
+													$timestamp = (int) $candidate;
+													if ( $timestamp > 0 ) {
+														break;
+													}
+												}
+												$candidate_timestamp = strtotime( (string) $candidate );
+												if ( $candidate_timestamp ) {
+													$timestamp = $candidate_timestamp;
+													break;
+												}
+											}
+										}
+									}
+								}
+								if ( $timestamp > 0 ) {
+									$date = wp_date( get_option( 'date_format' ), $timestamp, wp_timezone() );
+								}
+							}
+							if ( empty( $date ) ) {
+								$txn_id = isset( $item->txn_id ) ? $item->txn_id : '';
+								if ( is_string( $txn_id ) && preg_match( '/_(\\d{9,})$/', $txn_id, $matches ) ) {
+									$timestamp = (int) $matches[1];
+									if ( $timestamp > 0 ) {
+										$date = wp_date( get_option( 'date_format' ), $timestamp, wp_timezone() );
+									}
+								}
+							}
+							$date = $date ? $date : __( 'N/A', 'profilegrid-user-profiles-groups-and-communities' );
+							?>
+							<tr>
+								<td><?php echo esc_html( $user_label ); ?></td>
+								<td><?php echo esc_html( $group_label ); ?></td>
+								<td><?php echo esc_html( trim( "{$currency} {$amount}" ) ); ?></td>
+								<td><?php echo esc_html( $pmrequests->pg_get_payment_processor_label( $item->pay_processor ) ); ?></td>
+								<td>
+									<span class="pg-status-label pg-status-<?php echo esc_attr( sanitize_html_class( $item->status ) ); ?>">
+										<?php echo esc_html( ucfirst( $item->status ) ); ?>
+									</span>
+								</td>
+								<td><?php echo esc_html( $date ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					<?php endif; ?>
+				</tbody>
+			</table>
+		</div>
+		<?php
 	}
 
 	public function pm_activation_wizard() {
@@ -606,6 +877,10 @@ class Profile_Magic_Admin {
                             $list = explode( ',', $list_order );
                             $i    = 1;
                             foreach ( $list as $id ) {
+                                    $id = absint( $id );
+                                    if ( 0 === $id ) {
+                                            continue;
+                                    }
                                     $dbhandler->update_row( $identifier, 'id', $id, array( 'ordering' => $i ), array( '%d' ), '%d' );
 
                                     $i++;
@@ -618,7 +893,7 @@ class Profile_Magic_Admin {
 	}
 
 	public function profile_magic_section_dropdown() {
-		$gid       = filter_input( INPUT_POST, 'gid' );
+		$gid       = absint( filter_input( INPUT_POST, 'gid' ) );
 		$dbhandler = new PM_DBhandler();
 		$sections  = $dbhandler->get_all_result( 'SECTION', array( 'id', 'section_name' ), array( 'gid' => $gid ) );
 		foreach ( $sections as $section ) {
@@ -724,14 +999,18 @@ class Profile_Magic_Admin {
 			$pg_cover_photo_minimum_width = 800;
 		}
 		if ( $pg_profile_image_max_file_size == '' ) {
+			// translators: 1: min width, 2: min height.
 			$message = sprintf( __( 'File Restrictions: Please make sure your image size fits within %1$d by %2$d pixels.', 'profilegrid-user-profiles-groups-and-communities' ), $pg_profile_photo_minimum_width, $pg_profile_photo_minimum_width );
 		} else {
+			// translators: 1: min width, 2: min height, 3: max bytes.
 			$message = sprintf( __( 'File Restrictions: Please make sure your image size fits within %1$d by %2$d pixels and does not exceeds total size of %3$d bytes.', 'profilegrid-user-profiles-groups-and-communities' ), $pg_profile_photo_minimum_width, $pg_profile_photo_minimum_width, $pg_profile_image_max_file_size );
 		}
 
 		if ( $pg_cover_image_max_file_size == '' ) {
+			// translators: 1: min width, 2: min height.
 			$message2 = sprintf( __( 'File Restrictions: Please make sure your image size fits within %1$d by %2$d pixels.', 'profilegrid-user-profiles-groups-and-communities' ), $pg_cover_photo_minimum_width, 300 );
 		} else {
+			// translators: 1: min width, 2: min height, 3: max bytes.
 			$message2 = sprintf( __( 'File Restrictions: Please make sure your image size fits within %1$d by %2$d pixels and does not exceeds total size of %3$d bytes.', 'profilegrid-user-profiles-groups-and-communities' ), $pg_cover_photo_minimum_width, 300, $pg_cover_image_max_file_size );
 		}
 
@@ -787,17 +1066,19 @@ class Profile_Magic_Admin {
 								?>
 								">
 								<?php
-								echo get_avatar(
-									$user->user_email,
-									100,
-									'',
-									false,
-									array(
-										'class'         => 'pm-user user-profile-image',
-										'id'            => 'pg_upload_image_preview',
-										'force_display' => true,
-									)
-								);
+								if ( is_object( $user ) && isset( $user->user_email ) ) {
+									echo get_avatar(
+										$user->user_email,
+										100,
+										'',
+										false,
+										array(
+											'class'         => 'pm-user user-profile-image',
+											'id'            => 'pg_upload_image_preview',
+											'force_display' => true,
+										)
+									);
+								}
 								?>
 																	<input type="button" name="pg_remove_image" id="pg_remove_image" class="button" value="<?php esc_attr_e( 'Remove', 'profilegrid-user-profiles-groups-and-communities' ); ?>" onclick="pg_remove_profile_image()"/>
 								</span>
@@ -929,7 +1210,7 @@ class Profile_Magic_Admin {
 			}
 				endif;
 		if ( is_object( $user ) ) {
-			echo '<input type="hidden" id="pg_user_id" name="pg_user_id" value="' . esc_attr( $user->ID ) . '" />';
+			echo '<input type="hidden" id="pg_user_id" name="pg_user_id" value="' . esc_attr( isset( $user->ID ) ? absint( $user->ID ) : get_current_user_id() ) . '" />';
 		}
 				wp_nonce_field( 'pg_user_profile', 'pg_user_profile_nonce' );
 				echo '<div class="all_errors" style="display:none;"></div>';
@@ -1055,7 +1336,8 @@ class Profile_Magic_Admin {
 
 	public function profile_magic_activate_user_by_email() {
 		$pmemails           = new PM_Emails();
-		$req                = filter_input( INPUT_GET, 'user', FILTER_SANITIZE_STRING );
+		$req_raw            = filter_input( INPUT_GET, 'user' );
+		$req                = sanitize_text_field( wp_unslash( $req_raw ) );
 		$pmrequests         = new PM_request();
 		$req_deco           = $pmrequests->pm_encrypt_decrypt_pass( 'decrypt', $req );
 		$user_data          = json_decode( $req_deco );
@@ -1083,7 +1365,6 @@ class Profile_Magic_Admin {
 		}
 		wp_safe_redirect( esc_url_raw( $redirect_url ) );
 		exit;
-		die;
 	}
 
 	public function pm_load_export_fields_dropdown() {
@@ -1150,6 +1431,8 @@ class Profile_Magic_Admin {
 	public function profile_grid_myme_types( $mime_types ) {
 		$mime_types['csv']  = 'text/csv';
 		$mime_types['json'] = 'application/json';
+		$mime_types['webp'] = 'image/webp';
+		$mime_types['avif'] = 'image/avif';
 		return $mime_types;
 	}
 
@@ -1743,7 +2026,7 @@ class Profile_Magic_Admin {
 	public function individual_user_group_add_meta_box() {
 		add_meta_box(
 			'group_pages_menu_metabox',
-			__( 'Individual User Group', 'individual-user-group-to-menu' ),
+			__( 'Individual User Group', 'profilegrid-user-profiles-groups-and-communities' ),
 			array( $this, 'individual_user_group_display_meta_box' ),
 			'nav-menus',
 			'side',
@@ -1751,7 +2034,7 @@ class Profile_Magic_Admin {
 		);
 		add_meta_box(
 			'user_profile_pages_menu_metabox',
-			__( 'Individual User Profile', 'individual-user-profile-to-menu' ),
+			__( 'Individual User Profile', 'profilegrid-user-profiles-groups-and-communities' ),
 			array( $this, 'individual_user_profile_display_meta_box' ),
 			'nav-menus',
 			'side',
@@ -1801,10 +2084,10 @@ class Profile_Magic_Admin {
 		</div>
 		<p class="button-controls">
 			<span class="list-controls">
-				<a href="<?php echo esc_url( admin_url( 'nav-menus.php?page-tab=all&selectall=1#posttype-group-pages' ) ); ?>" class="select-all"> <?php esc_html_e( 'Select All', 'group-pages-to-menu' ); ?></a>
+				<a href="<?php echo esc_url( admin_url( 'nav-menus.php?page-tab=all&selectall=1#posttype-group-pages' ) ); ?>" class="select-all"> <?php esc_html_e( 'Select All', 'profilegrid-user-profiles-groups-and-communities' ); ?></a>
 			</span>
 			<span class="add-to-menu">
-				<input type="submit" class="button-secondary submit-add-to-menu right" value="<?php esc_attr_e( 'Add to Menu', 'group-pages-to-menu' ); ?>" name="add-post-type-menu-item" id="submit-posttype-group-pages">
+				<input type="submit" class="button-secondary submit-add-to-menu right" value="<?php esc_attr_e( 'Add to Menu', 'profilegrid-user-profiles-groups-and-communities' ); ?>" name="add-post-type-menu-item" id="submit-posttype-group-pages">
 				<span class="spinner"></span>
 			</span>
 		</p>
@@ -1835,7 +2118,7 @@ class Profile_Magic_Admin {
 					foreach ( $users as $user ) {
 						$group_name                          = $user->display_name;
 						$uid                                 = $user->ID;
-												$profile_url = $pmrequests->pm_get_user_profile_url( $uid );
+								$profile_url = $pmrequests->pm_get_user_profile_url( $uid );
 						?>
 						<li>
 							<label class="menu-item-title">
@@ -1856,10 +2139,10 @@ class Profile_Magic_Admin {
 		</div>
 		<p class="button-controls">
 			<span class="list-controls">
-				<a href="<?php echo esc_url( admin_url( 'nav-menus.php?page-tab=all&selectall=1#posttype-user-pages' ) ); ?>" class="select-all"> <?php esc_html_e( 'Select All', 'user-pages-to-menu' ); ?></a>
+				<a href="<?php echo esc_url( admin_url( 'nav-menus.php?page-tab=all&selectall=1#posttype-user-pages' ) ); ?>" class="select-all"> <?php esc_html_e( 'Select All', 'profilegrid-user-profiles-groups-and-communities' ); ?></a>
 			</span>
 			<span class="add-to-menu">
-				<input type="submit" class="button-secondary submit-add-to-menu right" value="<?php esc_attr_e( 'Add to Menu', 'user-pages-to-menu' ); ?>" name="add-post-type-menu-item" id="submit-posttype-user-pages">
+				<input type="submit" class="button-secondary submit-add-to-menu right" value="<?php esc_attr_e( 'Add to Menu', 'profilegrid-user-profiles-groups-and-communities' ); ?>" name="add-post-type-menu-item" id="submit-posttype-user-pages">
 				<span class="spinner"></span>
 			</span>
 		</p>
@@ -1875,7 +2158,7 @@ class Profile_Magic_Admin {
 		if ( current_user_can( 'manage_options' ) ) 
 		{
 			$dbhandler  = new PM_DBhandler();
-			$gid        = filter_input( INPUT_POST, 'gid' );
+			$gid        = absint( filter_input( INPUT_POST, 'gid' ) );
 			$identifier = 'GROUPS';
 			$row        = $dbhandler->get_row( $identifier, $gid );
 			if ( $row->group_options != '' ) {
@@ -2052,8 +2335,8 @@ class Profile_Magic_Admin {
             if ( current_user_can( 'manage_options' ) ) 
             {
                 $dbhandler = new PM_DBhandler();
-                $gid        = filter_input( INPUT_POST, 'gid' );
-                $group_icon = filter_input( INPUT_POST, 'group_icon' );
+                $gid        = absint( filter_input( INPUT_POST, 'gid' ) );
+                $group_icon = absint( filter_input( INPUT_POST, 'group_icon' ) );
                 $data       = array( 'group_icon' => $group_icon );
                 $dbhandler->update_row( 'GROUPS', 'id', $gid, $data );
             }
@@ -2069,7 +2352,7 @@ class Profile_Magic_Admin {
 		if ( ! wp_verify_nonce( $retrieved_nonce, 'pm_group_wizard_form' ) ) {
 			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
 		}
-		$groupid = filter_input( INPUT_POST, 'group_id' );
+		$groupid = absint( filter_input( INPUT_POST, 'group_id' ) );
 		$exclude = array( '_wpnonce', '_wp_http_referer', 'submit_group', 'group_id', 'pg-switch-two', 'action' );
 
 		$post = $pmrequests->sanitize_request( $_POST, $identifier, $exclude );
@@ -2095,12 +2378,16 @@ class Profile_Magic_Admin {
 		$identifier     = 'GROUPS';
 			$pmrequests = new PM_request();
 		$pm_sanitizer   = new PM_sanitizer();
-			$path       = plugin_dir_url( __FILE__ );
+            $path       = plugin_dir_url( __FILE__ );
 
                         
                 $post = $pm_sanitizer->sanitize( $_POST );
 		if ( isset( $post['gids'] ) && ! empty( $post['gids'] ) ) {
 			foreach ( $post['gids'] as $gid ) {
+				$gid = absint( $gid );
+				if ( 0 === $gid ) {
+					continue;
+				}
 				$row              = $dbhandler->get_row( $identifier, $gid );
 				$meta_query_array = $pmrequests->pm_get_user_meta_query( array( 'gid' => $row->id ) );
 				$user_query       = $dbhandler->pm_get_all_users_ajax( '', $meta_query_array, '', 0, 6, 'DESC', 'ID' );
@@ -2252,15 +2539,15 @@ class Profile_Magic_Admin {
                 return;
         }
         ?>
-            <div class="notice notice-info pg-brand-notice is-dismissible pg-dismissible" id="pg_dismissible_discount_sale_banner" style="display: none;">
+            <!-- <div class="notice notice-info pg-brand-notice is-dismissible pg-dismissible" id="pg_dismissible_discount_sale_banner" style="display: none;">
             <div class="pg-content pg-d-flex pg-box-center">
                 <div class="pg-icon">🎉</div>
                 <div class="pg-message">
                 <?php
-                echo wp_kses_post(
-                        __('<strong>Save 30% on ProfileGrid Premium – Limited Time!</strong>
-                        Use code <strong>PGJULY30</strong> at checkout. Offer valid until <strong>July 31</strong>.','profilegrid-user-profiles-groups-and-communities')
-                    );
+                // echo wp_kses_post(
+                //         __('<strong>Save 30% on ProfileGrid Premium – Limited Time!</strong>
+                //         Use code <strong>PGJULY30</strong> at checkout. Offer valid until <strong>July 31</strong>.','profilegrid-user-profiles-groups-and-communities')
+                //     );
                 ?>
                     
            
@@ -2272,7 +2559,7 @@ class Profile_Magic_Admin {
             
             
            
-        </div>
+        </div> -->
     <?php
     }
 

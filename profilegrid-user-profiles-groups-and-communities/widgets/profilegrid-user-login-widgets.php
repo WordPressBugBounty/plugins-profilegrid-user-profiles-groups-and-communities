@@ -12,10 +12,18 @@ if ( ! class_exists( 'Profilegrid_User_login' ) ) :
     
 class Profilegrid_User_login extends WP_Widget {
     
+    /**
+     * Plugin identifiers used by shared helpers included in the widget view.
+     */
+    private $profile_magic;
+    private $version;
+    
     /*
      *  registers basic widget information.
      */
     public function __construct() {
+        $this->profile_magic = 'profilegrid-user-profiles-groups-and-communities';
+        $this->version       = defined( 'PROGRID_PLUGIN_VERSION' ) ? PROGRID_PLUGIN_VERSION : '1.0.0';
         $widget_options = array(
            'classname' => 'pg_user_login',
           'description' => esc_html__('Widget for Login and Display Short Profile ','profilegrid-user-profiles-groups-and-communities'),
@@ -85,4 +93,3 @@ class Profilegrid_User_login extends WP_Widget {
     }
 }
 endif;
-

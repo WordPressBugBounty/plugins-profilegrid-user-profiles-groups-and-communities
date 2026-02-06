@@ -354,6 +354,7 @@ function pm_multiple_friends_remove(uid)
     var result = confirm(pm_error_object.remove_friend);
     if(result)
     {
+        var handled = false;
         jQuery('.pm-my-friends-select-checkbox').each(function (index, element) { //Validation for number type custom field
                     var isChecked = jQuery(this).is(':checked');
                     var u2 = jQuery(this).val();
@@ -361,9 +362,17 @@ function pm_multiple_friends_remove(uid)
                     {
 
                         pm_unfriend_request(uid,u2,this);
+                        handled = true;
                     }
 
         });
+        if (!handled) {
+            var allCheckboxes = jQuery('.pm-my-friends-select-checkbox');
+            if (allCheckboxes.length === 1) {
+                var single = allCheckboxes.first();
+                pm_unfriend_request(uid, single.val(), single);
+            }
+        }
     }
 }
 
@@ -372,15 +381,24 @@ function pm_multiple_friends_request_accept(uid)
     var result = confirm(pm_error_object.accept_friend_request_conf);
     if(result)
     {
+        var handled = false;
         jQuery('.pm-request-friends-select-checkbox').each(function (index, element) { //Validation for number type custom field
                     var isChecked = jQuery(this).is(':checked');
                     var u2 = jQuery(this).val();
                     if(isChecked)
                     {
                         pm_confirm_request(uid,u2,this);
+                        handled = true;
                     }
 
         });
+        if (!handled) {
+            var allCheckboxes = jQuery('.pm-request-friends-select-checkbox');
+            if (allCheckboxes.length === 1) {
+                var single = allCheckboxes.first();
+                pm_confirm_request(uid, single.val(), single);
+            }
+        }
     }        
 }
 
@@ -389,15 +407,24 @@ function pm_multiple_friends_request_delete(uid)
     var result = confirm(pm_error_object.delete_friend_request);
     if(result)
     {
+        var handled = false;
         jQuery('.pm-request-friends-select-checkbox').each(function (index, element) { //Validation for number type custom field
                     var isChecked = jQuery(this).is(':checked');
                     var u2 = jQuery(this).val();
                     if(isChecked)
                     {
                         pm_reject_friend_request(uid,u2,'multiple');
+                        handled = true;
                     }
 
         });
+        if (!handled) {
+            var allCheckboxes = jQuery('.pm-request-friends-select-checkbox');
+            if (allCheckboxes.length === 1) {
+                var single = allCheckboxes.first();
+                pm_reject_friend_request(uid, single.val(), 'multiple');
+            }
+        }
     }
 }
 

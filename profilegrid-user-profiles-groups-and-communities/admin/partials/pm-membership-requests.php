@@ -114,7 +114,7 @@ $pagination   = $dbhandler->pm_get_pagination_new_ui( $num_of_pages, $pagenum );
     <form name="request_manager" id="request_manager" action="" method="get">
         <input type="hidden" name="page" value="pm_requests_manager" />
         
-        <input type="hidden" id="pagenum" name="pagenum" value="<?php esc_attr_e($pagenum);?>" />
+        <input type="hidden" id="pagenum" name="pagenum" value="<?php echo esc_attr( $pagenum ); ?>" />
  
         <!--------Operationsbar Ends-----> 
 
@@ -127,7 +127,7 @@ $pagination   = $dbhandler->pm_get_pagination_new_ui( $num_of_pages, $pagenum );
          
                 <div class="tablenav top rm-tablenav-top">
                     <div class="alignleft actions bulkactions">
-                        <label for="bulk-action-selector-top"  class="screen-reader-text"><?php esc_html_e('Select bulk action','profilegrid-user-profiles-groups-and-communities');?></label>
+                        <label for="bulk-action-selector-top" class="screen-reader-text"><?php esc_html_e('Select bulk action','profilegrid-user-profiles-groups-and-communities');?></label>
                         <select name="bulk_action" id="pg_request_bulk_actions">
                             <option value=""><?php esc_attr_e('Bulk actions','profilegrid-user-profiles-groups-and-communities');?></option>
                             <option value="approve"><?php esc_attr_e('Approve','profilegrid-user-profiles-groups-and-communities');?></option>
@@ -166,7 +166,12 @@ $pagination   = $dbhandler->pm_get_pagination_new_ui( $num_of_pages, $pagenum );
                   
                     <h2 class="screen-reader-text"><?php esc_html_e('User list navigation', 'profilegrid-user-profiles-groups-and-communities'); ?></h2>
                     <div  class="tablenav-pages pg-mb-2 <?php  if($num_of_pages==1){echo 'one-page';} ?>">
-                        <span class="displaying-num"><?php esc_html_e(sprintf('%d request',$total_users),'profilegrid-user-profiles-groups-and-communities');?></span>
+                        <span class="displaying-num">
+                        <?php
+                        // translators: %d: request count.
+                        printf( esc_html__( '%d request', 'profilegrid-user-profiles-groups-and-communities' ), intval( $total_users ) );
+                        ?>
+                        </span>
                         <?php
                             if($total_users){
                                 echo wp_kses_post($pagination);
@@ -215,7 +220,7 @@ $pagination   = $dbhandler->pm_get_pagination_new_ui( $num_of_pages, $pagenum );
             </th>
             <td class="username column-username has-row-actions column-primary">
                 <?php echo wp_kses_post($avatar); ?>      
-                <strong> <a href="admin.php?page=pm_profile_view&id=<?php echo esc_attr( $user->ID ); ?> class="row-title"><?php echo esc_html( $user->user_login ); ?></a></strong>
+                <strong> <a href="admin.php?page=pm_profile_view&id=<?php echo esc_attr( $user->ID ); ?>" class="row-title"><?php echo esc_html( $user->user_login ); ?></a></strong>
                 <div class="row-actions">
                             <span class="pg-user-view"><a href="admin.php?page=pm_profile_view&id=<?php echo esc_attr($user->ID); ?>" target="__blank"><?php esc_html_e('View', 'profilegrid-user-profiles-groups-and-communities'); ?></a> |</span>
                             <span class="pg-assign-group"><a href="javascript:void()" onclick="pm_request_user_action(this,'approve')"><?php esc_html_e('Approve', 'profilegrid-user-profiles-groups-and-communities'); ?></a> |</span>

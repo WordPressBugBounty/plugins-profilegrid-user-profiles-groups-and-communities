@@ -546,17 +546,17 @@ $pm_default_groups_sorting = $dbhandler->get_global_option_value( 'pm_default_gr
             <div class="uiminput">
                 <?php  $pm_date_format = $dbhandler->get_global_option_value( 'pm_date_format', '0' ); ?>
                 <select name="pm_date_format" id="pm_date_format">
-                    <option value="Y-m-d" <?php selected( 'Y-m-d', $pm_date_format ); ?>><?php echo esc_html(date('Y-m-d').'( Y-m-d )'); ?></option>
-                    <option value="d-m-Y"  <?php selected( 'd-m-Y', $pm_date_format ); ?>><?php echo esc_html(date('d-m-Y').'( d-m-Y )'); ?></option>
-                    <option value="m-d-Y"  <?php selected( 'm-d-Y', $pm_date_format ); ?>><?php echo esc_html(date('m-d-Y').'( m-d-Y )'); ?></option>
+                    <option value="Y-m-d" <?php selected( 'Y-m-d', $pm_date_format ); ?>><?php echo esc_html(gmdate('Y-m-d').'( Y-m-d )'); ?></option>
+                    <option value="d-m-Y"  <?php selected( 'd-m-Y', $pm_date_format ); ?>><?php echo esc_html(gmdate('d-m-Y').'( d-m-Y )'); ?></option>
+                    <option value="m-d-Y"  <?php selected( 'm-d-Y', $pm_date_format ); ?>><?php echo esc_html(gmdate('m-d-Y').'( m-d-Y )'); ?></option>
                     
-                    <option value="Y/m/d"  <?php selected( 'Y/m/d', $pm_date_format ); ?>><?php echo esc_html(date('Y/m/d').'( Y/m/d )'); ?></option>
-                    <option value="d/m/Y"  <?php selected( 'd/m/Y', $pm_date_format ); ?>><?php echo esc_html(date('d/m/Y').'( d/m/Y )'); ?></option>
-                    <option value="m/d/Y"  <?php selected( 'm/d/Y', $pm_date_format ); ?>><?php echo esc_html(date('m/d/Y').'( m/d/Y )'); ?></option>
+                    <option value="Y/m/d"  <?php selected( 'Y/m/d', $pm_date_format ); ?>><?php echo esc_html(gmdate('Y/m/d').'( Y/m/d )'); ?></option>
+                    <option value="d/m/Y"  <?php selected( 'd/m/Y', $pm_date_format ); ?>><?php echo esc_html(gmdate('d/m/Y').'( d/m/Y )'); ?></option>
+                    <option value="m/d/Y"  <?php selected( 'm/d/Y', $pm_date_format ); ?>><?php echo esc_html(gmdate('m/d/Y').'( m/d/Y )'); ?></option>
                     
-                    <option value="Y.m.d"  <?php selected( 'Y.m.d', $pm_date_format ); ?>><?php echo esc_html(date('Y.m.d').'( Y.m.d )'); ?></option>
-                    <option value="d.m.Y"  <?php selected( 'd.m.Y', $pm_date_format ); ?>><?php echo esc_html(date('d.m.Y').'( d.m.Y )'); ?></option>
-                    <option value="m.d.Y"  <?php selected( 'm.d.Y', $pm_date_format ); ?>><?php echo esc_html(date('m.d.Y').'( m.d.Y )'); ?></option>
+                    <option value="Y.m.d"  <?php selected( 'Y.m.d', $pm_date_format ); ?>><?php echo esc_html(gmdate('Y.m.d').'( Y.m.d )'); ?></option>
+                    <option value="d.m.Y"  <?php selected( 'd.m.Y', $pm_date_format ); ?>><?php echo esc_html(gmdate('d.m.Y').'( d.m.Y )'); ?></option>
+                    <option value="m.d.Y"  <?php selected( 'm.d.Y', $pm_date_format ); ?>><?php echo esc_html(gmdate('m.d.Y').'( m.d.Y )'); ?></option>
                 </select>
                 <div class="errortext"></div>
             </div>

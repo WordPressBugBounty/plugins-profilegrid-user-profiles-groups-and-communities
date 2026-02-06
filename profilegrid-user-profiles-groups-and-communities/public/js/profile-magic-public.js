@@ -148,14 +148,29 @@ function validate_phone_number(number) {
 }
 
 function validateMobileNumber(number) {
-    if (number != "") {
+    if(number!=""){
+        var phone_num = number.replace(/[^\d]/g, '');
+        var a = number;
+        var phone_num = number.replace(/[^\d]/g, '');
+        var filter = /^((\+[1-9]{1,4}[ \-]*)|(\([0-9]{2,3}\)[ \-]*)|([0-9]{2,4})[ \-]*)*?[0-9]{3,4}?[ \-]*[0-9]{3,4}?$/;
+        if (filter.test(a)&&(phone_num.length >=10 && phone_num.length <= 13)) {
+            //console.log(phone_num);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }else{
+        return true;
+    }
+    /*if (number != "") {
         const regex = /^\+?(\d{1,4})?[-.\s]?((\d{10,15})|(\d{6,9}))$/;
         return regex.test(number);
     }
     else
     {
         return true;
-    }
+    }*/
 }
 
 function validate_facebook_url(val)
@@ -540,11 +555,13 @@ function profile_magic_frontend_validation(form)
 	});
 	
 	jQuery('#'+formid+' .pm_recaptcha').each(function (index, element) {
-		var response = grecaptcha.getResponse();
-				//recaptcha failed validation
-		if (response.length == 0) {
-			jQuery(this).children('.errortext').html(pm_error_object.required_field);
-			jQuery(this).children('.errortext').show();
+		if (typeof grecaptcha !== 'undefined' && typeof grecaptcha.getResponse === 'function') {
+			var response = grecaptcha.getResponse();
+			// recaptcha failed validation
+			if (response.length == 0) {
+				jQuery(this).children('.errortext').html(pm_error_object.required_field);
+				jQuery(this).children('.errortext').show();
+			}
 		}
 	});
 	
@@ -741,7 +758,7 @@ function profile_magic_frontend_validation_edit_profile(form)
                     pattern = /^([0-9]{4}).([0-9]{2}).([0-9]{2})$/;
                 }
                 else if(pm_fields_object.dateformat =='mm.dd.yy'){
-                    pattern = /^([0-9]{2}).([0-9]{2}).([0-9]{4})$/;
+                    pattern = /^([0-9]{2]).([0-9]{2}).([0-9]{4})$/;
                 }
                 else if(pm_fields_object.dateformat =='yy/mm/dd'){
                     pattern = /^([0-9]{4})\/([0-9]{2})\/([0-9]{2})$/;
@@ -970,7 +987,7 @@ function pm_frontend_change_password(form)
 {
 	var pass1 = jQuery(form).children('.pmrow').children('.pm-col').children('.pm-field-input').children('#pass1').val();	
         var pass2 = jQuery(form).children('.pmrow').children('.pm-col').children('.pm-field-input').children('#pass2').val();	
-	var userid = jQuery(form).children('#user_id').val();
+	var userid = jQuery(form).find('input[name="user_id"]').val();
         jQuery('#pm_reset_passerror').removeClass('pm_password_error');
         jQuery('#pm_reset_passerror').removeClass('pm_password_success');
 	var data = {'action': 'pm_change_frontend_user_pass','pass1': pass1,'pass2' : pass2, 'nonce': pm_ajax_object.nonce};
@@ -1093,6 +1110,9 @@ function profile_magic_multistep_form_validation(form)
 	var email_val = "";
 	var formid = form.attr('id');
 	var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+	if (typeof pm_fields_object === 'undefined' || pm_fields_object === null) {
+		window.pm_fields_object = { dateformat: 'yy-mm-dd' };
+	}
 	jQuery('.errortext').html('');
 	jQuery('.errortext').hide();
 	jQuery('.all_errors').html('');
@@ -1448,7 +1468,7 @@ function pm_user_image_validation(a)
 		return false;
 	}
 	
-	var allowextensions = 'jpg|jpeg|png|gif';
+	var allowextensions = 'jpg|jpeg|png|gif|webp|avif';
 	if(allowextensions=='')
 	{
 		allowextensions = pm_error_object.allow_file_ext;
@@ -1502,7 +1522,7 @@ function profile_magic_blogpost_validation()
         
         jQuery('#pm_add_blog_post .pm_fileinput .pm_repeat').each(function (index, element) {
 		var val = jQuery(this).children('input').val().toLowerCase();
-		var allowextensions = 'jpg|jpeg|png|gif';
+		var allowextensions = 'jpg|jpeg|png|gif|webp|avif';
 		if(allowextensions=='')
 		{
 			allowextensions = pm_error_object.allow_file_ext;
@@ -1773,4 +1793,3 @@ jQuery(document).ready(function() {
         });
     });
 });
-

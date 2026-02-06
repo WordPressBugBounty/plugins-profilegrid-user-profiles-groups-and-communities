@@ -142,8 +142,8 @@ function parseDate(dateString) {
         return false;
     });
     
-    $(window).load(function() 
-    {
+    $(window).on('load', function() {
+        
         var recaptcha = $(".g-recaptcha");
 
         if($(window).width() < 391 ) {
@@ -368,10 +368,10 @@ function parseDate(dateString) {
 	            status: 'save',
 	            x: $('#x').val(),
 	            y : $('#y').val(),
-	            w: $('#w').val(),
-	            h : $('#h').val(),
+                    w: $('#w').val(),
+                    h : $('#h').val(),
                     fullpath:$('#fullpath').val(),
-                    user_id:$('#user_id').val(),
+                    user_id:$('#cropimage').find('input[name=\"user_id\"]').val(),
                     user_meta:$('#user_meta').val(),
                     attachment_id:$('#attachment_id').val()
 	        };
@@ -396,10 +396,10 @@ function parseDate(dateString) {
 	            status: 'cancel',
 	            x: $('#x').val(),
 	            y : $('#y').val(),
-	            w: $('#w').val(),
-	            h : $('#h').val(),
+                    w: $('#w').val(),
+                    h : $('#h').val(),
                     fullpath:$('#fullpath').val(),
-                    user_id:$('#user_id').val(),
+                    user_id:$('#cropimage').find('input[name=\"user_id\"]').val(),
                     user_meta:$('#user_meta').val(),
                     attachment_id:$('#attachment_id').val()
 	    };
@@ -485,10 +485,10 @@ function parseDate(dateString) {
 	            cover_status: 'save',
 	            x: $('#cx').val(),
 	            y : $('#cy').val(),
-	            w: $('#cw').val(),
-	            h : $('#ch').val(),
+                    w: $('#cw').val(),
+                    h : $('#ch').val(),
                     fullpath:$('#coverfullpath').val(),
-                    user_id:$('#user_id').val(),
+                    user_id:$('#cropcoverimage').find('input[name=\"user_id\"]').val(),
                     user_meta:'pm_cover_image',
                     attachment_id:$('#cover_attachment_id').val()
 	        };
@@ -511,10 +511,10 @@ function parseDate(dateString) {
 	            cover_status: 'cancel',
 	            x: $('#cx').val(),
 	            y : $('#cy').val(),
-	            w: $('#cw').val(),
-	            h : $('#ch').val(),
+                    w: $('#cw').val(),
+                    h : $('#ch').val(),
                     fullpath:$('#coverfullpath').val(),
-                    user_id:$('#user_id').val(),
+                    user_id:$('#cropcoverimage').find('input[name=\"user_id\"]').val(),
                     user_meta:$('#user_meta').val(),
                     attachment_id:$('#cover_attachment_id').val()
 	        };

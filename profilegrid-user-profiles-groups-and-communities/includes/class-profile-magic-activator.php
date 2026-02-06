@@ -292,7 +292,8 @@ class Profile_Magic_Activator {
 		if ( ! empty( $groups ) ) {
 			$checkfield = $dbhandler->get_row( 'GROUPS', $groups[0]->id, false, 'ARRAY_A' );
 			if ( ! array_key_exists( 'group_leaders', $checkfield ) ) {
-				$query = "ALTER TABLE $table_name 
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- table name built internally and sanitized.
+				$query = "ALTER TABLE " . esc_sql( $table_name ) . " 
                 ADD COLUMN `group_leaders` longtext DEFAULT NULL AFTER `leader_username`";
 				$wpdb->query( $query );
 			}
@@ -332,7 +333,8 @@ class Profile_Magic_Activator {
 		$table_name = $this->get_db_table_name( 'PAYPAL_LOG' );
 		// Add column if not present.
 		if ( ! empty( $paypallog ) && ! isset( $paypallog->gid ) ) {
-			$query = "ALTER TABLE $table_name 
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- table name built internally and sanitized.
+			$query = "ALTER TABLE " . esc_sql( $table_name ) . " 
             ADD COLUMN `gid` int(11) NOT NULL AFTER `posted_date`,
             ADD COLUMN `status` VARCHAR(255) NOT NULL AFTER `gid`,
             ADD COLUMN `invoice` VARCHAR(255) NOT NULL AFTER `status`,

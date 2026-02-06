@@ -1,22 +1,30 @@
-<?php $pmhtmlcreator = new PM_HTML_Creator($this->profile_magic,$this->version);
-$pmrequests = new PM_request;
-$pagenum = filter_input(INPUT_GET, 'pagenum');
-$rid = filter_input(INPUT_GET,'rid');
-$pagenum = isset($pagenum) ? absint($pagenum) : 1;
+<?php
+$pmhtmlcreator = new PM_HTML_Creator($this->profile_magic,$this->version);
+$pmrequests    = new PM_request;
+$pagenum       = filter_input(INPUT_GET, 'pagenum');
+$rid           = filter_input(INPUT_GET,'rid');
+$pagenum       = isset($pagenum) ? absint($pagenum) : 1;
 $group_page_link = $pmrequests->profile_magic_get_frontend_url('pm_group_page','');
-$pm_sanitizer = new PM_sanitizer;
-$post_obj = $pm_sanitizer->sanitize($_POST);
+$pm_sanitizer  = new PM_sanitizer;
+$post_obj      = $pm_sanitizer->sanitize($_POST);
+
+// New: basic_function helper for nonce rendering
+$basic_function = null;
+if ( class_exists( 'Profile_Magic_Basic_Functions' ) ) {
+    $basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+}
+
 if(!empty($gid))
 {
-    $primary_gid = $pmrequests->pg_get_primary_group_id($gid);
+    $primary_gid     = $pmrequests->pg_get_primary_group_id($gid);
     $group_page_link = $pmrequests->profile_magic_get_frontend_url('pm_group_page','',$primary_gid);
     //$group_page_link = add_query_arg( 'gid',$primary_gid,$group_page_link );
-    $groupinfo = $dbhandler->get_row('GROUPS',$primary_gid);
+    $groupinfo    = $dbhandler->get_row('GROUPS',$primary_gid);
     $group_leader = maybe_unserialize($groupinfo->group_leaders);
 }
 else
 {
-    $gid='';
+    $gid         = '';
     $primary_gid = '';
 }
 
@@ -135,14 +143,21 @@ else
           <a type="button" class="btn btn-primary" id="change-pic"><?php esc_html_e('Change Image','profilegrid-user-profiles-groups-and-communities');?></a>
 	  <div id="changePic" class="" style="display:none">
             <form id="cropimage" method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url( 'admin-ajax.php') );?>">
+                <?php
+                if ( $basic_function && is_callable( array( $basic_function, 'pm_render_nonce_field' ) ) ) {
+                    $basic_function->pm_render_nonce_field( 'pm_profile_update_action', 'pm_profile_nonce' );
+                } elseif ( function_exists( 'pm_render_nonce_field' ) ) {
+                    pm_render_nonce_field( 'pm_profile_update_action', 'pm_profile_nonce' );
+                }
+                ?>
                 <div class="pm-dbfl">
 	           <label><?php esc_html_e('Upload your image','profilegrid-user-profiles-groups-and-communities');?></label>
                 <input type="file" name="photoimg" id="photoimg" />
                     </div>
-            <input type="hidden" name="action" value="pm_upload_image" id="action" />
+            <input type="hidden" name="action" value="pm_upload_image" />
             <input type="hidden" name="status" value="" id="status" />
             <input type="hidden" name="filepath" id="filepath" value="<?php echo esc_url($path);?>" />
-            <input type="hidden" name="user_id" id="user_id" value="<?php echo esc_attr($user_info->ID); ?>" />
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( isset( $user_info->ID ) ? absint( $user_info->ID ) : get_current_user_id() ); ?>" />
             <input type="hidden" name="user_meta" id="user_meta" value="<?php echo esc_attr('pm_user_avatar'); ?>" />
             <input type="hidden" id="x" name="x" />
             <input type="hidden" id="y" name="y" />
@@ -157,6 +172,13 @@ else
             </div>
           </div>
           <form method="post" action="" enctype="multipart/form-data" onsubmit="return pg_prevent_double_click(this);">
+            <?php
+            if ( $basic_function && is_callable( array( $basic_function, 'pm_render_nonce_field' ) ) ) {
+                $basic_function->pm_render_nonce_field( 'pm_profile_update_action', 'pm_profile_nonce' );
+            } elseif ( function_exists( 'pm_render_nonce_field' ) ) {
+                pm_render_nonce_field( 'pm_profile_update_action', 'pm_profile_nonce' );
+            }
+            ?>
             <input type="hidden" name="user_id" value="<?php echo esc_attr($user_info->ID); ?>" />
             <input type="hidden" name="user_meta" value="<?php echo esc_attr('pm_user_avatar'); ?>" />
             <input type="submit" value="<?php esc_attr_e('Remove','profilegrid-user-profiles-groups-and-communities');?>" name="remove_image" id="pg_remove_profile_image_btn" />
@@ -183,12 +205,19 @@ else
           <a type="button" class="btn btn-primary" id="change-cover-pic"><?php esc_html_e('Change Cover Image','profilegrid-user-profiles-groups-and-communities');?></a>
 	  <div id="changeCoverPic" class="" style="display:none">
             <form id="cropcoverimage" method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url( 'admin-ajax.php' ));?>">
+            <?php
+            if ( $basic_function && is_callable( array( $basic_function, 'pm_render_nonce_field' ) ) ) {
+                $basic_function->pm_render_nonce_field( 'pm_profile_update_action', 'pm_profile_nonce' );
+            } elseif ( function_exists( 'pm_render_nonce_field' ) ) {
+                pm_render_nonce_field( 'pm_profile_update_action', 'pm_profile_nonce' );
+            }
+            ?>
 	    <label><?php esc_html_e('Upload Your Cover Image','profilegrid-user-profiles-groups-and-communities');?></label>
             <input type="file" name="coverimg" id="coverimg"  />
-            <input type="hidden" name="action" value="pm_upload_cover_image" id="action" />
+            <input type="hidden" name="action" value="pm_upload_cover_image" />
             <input type="hidden" name="cover_status" value="" id="cover_status" />
             <input type="hidden" name="cover_filepath" id="cover_filepath" value="<?php echo esc_url($path);?>" />
-            <input type="hidden" name="user_id" id="user_id" value="<?php echo esc_attr($user_info->ID); ?>" />
+            <input type="hidden" name="user_id" value="<?php echo esc_attr( isset( $user_info->ID ) ? absint( $user_info->ID ) : get_current_user_id() ); ?>" />
             <input type="hidden" id="cx" name="cx" />
             <input type="hidden" id="cy" name="cy" />
             <input type="hidden" id="cw" name="cw" />
@@ -206,6 +235,13 @@ else
             
             
           <form method="post" action="" enctype="multipart/form-data" onsubmit="return pg_prevent_double_click(this);">     
+            <?php
+            if ( $basic_function && is_callable( array( $basic_function, 'pm_render_nonce_field' ) ) ) {
+                $basic_function->pm_render_nonce_field( 'pm_profile_update_action', 'pm_profile_nonce' );
+            } elseif ( function_exists( 'pm_render_nonce_field' ) ) {
+                pm_render_nonce_field( 'pm_profile_update_action', 'pm_profile_nonce' );
+            }
+            ?>
             <input type="hidden" name="user_id" value="<?php echo esc_attr($user_info->ID); ?>" />
             <input type="hidden" name="user_meta" value="<?php echo esc_attr('pm_cover_image'); ?>" />
             <input type="submit" value="<?php esc_attr_e('Remove','profilegrid-user-profiles-groups-and-communities');?>" name="remove_image" id="pg_remove_cover_image_btn" />
@@ -294,4 +330,3 @@ else
         
     </div>
 </div>
-

@@ -2,6 +2,11 @@
 
 class PM_Custom_Fields {
 
+    /**
+     * Tracks how many username fields this instance has rendered to avoid duplicate IDs without relying on static state.
+     */
+    private $user_name_field_render_count = 0;
+
     public function pm_get_custom_form_fields($row, $value = '', $textdomain = '') {
         if ($textdomain == '')
             $textdomain = 'profilegrid-user-profiles-groups-and-communities';
@@ -185,14 +190,18 @@ class PM_Custom_Fields {
             $field_options = maybe_unserialize($row->field_options);
         if($value == '' && !empty($field_options) && isset($field_options['default_value']))
             $value = $field_options['default_value'];
+
+        $this->user_name_field_render_count++;
+        $base_id = $row->field_key;
+        $input_id = ($this->user_name_field_render_count > 1) ? $base_id . '_' . $this->user_name_field_render_count : $base_id;
         ?>        
         <div class="pm-col">
             <div class="pm-field-lable">
                 <span class="pm-form-field-icon"><?php echo wp_get_attachment_image($row->field_icon, array(16, 16), false, false); ?></span>
-                <label for="<?php echo esc_attr($row->field_key); ?>"><?php echo esc_attr($row->field_name); ?><sup class="pm_estric">*</sup></label>
+                <label for="<?php echo esc_attr($input_id); ?>"><?php echo esc_attr($row->field_name); ?><sup class="pm_estric">*</sup></label>
             </div>
             <div class="pm-field-input pm_user_name pm_required">
-                <input title="<?php echo esc_attr($row->field_desc); ?>" type="text" class="<?php if (!empty($field_options)) echo esc_attr($field_options['css_class_attribute']); ?>" maxlength="<?php if (!empty($field_options)) echo esc_attr($field_options['maximum_length']); ?>" value="<?php echo esc_attr($value); ?>" id="<?php echo esc_attr($row->field_key); ?>" name="<?php echo esc_attr($row->field_key); ?>" placeholder="<?php if (!empty($field_options)) echo esc_attr($field_options['place_holder_text']); ?>" onkeyup="pm_frontend_check_username()" onblur="pm_frontend_check_username()">
+                <input title="<?php echo esc_attr($row->field_desc); ?>" type="text" class="<?php if (!empty($field_options)) echo esc_attr($field_options['css_class_attribute']); ?>" maxlength="<?php if (!empty($field_options)) echo esc_attr($field_options['maximum_length']); ?>" value="<?php echo esc_attr($value); ?>" id="<?php echo esc_attr($input_id); ?>" name="<?php echo esc_attr($row->field_key); ?>" placeholder="<?php if (!empty($field_options)) echo esc_attr($field_options['place_holder_text']); ?>" onkeyup="pm_frontend_check_username()" onblur="pm_frontend_check_username()">
                 <div class="errortext" style="display:none;"></div>
                 <div class="usernameerror" style="display:none;"></div>
             </div>
@@ -720,7 +729,7 @@ class PM_Custom_Fields {
                 <label for="<?php echo esc_attr($row->field_key); ?>"><?php echo esc_attr($row->field_name); ?><?php if ($row->is_required == 1): ?><sup class="pm_estric">*</sup><?php endif; ?></label>
             </div>
             <div class="pm-field-input pm_fileinput <?php if ($row->is_required == 1) echo 'pm_repeat_required'; ?>">
-                <?php if($value!= '') echo $pmrequests->profile_magic_edit_user_attachment($value,$row->field_key); ?>
+                <?php if($value!= '') echo wp_kses_post( $pmrequests->profile_magic_edit_user_attachment($value,$row->field_key) ); ?>
                 <div class="pm_repeat">
                     <input title="<?php echo esc_attr($row->field_desc); ?>" type="file" class="<?php if (!empty($field_options)) echo esc_attr($field_options['css_class_attribute']); ?>" id="<?php echo esc_attr($row->field_key); ?>" name="<?php echo esc_attr($row->field_key) . '[]'; ?>" data-filter-placeholder="<?php if (!empty($field_options)) echo esc_attr(trim($field_options['allowed_file_types'])); ?>" />
                     <?php if ($dbhandler->get_global_option_value('pm_allow_multiple_attachments') == 1): ?>
@@ -742,10 +751,12 @@ class PM_Custom_Fields {
         if($pg_profile_photo_minimum_width=='DEFAULT')$pg_profile_photo_minimum_width = 150;
         if($pg_profile_image_max_file_size=='')
         {
+            // translators: 1: min width, 2: min height.
             $message = sprintf( __( 'Size Restrictions: Please make sure the image size is equal to or larger than %1$d by %2$d pixels.','profilegrid-user-profiles-groups-and-communities' ),$pg_profile_photo_minimum_width ,$pg_profile_photo_minimum_width);
         }
         else
         {
+            // translators: 1: min width, 2: min height, 3: max bytes.
             $message = sprintf( __( 'Size Restrictions: Please make sure the image size is equal to or larger than %1$d by %2$d pixels and does not exceeds total size of %3$d bytes.','profilegrid-user-profiles-groups-and-communities' ),$pg_profile_photo_minimum_width ,$pg_profile_photo_minimum_width,$pg_profile_image_max_file_size);
         }
         if ($value != '')

@@ -1,37 +1,38 @@
 <?php
 class ProfileMagic_Chat {
 
+	public $profile_magic = '';
+	public $version       = '';
+
+	public function __construct( $profile_magic = '', $version = '' ) {
+		$this->profile_magic = $profile_magic;
+		$this->version       = $version;
+	}
+
 	public function pm_messenger_notification_extra_data() {
 		$dbhandler               = new PM_DBhandler();
 		$pmrequests              = new PM_request();
 		$current_user            = wp_get_current_user();
 		$uid                     = $current_user->ID;
-		$threads                 = $pmrequests->pm_get_user_all_threads( $uid );
 		$extra_notification_data = array();
-		$thread_count            = 0;
-		$i                       = 0;
-		if ( ! empty( $threads ) ) {
-			foreach ( $threads as $thread ) {
-				$unread_message_count = $pmrequests->get_unread_msg_count( $thread->t_id );
-				if ( ! empty( $unread_message_count ) ) {
-					$thread_count = $thread_count + $unread_message_count;
-				}
-
-				if ( $i == 0 ) {
-					if ( $thread->r_id == $uid ) {
-						$rid = $thread->s_id;
-					} else {
-						$rid = $thread->r_id;
-					}
-					$extra_notification_data['last_thread']       = $thread->t_id;
-					$extra_notification_data['rid']               = $rid;
-					$extra_notification_data['last_thread_count'] = $unread_message_count;
-				}
-				$i++;
-
-			}
-		}
+		$summary                 = $pmrequests->pm_get_unread_message_summary( $uid );
+		$thread_count            = isset( $summary['count'] ) ? (int) $summary['count'] : 0;
 		$extra_notification_data['unread_threads'] = $thread_count;
+		$extra_notification_data['latest_ts']      = isset( $summary['latest'] ) ? (int) $summary['latest'] : 0;
+		$extra_notification_data['dismissed_at']   = (int) get_user_meta( $uid, 'pg_msg_unread_dismissed_at', true );
+
+		$threads = $pmrequests->pm_get_user_all_threads( $uid );
+		if ( ! empty( $threads ) ) {
+			$thread = $threads[0];
+			if ( $thread->r_id == $uid ) {
+				$rid = $thread->s_id;
+			} else {
+				$rid = $thread->r_id;
+			}
+			$extra_notification_data['last_thread']       = $thread->t_id;
+			$extra_notification_data['rid']               = $rid;
+			$extra_notification_data['last_thread_count'] = $pmrequests->get_unread_msg_count( $thread->t_id );
+		}
 		return wp_json_encode( $extra_notification_data );
 
 	}
@@ -424,7 +425,7 @@ class ProfileMagic_Chat {
                 {
                     return '';
                 }
-                
+
 		$messages        = $pmrequests->get_message_of_thread( $tid, $limit, $offset, $descending, $search );
 
 		$return = '';
@@ -666,6 +667,7 @@ class ProfileMagic_Chat {
 
 		<div class="pg-message-footer">
 			<form id="chat_message_form" name="chat_message_form" onsubmit="pm_messenger_send_chat_message(event);">  
+				<?php // translators: %s: recipient display name. ?>
 				<input id="pg_messaging_text" name="content" value="" type="text" data-placeholder="<?php printf( esc_html__( 'Send a message to %s', 'profilegrid-user-profiles-groups-and-communities' ), esc_html( $r_name ) ); ?>" /> 
 		
 				<button id="send_msg_btn" form="chat_message_form" type="submit" name="send">
@@ -680,7 +682,10 @@ class ProfileMagic_Chat {
 					if ( isset( $rid ) ) {
 						echo wp_kses_post( $rid );}
 					?>"  />   
-				<?php wp_nonce_field( 'pg_send_new_message' ); ?>
+				<?php
+				$basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+				$basic_function->pm_render_nonce_field( 'pg_send_new_message' ); 
+				?>
 				<input type="hidden" name="action" value='pm_messenger_send_new_message' /> 
 				<input type="hidden" id="thread_hidden_field" name="tid" value="<?php echo esc_attr( $tid ); ?>"/>
 									<input type="hidden" name="sid" value="<?php echo esc_attr( $uid ); ?>" /> 
@@ -761,7 +766,9 @@ class ProfileMagic_Chat {
 				</div>
 			  
 				<div class="pm-dbfl pm-chat-messenger-box">
-                    <?php wp_nonce_field( 'pg_send_new_message' ); ?>
+                    <?php 
+					$basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+					$basic_function->pm_render_nonce_field( 'pg_send_new_message' ); ?>
 					<input type="hidden" name="action" value='pm_messenger_send_new_message' /> 
 					<input type="hidden" id="thread_hidden_field" name="tid" value=""/>
 					<div class="emoji-container">

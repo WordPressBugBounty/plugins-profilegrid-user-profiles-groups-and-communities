@@ -18,6 +18,8 @@ define( 'PM_SSL_P_URL', 'https://www.paypal.com/cgi-bin/webscr' );
 define( 'PM_SSL_SAND_URL', 'https://www.sandbox.paypal.com/cgi-bin/webscr' );
 class profile_magic_paypal_class {
 
+	private $profile_magic;
+	private $version;
 	private $ipn_status;                // holds the last status
 	public $admin_mail;                 // receive the ipn status report pre transaction
 	public $paypal_mail;
@@ -33,7 +35,9 @@ class profile_magic_paypal_class {
         public $sendbox;
 
 	// initialization constructor.  Called when class is created.
-	function __construct() {
+	function __construct( $profile_magic = 'profilegrid-user-profiles-groups-and-communities', $version = '' ) {
+		$this->profile_magic = $profile_magic;
+		$this->version       = ( '' !== $version ) ? $version : ( defined( 'PROGRID_PLUGIN_VERSION' ) ? PROGRID_PLUGIN_VERSION : null );
 		$this->ipn_status   = '';
 		$this->admin_mail   = null;
 		$this->from_mail    = null;
@@ -70,6 +74,12 @@ class profile_magic_paypal_class {
 		echo '<center><h2>' . esc_html__( 'Please wait, your order is being processed and you will be redirected to the paypal website.', 'profilegrid-user-profiles-groups-and-communities' ) . "</h2></center>\n";
 		echo '<form method="post" name="paypal_form" ';
 		echo 'action="' . esc_url( $paypal_url ) . "\">\n";
+		if ( class_exists( 'Profile_Magic_Basic_Functions' ) ) {
+			$basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+			if ( method_exists( $basic_function, 'pm_render_nonce_field' ) ) {
+				$basic_function->pm_render_nonce_field( 'pm_payment_action', 'pm_payment_nonce' );
+			}
+		}
 		if ( isset( $this->paypal_mail ) ) {
 			echo '<input type="hidden" name="business" value="' . esc_attr( $this->paypal_mail ) . "\"/>\n";
         }
@@ -241,4 +251,3 @@ class profile_magic_paypal_class {
 
 	}
 }
-

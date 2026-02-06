@@ -13,15 +13,26 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
 	$exclude = array( '_wpnonce', '_wp_http_referer', 'submit_settings' );
 	$post    = $pmrequests->sanitize_request( $_POST, $identifier, $exclude );
 	if ( $post!=false ) {
+		if ( isset( $post['pm_enable_paypal'] ) ) {
+			$post['pm_enable_paypal'] = absint( $post['pm_enable_paypal'] );
+		}
 		if ( !isset( $post['pm_paypal_test_mode'] ) ) {
 			$post['pm_paypal_test_mode'] = 0;
+		} else {
+			$post['pm_paypal_test_mode'] = absint( $post['pm_paypal_test_mode'] );
         }
 		if ( !isset( $post['pm_enable_paypal'] ) ) {
 			$post['pm_enable_paypal'] = 0;
 		}
-    if ( !isset( $post['pm_przelewy24_test_mode'] ) ) {
+		if ( isset( $post['pm_przelewy24_test_mode'] ) ) {
+			$post['pm_przelewy24_test_mode'] = absint( $post['pm_przelewy24_test_mode'] );
+		}
+		if ( !isset( $post['pm_przelewy24_test_mode'] ) ) {
 			$post['pm_przelewy24_test_mode'] = 0;
         }
+		if ( isset( $post['pm_enable_przelewy24'] ) ) {
+			$post['pm_enable_przelewy24'] = absint( $post['pm_enable_przelewy24'] );
+		}
 		if ( !isset( $post['pm_enable_przelewy24'] ) ) {
 			$post['pm_enable_przelewy24'] = 0;
 		}

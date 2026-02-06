@@ -18,7 +18,7 @@ if(isset($_POST['upload_image']))
         }
         $post = $pm_sanitizer->sanitize($_POST);
 	$filefield = $_FILES['user_image'];
-	$allowed_ext ='jpg|jpeg|png|gif';
+	$allowed_ext ='jpg|jpeg|png|gif|webp|avif';
 	if($post['user_id']==$current_user->ID)
 	{
 		$attachment_id = $pmrequests->make_upload_and_get_attached_id($filefield,$allowed_ext);

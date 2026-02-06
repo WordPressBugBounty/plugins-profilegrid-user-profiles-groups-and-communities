@@ -10,6 +10,14 @@ $num_of_suggestions_pages = ceil( $suggestions_total_users/$limit);
 ?>
 <div class="pm_search_form">
 <form name="pm_search_users" id="pm_search_users">
+<?php 
+if ( class_exists( 'Profile_Magic_Basic_Functions' ) ) {
+    $basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+    if ( method_exists( $basic_function, 'pm_render_nonce_field' ) ) {
+        $basic_function->pm_render_nonce_field( 'pm_friend_action', 'pm_friend_nonce' );
+    }
+}
+?>
 <input type="text" id="pm_u_search" name="pm_u_search" value="<?php echo esc_attr($pm_u_search); ?>" />
 <input type="hidden" id="pm_tab" name="pm_tab" value="2" />
 <input type="submit" name="pm_u_search_button" id="pm_u_search_button" value="<?php esc_html_e('Search','profilegrid-user-profiles-groups-and-communities');?>" />

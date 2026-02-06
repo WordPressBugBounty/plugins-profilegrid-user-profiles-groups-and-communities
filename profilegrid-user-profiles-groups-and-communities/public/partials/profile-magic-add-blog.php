@@ -25,7 +25,7 @@ if(isset($_POST['blog_title']))
     $exclude = array('_wpnonce','_wp_http_referer','pg_blog_submit');
     $post = $pmrequests->sanitize_request($_POST,$identifier,$exclude);
     if(!isset($post['blog_tags']))$post['blog_tags']='';
-    $allowed_ext = 'jpg|jpeg|png|gif';
+    $allowed_ext = 'jpg|jpeg|png|gif|webp|avif';
     $arg = array('post_type' => 'profilegrid_blogs',
         'post_title' =>$post['blog_title'],
         'post_status' => $poststatus,

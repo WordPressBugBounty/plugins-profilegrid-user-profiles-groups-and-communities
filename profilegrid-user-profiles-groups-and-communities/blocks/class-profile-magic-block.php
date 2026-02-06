@@ -66,7 +66,7 @@ class Profile_Magic_Block {
 	public function pg_get_private_data_permissions_check() {
 		// Restrict endpoint to only users who have the edit_posts capability.
 		if ( ! current_user_can( 'edit_posts' ) ) {
-			return new WP_Error( 'rest_forbidden', esc_html__( 'OMG you can not view private data.', 'my-text-domain' ), array( 'status' => 401 ) );
+			return new WP_Error( 'rest_forbidden', esc_html__( 'OMG you can not view private data.', 'profilegrid-user-profiles-groups-and-communities' ), array( 'status' => 401 ) );
 		}
 
 		// This is a black-listing approach. You could alternatively do this via white-listing, by returning false here and changing the permissions check.

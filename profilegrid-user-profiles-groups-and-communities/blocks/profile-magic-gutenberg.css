@@ -601,7 +601,8 @@ screen and (-ms-high-contrast: none) {
     color: #fff
 }
 .pmagic .pm-login-box input[type=password],
-.pmagic .pm-login-box input[type=text] {
+.pmagic .pm-login-box input[type=text],
+.pmagic .pg-login-remember{
     margin: 20px 5% 0 5%!important;
     width: 90%!important;
     max-width: 90%!important;
@@ -609,6 +610,11 @@ screen and (-ms-high-contrast: none) {
     min-height: 3em;
     font-size: 1em
 }
+
+.pmagic .pg-login-remember{
+    padding: 0px !important;
+}
+
 .pmagic .pm-login-box form#pm_login_form {
     margin-bottom: 0
 }

@@ -41,7 +41,8 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
             <input type="text" name="pg_profile_image_max_file_size" id="pg_profile_image_max_file_size" value="<?php echo esc_attr( $dbhandler->get_global_option_value( 'pg_profile_image_max_file_size', '' ) ); ?>" />
 
         </div>
-          <div class="uimnote"><?php printf( wp_kses_post( __( 'Set an upper limit to the size of profile images uploaded by users. Sizes are in Bytes. For example, for 2MB limit use 2097152. You can also use an <a href="%s" target="_blank">online convertor</a> for finding out exact values.', 'profilegrid-user-profiles-groups-and-communities' ) ), 'http://whatsabyte.com/P1/byteconverter.htm' ); ?></div>
+          <div class="uimnote"><?php // translators: %s: URL to byte converter tool.
+              printf( wp_kses_post( __( 'Set an upper limit to the size of profile images uploaded by users. Sizes are in Bytes. For example, for 2MB limit use 2097152. You can also use an <a href="%s" target="_blank">online convertor</a> for finding out exact values.', 'profilegrid-user-profiles-groups-and-communities' ) ), 'http://whatsabyte.com/P1/byteconverter.htm' ); ?></div>
       </div>
         
       <div class="uimrow">
@@ -52,7 +53,8 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
             <input type="text" name="pg_cover_image_max_file_size" id="pg_cover_image_max_file_size" value="<?php echo esc_attr( $dbhandler->get_global_option_value( 'pg_cover_image_max_file_size', '' ) ); ?>" />
 
         </div>
-        <div class="uimnote"><?php printf( wp_kses_post( __( 'Set an upper limit to the size of cover images uploaded by users. Sizes are in Bytes. For example, for 2MB limit use 2097152. You can also use an <a href="%s" target="_blank">online convertor</a> for finding out exact values.', 'profilegrid-user-profiles-groups-and-communities' ) ), 'http://whatsabyte.com/P1/byteconverter.htm' ); ?></div>
+        <div class="uimnote"><?php // translators: %s: URL to byte converter tool.
+            printf( wp_kses_post( __( 'Set an upper limit to the size of cover images uploaded by users. Sizes are in Bytes. For example, for 2MB limit use 2097152. You can also use an <a href="%s" target="_blank">online convertor</a> for finding out exact values.', 'profilegrid-user-profiles-groups-and-communities' ) ), 'http://whatsabyte.com/P1/byteconverter.htm' ); ?></div>
       </div>
         
       <div class="uimrow">

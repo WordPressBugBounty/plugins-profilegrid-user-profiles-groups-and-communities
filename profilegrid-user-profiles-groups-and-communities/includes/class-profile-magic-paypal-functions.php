@@ -83,12 +83,15 @@ class PM_paypal_request {
 				break;
 			case 'success': // success case to show the user payment got success
 				echo '<div>';
-				echo "<div class='info-text'>" . esc_html__( 'Payment Transaction Done Successfully', 'profilegrid-user-profiles-groups-and-communities' ) . '</br>';
+				echo "<div class='info-text'>" . esc_html__( 'Thank you! Your payment was successful.', 'profilegrid-user-profiles-groups-and-communities' ) . '</br>';
 				echo '</div></div>';
                                 $gid = filter_input( INPUT_GET, 'gid', FILTER_VALIDATE_INT );
 
 				if ( $dbhandler->get_value( 'GROUPS', 'show_success_message', $gid )==1 ) {
-					echo wp_kses_post( $dbhandler->get_value( 'GROUPS', 'success_message', $gid ) );
+					$success_message = $dbhandler->get_value( 'GROUPS', 'success_message', $gid );
+					if ( ! empty( $success_message ) ) {
+						echo wp_kses_post( wp_unslash( $success_message ) );
+					}
 				}
 				if ( $pmrequests->pm_get_user_redirect( $gid )!='' ) {
 					header( 'refresh: 5; url=' . $pmrequests->pm_get_user_redirect( $gid ) );
@@ -97,7 +100,7 @@ class PM_paypal_request {
 			    break;
 			case 'cancel': // case cancel to show user the transaction was cancelled
 				echo '<div id="crf-form">';
-				echo "<div class='info-text'>" . esc_html__( 'Transaction Cancelled', 'profilegrid-user-profiles-groups-and-communities' ) . '</br>';
+				echo "<div class='info-text'>" . esc_html__( 'The payment was canceled before completion.', 'profilegrid-user-profiles-groups-and-communities' ) . '</br>';
 				echo '</div></div>';
 			    break;
 			case 'ipn': // IPN case to receive payment information. this case will not displayed in browser. This is server to server communication. PayPal will send the transactions each and every details to this case in secured POST menthod by server to server.
@@ -119,7 +122,7 @@ class PM_paypal_request {
                         array(
 							'txn_id'        =>$trasaction_id,
 							'log'           =>$log_array,
-							'posted_date'   =>'NOW()',
+							'posted_date'   => current_time( 'mysql' ),
 							'gid'           =>$gid,
 							'status'        =>$payment_status,
 							'invoice'       =>$invoice,
@@ -220,13 +223,13 @@ class PM_paypal_request {
 				break;
 			case 'success': // success case to show the user payment got success
 				echo '<div>';
-				echo "<div class='info-text'>" . esc_html__( 'Payment Transaction Done Successfully', 'profilegrid-user-profiles-groups-and-communities' ) . '</br>';
+				echo "<div class='info-text'>" . esc_html__( 'Thank you! Your payment was successful.', 'profilegrid-user-profiles-groups-and-communities' ) . '</br>';
 				echo '</div></div>';
 
 			    break;
 			case 'cancel': // case cancel to show user the transaction was cancelled
 				echo '<div id="crf-form">';
-				echo "<div class='info-text'>" . esc_html__( 'Transaction Cancelled', 'profilegrid-user-profiles-groups-and-communities' ) . '</br>';
+				echo "<div class='info-text'>" . esc_html__( 'The payment was canceled before completion.', 'profilegrid-user-profiles-groups-and-communities' ) . '</br>';
 				echo '</div></div>';
 			    break;
 			case 'ipn': // IPN case to receive payment information. this case will not displayed in browser. This is server to server communication. PayPal will send the transactions each and every details to this case in secured POST menthod by server to server.
@@ -247,7 +250,7 @@ class PM_paypal_request {
                         array(
 							'txn_id'        =>$trasaction_id,
 							'log'           =>$log_array,
-							'posted_date'   =>'NOW()',
+							'posted_date'   => current_time( 'mysql' ),
 							'gid'           =>$gid,
 							'status'        =>$payment_status,
 							'invoice'       =>$invoice,

@@ -52,7 +52,7 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
                                 </thead>
                                 <tbody>
                                     <!--
-                                    <tr class="<?php esc_attr_e($key);?>">
+                                    <tr class="<?php echo esc_attr( $key ); ?>">
                                             <td>
                                             <div class="pg-purchase-selector">
                                             <select onchange="pg_on_change_bundle(this.value)">
@@ -67,7 +67,7 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
                                             </div>
                                             </td>
                                             
-                                         <td><input id="<?php esc_attr_e($id);?>" name="<?php esc_attr_e($id);?>" type="text" class="regular-text pg-box-wrap pg-license-block" data-prefix="<?php esc_attr_e($bundle_id);?>" data-key="<?php esc_attr_e($key);?>" value="<?php esc_attr_e($pg_license_key); ?>" placeholder="<?php esc_html_e( 'Please Enter License Key', 'profilegrid-user-profiles-groups-and-communities' );?>" /></td>
+                                         <td><input id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $id ); ?>" type="text" class="regular-text pg-box-wrap pg-license-block" data-prefix="<?php echo esc_attr( $bundle_id ); ?>" data-key="<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $pg_license_key ); ?>" placeholder="<?php esc_html_e( 'Please Enter License Key', 'profilegrid-user-profiles-groups-and-communities' );?>" /></td>
                     <td>         
                         <span class="license-expire-date" style="padding-bottom:2rem;" >
                             <?php
@@ -75,7 +75,8 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
                                 if( $pg_license_response->expires == 'lifetime' ){
                                     esc_html_e( 'Your License key is activated for lifetime', 'profilegrid-user-profiles-groups-and-communities' );
                                 }else{
-                                    echo sprintf( esc_html__('Your License Key expires on %s', 'profilegrid-user-profiles-groups-and-communities' ), esc_html(date( 'F d, Y', strtotime( $pg_license_response->expires ) )) );
+                                    // translators: %s: expiry date.
+                                    echo sprintf( esc_html__( 'Your License Key expires on %s', 'profilegrid-user-profiles-groups-and-communities' ), esc_html( gmdate( 'F d, Y', strtotime( $pg_license_response->expires ) ) ) );
                                 }
                             } else {
                                 $expire_date = '';
@@ -84,16 +85,16 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
                         </span>
                     </td>
                     <td>
-                        <span class="<?php esc_attr_e($key);?>-license-status-block">
+                        <span class="<?php echo esc_attr( $key ); ?>-license-status-block">
                             <?php if ( isset( $pg_license_key ) && ! empty( $pg_license_key )) { ?>
                                 <?php if ( isset( $pg_license_status ) && $pg_license_status !== false && $pg_license_status == 'valid' ) { ?>
-                                    <button type="button" class="button action pg-my-2 pg_license_deactivate" name="<?php esc_attr_e($deactivate_license_btn);?>" id="<?php esc_attr_e($deactivate_license_btn);?>" data-prefix="<?php esc_attr_e($bundle_id);?>" data-key="<?php esc_attr_e($key);?>" value="<?php esc_html_e( 'Deactivate License', 'profilegrid-user-profiles-groups-and-communities' );?>"><?php esc_html_e( 'Deactivate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
+                                    <button type="button" class="button action pg-my-2 pg_license_deactivate" name="<?php echo esc_attr( $deactivate_license_btn ); ?>" id="<?php echo esc_attr( $deactivate_license_btn ); ?>" data-prefix="<?php echo esc_attr( $bundle_id ); ?>" data-key="<?php echo esc_attr( $key ); ?>" value="<?php esc_html_e( 'Deactivate License', 'profilegrid-user-profiles-groups-and-communities' );?>"><?php esc_html_e( 'Deactivate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
                                 <?php } elseif( ! empty( $pg_license_status ) && $pg_license_status == 'invalid' ) { ?>
-                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php esc_attr_e($activate_license_btn);?>" id="<?php esc_attr_e($activate_license_btn);?>" data-prefix="<?php esc_attr_e($bundle_id);?>" data-key="<?php esc_attr_e($key);?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
+                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php echo esc_attr( $activate_license_btn ); ?>" id="<?php echo esc_attr( $activate_license_btn ); ?>" data-prefix="<?php echo esc_attr( $bundle_id ); ?>" data-key="<?php echo esc_attr( $key ); ?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
                                 <?php }else{ ?>
-                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php esc_attr_e($activate_license_btn);?>" id="<?php esc_attr_e($activate_license_btn);?>" data-prefix="<?php esc_attr_e($bundle_id);?>" data-key="<?php esc_attr_e($key);?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>" style="<?php if ( empty( $pg_license_key ) ){ echo 'display:none'; } ?>"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
+                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php echo esc_attr( $activate_license_btn ); ?>" id="<?php echo esc_attr( $activate_license_btn ); ?>" data-prefix="<?php echo esc_attr( $bundle_id ); ?>" data-key="<?php echo esc_attr( $key ); ?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>" style="<?php if ( empty( $pg_license_key ) ){ echo 'display:none'; } ?>"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
                                 <?php } }else{ ?>
-                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php esc_attr_e($activate_license_btn);?>" id="<?php esc_attr_e($activate_license_btn);?>" data-prefix="<?php esc_attr_e($bundle_id);?>" data-key="<?php esc_attr_e($key);?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>" style="display:none;"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
+                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php echo esc_attr( $activate_license_btn ); ?>" id="<?php echo esc_attr( $activate_license_btn ); ?>" data-prefix="<?php echo esc_attr( $bundle_id ); ?>" data-key="<?php echo esc_attr( $key ); ?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>" style="display:none;"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
                                 <?php } ?>
                         </span>
                     </td>
@@ -117,9 +118,9 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
                                           $activate_license_btn = $key.'_license_activate';
                                         ?>
                                     
-                                            <tr valign="top" class="<?php esc_attr_e($key);?>">
-                    <td><?php esc_html_e( $product[1], 'profilegrid-user-profiles-groups-and-communities' );?></td>
-                    <td><input id="<?php esc_attr_e($id);?>" name="<?php esc_attr_e($id);?>" type="text" class="regular-text pg-box-wrap pg-license-block" data-prefix="<?php esc_attr_e($product[0]);?>" data-key="<?php esc_attr_e($key);?>" value="<?php esc_attr_e($pg_license_key); ?>" placeholder="<?php esc_html_e( 'Please Enter License Key', 'profilegrid-user-profiles-groups-and-communities' );?>" /></td>
+                                            <tr valign="top" class="<?php echo esc_attr( $key ); ?>">
+                    <td><?php echo esc_html( $product[1] ); ?></td>
+                    <td><input id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $id ); ?>" type="text" class="regular-text pg-box-wrap pg-license-block" data-prefix="<?php echo esc_attr( $product[0] ); ?>" data-key="<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $pg_license_key ); ?>" placeholder="<?php esc_html_e( 'Please Enter License Key', 'profilegrid-user-profiles-groups-and-communities' );?>" /></td>
                     <td>         
                         <span class="license-expire-date" style="padding-bottom:2rem;" >
                             <?php
@@ -127,7 +128,8 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
                                 if( $pg_license_response->expires == 'lifetime' ){
                                     esc_html_e( 'Your License key is activated for lifetime', 'profilegrid-user-profiles-groups-and-communities' );
                                 }else{
-                                    echo sprintf( esc_html__('Your License Key expires on %s', 'profilegrid-user-profiles-groups-and-communities' ), esc_html(date( 'F d, Y', strtotime( $pg_license_response->expires ) )) );
+                                    // translators: %s: expiry date.
+                                    echo sprintf( esc_html__( 'Your License Key expires on %s', 'profilegrid-user-profiles-groups-and-communities' ), esc_html( gmdate( 'F d, Y', strtotime( $pg_license_response->expires ) ) ) );
                                 }
                             } else {
                                 $expire_date = '';
@@ -136,16 +138,16 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
                         </span>
                     </td>
                     <td>
-                        <span class="<?php esc_attr_e($key);?>-license-status-block">
+                        <span class="<?php echo esc_attr( $key ); ?>-license-status-block">
                             <?php if ( isset( $pg_license_key ) && ! empty( $pg_license_key )) { ?>
                                 <?php if ( isset( $pg_license_status ) && $pg_license_status !== false && $pg_license_status == 'valid' ) { ?>
-                                    <button type="button" class="button action pg-my-2 pg_license_deactivate" name="<?php esc_attr_e($deactivate_license_btn);?>" id="<?php esc_attr_e($deactivate_license_btn);?>" data-prefix="<?php esc_attr_e($product[0]); ?>" data-key="<?php esc_attr_e($key);?>" value="<?php esc_html_e( 'Deactivate License', 'profilegrid-user-profiles-groups-and-communities' );?>"><?php esc_html_e( 'Deactivate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
+                                    <button type="button" class="button action pg-my-2 pg_license_deactivate" name="<?php echo esc_attr( $deactivate_license_btn ); ?>" id="<?php echo esc_attr( $deactivate_license_btn ); ?>" data-prefix="<?php echo esc_attr( $product[0] ); ?>" data-key="<?php echo esc_attr( $key ); ?>" value="<?php esc_html_e( 'Deactivate License', 'profilegrid-user-profiles-groups-and-communities' );?>"><?php esc_html_e( 'Deactivate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
                                 <?php } elseif( ! empty( $pg_license_status ) && $pg_license_status == 'invalid' ) { ?>
-                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php esc_attr_e($activate_license_btn);?>" id="<?php esc_attr_e($activate_license_btn);?>" data-prefix="<?php esc_attr_e($product[0]); ?>" data-key="<?php esc_attr_e($key);?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
+                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php echo esc_attr( $activate_license_btn ); ?>" id="<?php echo esc_attr( $activate_license_btn ); ?>" data-prefix="<?php echo esc_attr( $product[0] ); ?>" data-key="<?php echo esc_attr( $key ); ?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
                                 <?php }else{ ?>
-                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php esc_attr_e($activate_license_btn);?>" id="<?php esc_attr_e($activate_license_btn);?>" data-prefix="<?php esc_attr_e($product[0]); ?>" data-key="<?php esc_attr_e($key);?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>" style="<?php if ( empty( $pg_license_key ) ){ echo 'display:none'; } ?>"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
+                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php echo esc_attr( $activate_license_btn ); ?>" id="<?php echo esc_attr( $activate_license_btn ); ?>" data-prefix="<?php echo esc_attr( $product[0] ); ?>" data-key="<?php echo esc_attr( $key ); ?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>" style="<?php if ( empty( $pg_license_key ) ){ echo 'display:none'; } ?>"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
                                 <?php } }else{ ?>
-                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php esc_attr_e($activate_license_btn);?>" id="<?php esc_attr_e($activate_license_btn);?>" data-prefix="<?php esc_attr_e($product[0]); ?>" data-key="<?php esc_attr_e($key);?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>" style="display:none;"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
+                                    <button type="button" class="button action pg-my-2 pg_license_activate" name="<?php echo esc_attr( $activate_license_btn ); ?>" id="<?php echo esc_attr( $activate_license_btn ); ?>" data-prefix="<?php echo esc_attr( $product[0] ); ?>" data-key="<?php echo esc_attr( $key ); ?>" value="<?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?>" style="display:none;"><?php esc_html_e( 'Activate License', 'profilegrid-user-profiles-groups-and-communities' );?></button>
                                 <?php } ?>
                         </span>
                     </td>
@@ -164,9 +166,10 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
             <div class="">
               <?php
             printf(
+                // translators: 1: bold open, 2: bold close, 3: plugins bold open, 4: plugins bold close.
                 esc_html__(
                     'Note: License key fields will appear %1$safter activating your purchased extensions.%2$s If you don’t see any fields yet, please activate the corresponding extensions from the %3$sPlugins%4$s page.', 
-                    'profilegrid-user-profiles-groups-and-communitiest'
+                    'profilegrid-user-profiles-groups-and-communities'
                 ),
                 '<strong>', '</strong>', '<strong>', '</strong>'
             );
@@ -185,6 +188,7 @@ $pg_premium_license_key = $dbhandler->get_global_option_value( 'pg_premium_licen
                 <?php
             }
 ?>
+        <?php wp_nonce_field( 'pg_license_settings', 'pg_license_settings_nonce' ); ?>
         
   </form>
 

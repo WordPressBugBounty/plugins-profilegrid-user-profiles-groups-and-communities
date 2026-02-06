@@ -613,7 +613,8 @@ screen and (-ms-high-contrast: none) {
     color: #fff
 }
 .pmagic .pm-login-box input[type=password],
-.pmagic .pm-login-box input[type=text] {
+.pmagic .pm-login-box input[type=text],
+.pmagic .pg-login-remember{
     margin: 20px 5% 0 5%!important;
     width: 90%!important;
     max-width: 90%!important;
@@ -621,6 +622,16 @@ screen and (-ms-high-contrast: none) {
     min-height: 3em;
     font-size: 1em
 }
+
+.pmagic .pg-login-remember{
+    padding: 0px !important;
+}
+
+.pmagic .pm-widget-login-box .pg-login-remember{
+    display: inline-block;
+    margin: 0px !important;
+}
+
 .pmagic .pm-login-box form#pm_login_form {
     margin-bottom: 0
 }
@@ -1440,7 +1451,7 @@ span#pm-change-cover-image {
     flex-wrap: wrap;
     align-content: center;
     justify-content: center;
-    align-items: flex-end;
+    align-items: flex-start;
     width: 100%;
 }
 
@@ -2653,6 +2664,45 @@ div#pm_result_pane .pm-loader {
 .pg-group-setting-request-batch .pg-group-setting-blog-link a:hover {
     text-decoration: none
 }
+.pg-group-membership-table-wrap {
+    width: 100%;
+    overflow-x: auto
+}
+.pmagic table.pg-group-membership-table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 25px;
+    font-size: 13px;
+    background-color: #fff
+}
+.pmagic table.pg-group-membership-table th,
+.pmagic table.pg-group-membership-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ededed;
+    white-space: nowrap
+}
+.pmagic table.pg-group-membership-table th {
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: .04em;
+    color: #6d6d6d;
+    font-weight: 600
+}
+.pmagic table.pg-group-membership-table td {
+    color: #333;
+    font-weight: 400
+}
+.pmagic table.pg-group-membership-table tr:nth-child(even) {
+    background-color: #fafafa
+}
+@media only screen and (max-width:600px) {
+    .pmagic table.pg-group-membership-table th,
+    .pmagic table.pg-group-membership-table td {
+        white-space: normal
+    }
+}
 .pmagic table.pg-group-members {
     border-collapse: collapse;
     font-size: 12px;
@@ -3477,8 +3527,6 @@ body.theme-blocksy .pmagic{
 
 #pm-advance-search-form #advance_search_pane {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
     justify-content: flex-start;
     align-items: center;
     align-content: center;
@@ -3486,11 +3534,12 @@ body.theme-blocksy .pmagic{
     max-width: 100%;
     margin: 20px 0px;
     padding: 16px 0px;
+    gap: 6px
 }
 
 #pm-advance-search-form #advance_search_pane .pm-search-box {
     margin: 0px;
-    padding: 0px;
+    padding: 0px 8px;
     border: 1px solid #e1e1e1;
     text-align: left;
 }

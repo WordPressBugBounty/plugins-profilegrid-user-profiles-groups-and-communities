@@ -24,23 +24,23 @@
         <div class="uiminput">
            <ul class="uimradio">
               <li>
-                <input type="radio" name="pm_content_access" id="pm_content_access" value="1" onClick="pm_show_hide(this,'','pm_group_html')"  <?php checked( get_post_meta( $post->ID, 'pm_content_access', true ), '1' ); ?>>
+                <input type="radio" name="pm_content_access" id="pm_content_access_admin_1" value="1" onClick="pm_show_hide(this,'','pm_group_html')"  <?php checked( get_post_meta( $post->ID, 'pm_content_access', true ), '1' ); ?>>
                 <?php esc_html_e( 'Content accessible to Everyone', 'profilegrid-user-profiles-groups-and-communities' ); ?>
               </li>
               <li>
-                <input type="radio" name="pm_content_access" id="pm_content_access" value="2" onClick="pm_show_hide(this,'pm_group_html')" <?php checked( get_post_meta( $post->ID, 'pm_content_access', true ), '2' ); ?>>
+                <input type="radio" name="pm_content_access" id="pm_content_access_admin_2" value="2" onClick="pm_show_hide(this,'pm_group_html')" <?php checked( get_post_meta( $post->ID, 'pm_content_access', true ), '2' ); ?>>
                 <?php esc_html_e( 'Content accessible to Logged In Users', 'profilegrid-user-profiles-groups-and-communities' ); ?>
               </li>
               <li>
-                <input type="radio" name="pm_content_access" id="pm_content_access" value="5" onClick="pm_show_hide(this,'','pm_group_html')" <?php checked( get_post_meta( $post->ID, 'pm_content_access', true ), '5' ); ?>>
+                <input type="radio" name="pm_content_access" id="pm_content_access_admin_5" value="5" onClick="pm_show_hide(this,'','pm_group_html')" <?php checked( get_post_meta( $post->ID, 'pm_content_access', true ), '5' ); ?>>
                 <?php esc_html_e( "Members of Author's Groups", 'profilegrid-user-profiles-groups-and-communities' ); ?>
               </li>
              <li>
-                <input type="radio" name="pm_content_access" id="pm_content_access" value="3" onClick="pm_show_hide(this,'','pm_group_html')" <?php checked( get_post_meta( $post->ID, 'pm_content_access', true ), '3' ); ?>>
+                <input type="radio" name="pm_content_access" id="pm_content_access_admin_3" value="3" onClick="pm_show_hide(this,'','pm_group_html')" <?php checked( get_post_meta( $post->ID, 'pm_content_access', true ), '3' ); ?>>
                 <?php esc_html_e( 'Content accessible to My Friends', 'profilegrid-user-profiles-groups-and-communities' ); ?>
               </li>
               <li>
-                <input type="radio" name="pm_content_access" id="pm_content_access" value="4" onClick="pm_show_hide(this,'','pm_group_html')" <?php checked( get_post_meta( $post->ID, 'pm_content_access', true ), '4' ); ?>>
+                <input type="radio" name="pm_content_access" id="pm_content_access_admin_4" value="4" onClick="pm_show_hide(this,'','pm_group_html')" <?php checked( get_post_meta( $post->ID, 'pm_content_access', true ), '4' ); ?>>
                 <?php esc_html_e( 'Content accessible to Only Me', 'profilegrid-user-profiles-groups-and-communities' ); ?>
               </li>
               <?php do_action('pg_custom_content_access_html',$post); ?>

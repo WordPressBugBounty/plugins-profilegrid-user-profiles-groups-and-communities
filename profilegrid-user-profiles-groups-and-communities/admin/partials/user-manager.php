@@ -181,7 +181,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
         <input type="hidden" name="status" id="status" value="all" />
         <input type="hidden" name="orderby" id="orderby" value="ID" />
         <input type="hidden" name="sort" id="sort" value="ASC" />
-        <input type="hidden" id="pagenum" name="pagenum" value="<?php esc_attr_e($pagenum);?>" />
+        <input type="hidden" id="pagenum" name="pagenum" value="<?php echo esc_attr( $pagenum ); ?>" />
  
         <!--------Operationsbar Ends-----> 
 
@@ -238,13 +238,13 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
 
         <li class="all"><a href="javascript:void(0)" class="all current" aria-current="page" onclick="jQuery('#pagenum').val(1);jQuery('#status').val('all');jQuery('#user_manager').submit()"><?php esc_html_e('All','profilegrid-user-profiles-groups-and-communities');?> <span class="count">(<?php echo esc_html(get_user_count()); ?>)</span></a> |</li>
 
-        <li class="active"><a href="javascript:void(0)" class="" onclick="jQuery('#pagenum').val(1);jQuery('#status').val('0');jQuery('#user_manager').submit()"><?php esc_html_e('Active','profilegrid-user-profiles-groups-and-communities');?> <span class="count">(<?php esc_html_e($total_activate_users);?>)</span></a> |</li>
-        <li class="pending"><a href="javascript:void(0)" class="" onclick="jQuery('#pagenum').val(1);jQuery('#status').val('1');jQuery('#user_manager').submit()"><?php esc_html_e('Inactive','profilegrid-user-profiles-groups-and-communities');?> <span class="count">(<?php esc_html_e($total_inactivate_users);?>)</span></a></li>
+        <li class="active"><a href="javascript:void(0)" class="" onclick="jQuery('#pagenum').val(1);jQuery('#status').val('0');jQuery('#user_manager').submit()"><?php esc_html_e('Active','profilegrid-user-profiles-groups-and-communities');?> <span class="count">(<?php echo esc_html( $total_activate_users ); ?>)</span></a> |</li>
+        <li class="pending"><a href="javascript:void(0)" class="" onclick="jQuery('#pagenum').val(1);jQuery('#status').val('1');jQuery('#user_manager').submit()"><?php esc_html_e('Inactive','profilegrid-user-profiles-groups-and-communities');?> <span class="count">(<?php echo esc_html( $total_inactivate_users ); ?>)</span></a></li>
     </ul>
              
     <p class="search-box">
         <label class="screen-reader-text" for="user-search-input"><?php esc_attr_e('Search User', 'profilegrid-user-profiles-groups-and-communities'); ?>:</label>
-        <input type="search" id="user-search-input" name="search" value="<?php esc_attr_e($search);?>">
+        <input type="search" id="user-search-input" name="search" value="<?php echo esc_attr( $search ); ?>">
         <input type="submit" id="search-submit" class="button"  value="<?php esc_attr_e('Search Users', 'profilegrid-user-profiles-groups-and-communities'); ?>">
     </p>
          
@@ -302,7 +302,12 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                   
                     <h2 class="screen-reader-text"><?php esc_html_e('User list navigation', 'profilegrid-user-profiles-groups-and-communities'); ?></h2>
                     <div  class="tablenav-pages <?php  if($num_of_pages==1){echo 'one-page';} ?>">
-                        <span class="displaying-num"><?php esc_html_e(sprintf('%d items',$total_users),'profilegrid-user-profiles-groups-and-communities');?></span>
+                        <span class="displaying-num">
+                        <?php
+                        // translators: %d: item count.
+                        printf( esc_html__( '%d items', 'profilegrid-user-profiles-groups-and-communities' ), intval( $total_users ) );
+                        ?>
+                        </span>
                         <?php echo wp_kses_post($pagination); ?>
                     </div>
                     
@@ -435,7 +440,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                         <td class="pg-group-col column-group-col" data-colname="<?php esc_html_e( 'Groups', 'profilegrid-user-profiles-groups-and-communities' ); ?>">
                             <?php $icons = $pmrequests->pg_get_user_groups_icon_with_more($entry->ID); echo (!empty($icons))?wp_kses_post($icons):'—'; ?>
                         </td>
-                        <td class="pg-user-register-date column-register-date-col" data-colname="<?php esc_html_e( 'Registered On', 'profilegrid-user-profiles-groups-and-communities' ); ?>"><?php echo esc_html(date('M d, Y @ h:i a', strtotime($entry->user_registered))); ?></td>
+                        <td class="pg-user-register-date column-register-date-col" data-colname="<?php esc_html_e( 'Registered On', 'profilegrid-user-profiles-groups-and-communities' ); ?>"><?php echo esc_html(gmdate('M d, Y @ h:i a', strtotime($entry->user_registered))); ?></td>
 				<?php
 				if ( $pmrequests->profile_magic_get_user_field_value( $entry->ID, 'rm_user_status' ) == '' || $pmrequests->profile_magic_get_user_field_value( $entry->ID, 'rm_user_status' ) == null ) {
 					$userstatus = 0;

@@ -10,9 +10,9 @@ $offset = ( $pagenum - 1 ) * $limit;
 if(isset($content) && !empty($content['ids']))
 {
     // Remove any non-numeric, non-comma, and non-space characters
-    $sanitizedIds = preg_replace('/[^0-9, ]/', '', $content['ids']);
+    $sanitizedIds = preg_replace('/[^0-9, ]/', '', (string) $content['ids']);
     // Remove extra spaces and trim the string
-    $sanitizedIds = trim(preg_replace('/\s+/', ' ', $sanitizedIds));
+    $sanitizedIds = trim(preg_replace('/\s+/', ' ', (string) $sanitizedIds));
     
     $additional = ' id in(' . $sanitizedIds . ')';
 }

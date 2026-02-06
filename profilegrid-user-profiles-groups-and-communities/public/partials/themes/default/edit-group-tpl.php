@@ -11,7 +11,7 @@ if($leaders =='')
 {
     $leaders = array();
 }
-
+$basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
 ?>
 <div class="pmagic"> 
   <!-----Operationsbar Starts----->
@@ -33,7 +33,7 @@ if($leaders =='')
       <div class="pmrow pm-dbfl">        
         <div class="pm-col">
 			<div class="pm-field-lable">
-				<label for="first_name"><?php esc_html_e('Group Name','profilegrid-user-profiles-groups-and-communities');?><sup class="pm_estric">*</sup></label>
+				<label for="group_name"><?php esc_html_e('Group Name','profilegrid-user-profiles-groups-and-communities');?><sup class="pm_estric">*</sup></label>
 			  </div>
 			  <div class="pm-field-input pm_required">
                               <input type="text" id="group_name" name="group_name" value="<?php echo esc_attr($row->group_name);?>">
@@ -47,7 +47,7 @@ if($leaders =='')
         <div class="pmrow">        
         <div class="pm-col">
 			<div class="pm-field-lable">
-				<label for="first_name"><?php esc_html_e('Group Description','profilegrid-user-profiles-groups-and-communities');?><sup class="pm_estric">*</sup></label>
+				<label for="group_desc"><?php esc_html_e('Group Description','profilegrid-user-profiles-groups-and-communities');?><sup class="pm_estric">*</sup></label>
 			  </div>
 			  <div class="pm-field-input pm_textarearequired">
                               <textarea name="group_desc" id="group_desc" rows="10"><?php if(!empty($row->group_desc)){echo wp_kses_post($row->group_desc);}?></textarea>
@@ -60,7 +60,7 @@ if($leaders =='')
       </div>
       </div>
         <input type="hidden" name="group_id" value="<?php echo esc_attr($row->id);?>" />
-      <?php wp_nonce_field('save_pm_edit_group'); ?>
+      <?php $basic_function->pm_render_nonce_field( 'save_pm_edit_group' ); ?>
       
          <div class="pm-edit-action pm-dbfl">
          <div class="all_errors" style="display:none;"></div>
@@ -86,14 +86,14 @@ if($leaders =='')
             <input type="hidden" name="group_id" value="<?php echo esc_attr($row->id);?>" />           
             <input type="submit" name="edit_group" value="<?php esc_attr_e('Upload','profilegrid-user-profiles-groups-and-communities');?>" class="pm-dbfl" />
  
-      		<?php wp_nonce_field('save_pm_edit_group'); ?>
+      		<?php $basic_function->pm_render_nonce_field( 'save_pm_edit_group' ); ?>
             <p class="pm-popup-error"></p>
           </form>
           
           <form class="pmagic-form pm-dbfl" method="post" action="" id="pm_edit_group" name="pm_edit_group" enctype="multipart/form-data">
             <input type="submit" value="<?php esc_attr_e('Remove','profilegrid-user-profiles-groups-and-communities');?>" name="remove_image" class="pm-dbfl" />
             <input type="hidden" name="group_id" value="<?php echo esc_attr($row->id);?>" />
-      		<?php wp_nonce_field('save_pm_edit_group'); ?>
+      		<?php $basic_function->pm_render_nonce_field( 'save_pm_edit_group' ); ?>
           </form>
           
         </div>

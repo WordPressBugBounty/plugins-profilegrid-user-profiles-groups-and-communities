@@ -26,6 +26,7 @@ $path = plugin_dir_url( __FILE__ );
                         <?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?>
                     </div>
                 </a>
+                <?php wp_nonce_field( 'pg_content_restrictions_settings', 'pg_content_restrictions_nonce' ); ?>
             </div>
         </div>
     </form>

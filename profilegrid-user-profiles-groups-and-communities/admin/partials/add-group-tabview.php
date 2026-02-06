@@ -439,7 +439,12 @@ if ( $id==false || $id==null ) {
 						$count = 0;
 					}
 					?>
-                 <div class="pg-group-requests"> <a href="admin.php?page=pm_requests_manager&pagenum=1&gid=<?php echo esc_attr( $row->id ); ?>" class="pg-d-flex pg-box-center"><span class="material-icons"> person_add </span> <?php echo sprintf( esc_html__( '%d pending requests', '' ), esc_html( $count ) ); ?></a></div>
+                 <div class="pg-group-requests"> <a href="admin.php?page=pm_requests_manager&pagenum=1&gid=<?php echo esc_attr( $row->id ); ?>" class="pg-d-flex pg-box-center"><span class="material-icons"> person_add </span> 
+				 <?php
+				 // translators: %d: pending request count.
+				 echo sprintf( esc_html__( '%d pending requests', 'profilegrid-user-profiles-groups-and-communities' ), esc_html( $count ) );
+				 ?>
+				 </a></div>
 				<?php endif; ?>
             </div>
             

@@ -168,6 +168,25 @@ class PM_request {
 		return $data;
 	}
 
+	private function pm_extend_image_extensions( $extensions ) {
+		$extensions_array = array_filter( array_map( 'trim', explode( '|', strtolower( $extensions ) ) ) );
+		$extensions_array = array_unique( array_merge( $extensions_array, array( 'webp', 'avif' ) ) );
+
+		return implode( '|', $extensions_array );
+	}
+
+	private function pm_maybe_extend_image_types( $extensions ) {
+		$normalized       = strtolower( trim( $extensions ) );
+		$extensions_array = array_filter( array_map( 'trim', explode( '|', $normalized ) ) );
+		$non_images       = array_diff( $extensions_array, array( 'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif' ) );
+
+		if ( empty( $non_images ) ) {
+			return $this->pm_extend_image_extensions( implode( '|', $extensions_array ) );
+		}
+
+		return $extensions;
+	}
+
 	public function make_upload_and_get_attached_id( $filefield, $allowed_ext, $require_imagesize = array(), $parent_post_id = 0 ) {
 		$allowfieldstypes = strtolower( trim( $allowed_ext ) );
 		$attach_id        = '';
@@ -181,13 +200,13 @@ class PM_request {
 			);
 
 			if ( ! empty( $require_imagesize ) && ! empty( $file['tmp_name'] ) ) {
-				$imagesize     = getimagesize( $file['tmp_name'] );
-				 $image_width  = $imagesize[0];
-				 $image_height = $imagesize[1];
+				$imagesize     = @getimagesize( $file['tmp_name'] );
+				$image_width   = is_array( $imagesize ) && isset( $imagesize[0] ) ? $imagesize[0] : 0;
+				$image_height  = is_array( $imagesize ) && isset( $imagesize[1] ) ? $imagesize[1] : 0;
 
 				if ( isset( $require_imagesize[2] ) && $file['size'] > $require_imagesize[2] ) {
 							   $too_small = sprintf( esc_html__( 'Image size exceeds the maximum limit. Maximum allowed image size is %d byte.', 'profilegrid-user-profiles-groups-and-communities' ), $require_imagesize['2'] );
-				} elseif ( $image_width < $require_imagesize['0'] || $image_height < $require_imagesize['1'] ) {
+				} elseif ( $image_width && $image_height && ( $image_width < $require_imagesize['0'] || $image_height < $require_imagesize['1'] ) ) {
 								$too_small = sprintf( esc_html__( 'Image dimensions are too small. Minimum size is %1$d by %2$d pixels.', 'profilegrid-user-profiles-groups-and-communities' ), $require_imagesize['0'], $require_imagesize['1'] );
 				} else {
 					$too_small = false;
@@ -219,7 +238,7 @@ class PM_request {
 						$attachment = array(
 							'guid'           => $wp_upload_dir['url'] . '/' . basename( $filename ),
 							'post_mime_type' => $filetype['type'],
-							'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( $filename ) ),
+							'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( (string) $filename ) ),
 							'post_content'   => '',
 							'post_status'    => 'inherit',
 						);
@@ -468,14 +487,15 @@ class PM_request {
 
 				if ( ( $field->field_type == 'file' || $field->field_type == 'user_avatar' ) && isset( $files[ $field_key ] ) && ! empty( $files[ $field_key ]['name'][0] ) ) {
 					$field_options = maybe_unserialize( $field->field_options );
-					$allowed_ext   = ( ( $field_options['allowed_file_types'] != '' ) ? $field_options['allowed_file_types'] : $dbhandler->get_global_option_value( 'pm_allow_file_types', 'jpg|jpeg|png|gif' ) );
+					$allowed_ext   = ( ( $field_options['allowed_file_types'] != '' ) ? $field_options['allowed_file_types'] : $dbhandler->get_global_option_value( 'pm_allow_file_types', 'jpg|jpeg|png|gif|webp|avif' ) );
 					// $current_file_type = '';
 					if ( $field->field_type == 'user_avatar' ) {
-							$allowed_ext       = 'jpg|jpeg|png|gif';
+							$allowed_ext       = $this->pm_extend_image_extensions( 'jpg|jpeg|png|gif|webp|avif' );
 							$require_imagesize = $this->pm_get_minimum_requirement_user_avatar();
 					}
                                         else
                                         {
+                                            $allowed_ext       = $this->pm_maybe_extend_image_types( $allowed_ext );
                                             $require_imagesize = false;
                                         }
 					$allowfieldstypes = strtolower( trim( $allowed_ext ) );
@@ -1135,7 +1155,12 @@ class PM_request {
 					continue;
 				}
 				if ( $field->field_type == 'file' || $field->field_type == 'user_avatar' ) {
-					$allowed_ext = ( ( $field_options['allowed_file_types'] != '' ) ? $field_options['allowed_file_types'] : $dbhandler->get_global_option_value( 'pm_allow_file_types', 'jpg|jpeg|png|gif' ) );
+					$allowed_ext = ( ( $field_options['allowed_file_types'] != '' ) ? $field_options['allowed_file_types'] : $dbhandler->get_global_option_value( 'pm_allow_file_types', 'jpg|jpeg|png|gif|webp|avif' ) );
+					if ( $field->field_type == 'user_avatar' ) {
+						$allowed_ext         = $this->pm_extend_image_extensions( 'jpg|jpeg|png|gif|webp|avif' );
+					} else {
+						$allowed_ext         = $this->pm_maybe_extend_image_types( $allowed_ext );
+					}
 					$filefield   = $files[ $field_key ];
 					if ( is_array( $filefield ) ) {
 						$attchment_id = array();
@@ -2434,18 +2459,69 @@ class PM_request {
 		}
 
 	}
-	public function get_unread_msg_count( $tid ) {
-		$dbhandler  = new PM_DBhandler();
-		$identifier = 'MSG_CONVERSATION';
-		$count      = null;
-		$uid        = wp_get_current_user()->ID;
-		$where      = 1;
-		$status     = 2;
-		$additional = " t_id = $tid AND s_id NOT IN ($uid) AND status =$status ";
-		$message    = $dbhandler->get_all_result( $identifier, $column = 'm_id', $where, 'results', 0, false, $sort_by = 'timestamp', true, $additional );
-		if ( isset( $message ) && ! empty( $message ) ) {
-			$count = count( $message );
+
+	public function pm_get_unread_message_summary( $uid ) {
+		$summary = array(
+			'count'  => 0,
+			'latest' => 0,
+		);
+
+		$uid = absint( $uid );
+		if ( $uid === 0 ) {
+			return $summary;
 		}
+
+		global $wpdb;
+		$pm_activator      = new Profile_Magic_Activator();
+		$conversation_table = esc_sql( $pm_activator->get_db_table_name( 'MSG_CONVERSATION' ) );
+		$thread_table      = esc_sql( $pm_activator->get_db_table_name( 'MSG_THREADS' ) );
+
+		$thread_active_status = 2;
+		$message_unread_status = 2;
+
+		$query = $wpdb->prepare(
+			"SELECT COUNT(mc.m_id) AS unread_count, MAX(mc.timestamp) AS latest_ts
+			FROM {$conversation_table} mc
+			INNER JOIN {$thread_table} mt ON mc.t_id = mt.t_id
+			WHERE mt.status = %d
+				AND ( mt.s_id = %d OR mt.r_id = %d )
+				AND mc.s_id != %d
+				AND mc.status = %d",
+			$thread_active_status,
+			$uid,
+			$uid,
+			$uid,
+			$message_unread_status
+		);
+
+		$result = $wpdb->get_row( $query );
+		if ( $result ) {
+			$summary['count']  = isset( $result->unread_count ) ? (int) $result->unread_count : 0;
+			$summary['latest'] = ( isset( $result->latest_ts ) && ! empty( $result->latest_ts ) ) ? strtotime( $result->latest_ts ) : 0;
+		}
+
+		return $summary;
+	}
+	public function get_unread_msg_count( $tid ) {
+		$tid = absint( $tid );
+		if ( $tid === 0 ) {
+			return 0;
+		}
+
+		global $wpdb;
+		$pm_activator = new Profile_Magic_Activator();
+		$table        = esc_sql( $pm_activator->get_db_table_name( 'MSG_CONVERSATION' ) );
+		$uid          = get_current_user_id();
+		$unread_status = 2;
+
+		$query = $wpdb->prepare(
+			"SELECT COUNT(m_id) FROM {$table} WHERE t_id = %d AND s_id != %d AND status = %d",
+			$tid,
+			$uid,
+			$unread_status
+		);
+
+		$count = (int) $wpdb->get_var( $query );
 		return $count;
 
 	}
@@ -2502,20 +2578,28 @@ class PM_request {
 		return $updated;
 	}
 	public function update_message_status_to_read( $tid ) {
-		$dbhandler  = new PM_DBhandler();
-		$identifier = 'MSG_CONVERSATION';
-		$uid        = wp_get_current_user()->ID;
-		$where      = 1;
-		$status     = 2;
-		$additional = " t_id = $tid AND s_id NOT IN ($uid) AND status =$status ";
-		$messages   = $dbhandler->get_all_result( $identifier, $column = 'm_id', $where, 'results', 0, $limit = false, $sort_by = 'timestamp', true, $additional );
-		$data       = array( 'status' => '1' );
-		$data       = $this->sanitize_request( $data, $identifier );
-		if ( is_array( $messages ) && count( $messages ) > 0 ) {
-			foreach ( $messages as $message ) {
-				$updated = $dbhandler->update_row( $identifier, 'm_id', $message->m_id, $data );
-			}
+		$tid = absint( $tid );
+		if ( $tid === 0 ) {
+			return;
 		}
+
+		global $wpdb;
+		$pm_activator  = new Profile_Magic_Activator();
+		$table         = esc_sql( $pm_activator->get_db_table_name( 'MSG_CONVERSATION' ) );
+		$uid           = get_current_user_id();
+		$unread_status = 2;
+		$read_status   = 1;
+
+		$wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$table} SET status = %d WHERE t_id = %d AND s_id != %d AND status = %d",
+				$read_status,
+				$tid,
+				$uid,
+				$unread_status
+			)
+		);
+
 		$option = 'pg_send_email_for_unread_message_' . $tid;
 		delete_option( $option );
 
@@ -2667,10 +2751,412 @@ class PM_request {
 		return $slug;
 	}
 
-	public function pm_get_gid_from_group_slug( $slug ) {
+        public function pm_get_gid_from_group_slug( $slug ) {
 		 $uid = $slug;
 		$uid  = apply_filters( 'profile_magic_get_filter_gid_by_group_slug', $uid, $slug );
 		return $uid;
+	}
+
+	public function pg_get_enabled_payment_processors() {
+		$processors = array(
+			'paypal' => __( 'PayPal', 'profilegrid-user-profiles-groups-and-communities' ),
+		);
+
+		if ( $this->pg_is_payment_processor_enabled( 'stripe' ) ) {
+			$processors['stripe'] = __( 'Stripe', 'profilegrid-user-profiles-groups-and-communities' );
+		}
+
+		if ( $this->pg_is_payment_processor_enabled( 'mycred' ) ) {
+			$processors['mycred'] = __( 'myCred', 'profilegrid-user-profiles-groups-and-communities' );
+		}
+
+		if ( $this->pg_is_payment_processor_enabled( 'terawallet' ) ) {
+			$processors['terawallet'] = __( 'TeraWallet', 'profilegrid-user-profiles-groups-and-communities' );
+		}
+
+		/**
+		 * Allow extensions to modify the available payment processors.
+		 *
+		 * @since 5.9.7.0
+		 *
+		 * @param array $processors Associative array of slug => label.
+		 */
+		return apply_filters( 'pg_enabled_payment_processors', $processors );
+	}
+
+	public function pg_get_payment_processor_label( $processor ) {
+		$processors = $this->pg_get_enabled_payment_processors();
+		if ( isset( $processors[ $processor ] ) ) {
+			return $processors[ $processor ];
+		}
+
+		return ucfirst( $processor );
+	}
+
+	private function pg_is_payment_processor_enabled( $processor ) {
+		switch ( $processor ) {
+			case 'stripe':
+				return class_exists( 'Profilegrid_Stripe_Payment' ) || class_exists( 'Profilegrid_Stripe_Payment_Public' );
+			case 'mycred':
+				return class_exists( 'Profilegrid_Mycred' ) || class_exists( 'Profilegrid_Mycred_Public' );
+			case 'terawallet':
+				return class_exists( 'Profilegrid_Credit' ) || class_exists( 'Profilegrid_Credit_Public' );
+			case 'paypal':
+				return true;
+			default:
+				/**
+				 * Allow third-party processors to control their availability.
+				 *
+				 * @since 5.9.7.0
+				 */
+				return apply_filters( 'pg_is_payment_processor_enabled', false, $processor );
+		}
+	}
+
+	public function pg_get_group_membership_payments( $args = array() ) {
+		global $wpdb;
+
+		$defaults = array(
+			'paged'     => 1,
+			'per_page'  => 20,
+			'status'    => '',
+			'processor' => '',
+			'group'     => 0,
+			'user_id'   => 0,
+			'search'    => '',
+			'orderby'   => 'posted_date',
+			'order'     => 'DESC',
+			'allowed_processors' => array(),
+		);
+
+		$args = wp_parse_args( $args, $defaults );
+
+		$allowed_processors = array();
+		if ( is_array( $args['allowed_processors'] ) && ! empty( $args['allowed_processors'] ) ) {
+			$allowed_processors = array_map( 'sanitize_key', $args['allowed_processors'] );
+		}
+
+		$table = $wpdb->prefix . 'promag_paypal_log';
+
+		$order_map = array(
+			'posted_date' => 'posted_date',
+			'amount'      => 'amount',
+			'status'      => 'status',
+			'processor'   => 'pay_processor',
+			'group'       => 'gid',
+			'user'        => 'uid',
+		);
+
+		$order_column = isset( $order_map[ $args['orderby'] ] ) ? $order_map[ $args['orderby'] ] : 'posted_date';
+		$order        = ( 'ASC' === strtoupper( $args['order'] ) ) ? 'ASC' : 'DESC';
+
+		$where_clauses = array();
+		$sql_params    = array();
+
+		if ( ! empty( $args['status'] ) ) {
+			$where_clauses[] = 'status = %s';
+			$sql_params[]    = $args['status'];
+		}
+
+		if ( ! empty( $args['processor'] ) ) {
+			$processor = sanitize_key( $args['processor'] );
+			$where_clauses[] = 'pay_processor = %s';
+			$sql_params[]    = $processor;
+		}
+
+		if ( ! empty( $args['group'] ) ) {
+			$where_clauses[] = 'gid = %d';
+			$sql_params[]    = absint( $args['group'] );
+		}
+
+		if ( ! empty( $args['user_id'] ) ) {
+			$where_clauses[] = 'uid = %d';
+			$sql_params[]    = absint( $args['user_id'] );
+		}
+
+		if ( ! empty( $args['search'] ) ) {
+			$user_ids = $this->pg_get_payment_user_ids_by_keyword( $args['search'] );
+			if ( empty( $user_ids ) ) {
+				$where_clauses[] = '1=0';
+			} else {
+				$placeholders    = implode( ',', array_fill( 0, count( $user_ids ), '%d' ) );
+				$where_clauses[] = "uid IN ({$placeholders})";
+				foreach ( $user_ids as $search_uid ) {
+					$sql_params[] = absint( $search_uid );
+				}
+			}
+		}
+
+		if ( ! empty( $allowed_processors ) ) {
+			$placeholders    = implode( ',', array_fill( 0, count( $allowed_processors ), '%s' ) );
+			$where_clauses[] = "pay_processor IN ({$placeholders})";
+			foreach ( $allowed_processors as $allowed_processor ) {
+				$sql_params[] = $allowed_processor;
+			}
+		}
+
+		$where_sql = '';
+		if ( ! empty( $where_clauses ) ) {
+			$where_sql = 'WHERE ' . implode( ' AND ', $where_clauses );
+		}
+
+		$per_page = max( 1, absint( $args['per_page'] ) );
+		$paged    = max( 1, absint( $args['paged'] ) );
+		$offset   = ( $paged - 1 ) * $per_page;
+
+		// Base: fetch from PAYPAL_LOG table
+		$data_sql  = "SELECT * FROM {$table} {$where_sql} ORDER BY {$order_column} {$order}";
+		$prepared_data_sql  = ! empty( $sql_params ) ? $wpdb->prepare( $data_sql, $sql_params ) : $data_sql;
+		$paypal_items = $wpdb->get_results( $prepared_data_sql );
+
+		$all_items = (array) $paypal_items;
+
+		// Merge in other processors (WooCommerce orders) when requested and plugin is active
+		// TeraWallet integration marks orders with post meta 'pg_credit'
+		$allow_terawallet = empty( $allowed_processors ) || in_array( 'terawallet', $allowed_processors, true );
+		if ( ( empty( $args['processor'] ) || 'terawallet' === $args['processor'] ) && $allow_terawallet && class_exists( 'Profilegrid_Credit_Public' ) && class_exists( 'WC_Order' ) ) {
+			$meta_key = 'pg_credit';
+			$order_ids = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value = %s", $meta_key, '1' ) );
+			if ( ! empty( $order_ids ) ) {
+				foreach ( $order_ids as $order_id ) {
+					$order = wc_get_order( absint( $order_id ) );
+					if ( ! $order ) {
+						continue;
+					}
+					$ord_obj = new stdClass();
+					$ord_obj->id = 'order_' . $order->get_id();
+					$ord_obj->txn_id = $order->get_transaction_id() ? $order->get_transaction_id() : 'order_' . $order->get_id();
+					$ord_obj->log = maybe_serialize( array( 'order_id' => $order->get_id() ) );
+					$ord_obj->posted_date = $order->get_date_created()
+						? $order->get_date_created()->date( 'Y-m-d H:i:s' )
+						: ( $order->get_date_paid() ? $order->get_date_paid()->date( 'Y-m-d H:i:s' ) : current_time( 'mysql' ) );
+					$ord_obj->gid = 0; // No reliable mapping from order -> group available here
+					$ord_obj->status = $order->get_status();
+					$ord_obj->invoice = $order->get_id();
+					$ord_obj->amount = (float) $order->get_total();
+					$ord_obj->currency = $order->get_currency();
+					$ord_obj->pay_processor = 'terawallet';
+					$ord_obj->uid = (int) $order->get_user_id();
+					$all_items[] = $ord_obj;
+				}
+			}
+		}
+
+		// myCred: include WooCommerce orders with payment method indicating mycred or orders marked by myCred integration
+		$allow_mycred = empty( $allowed_processors ) || in_array( 'mycred', $allowed_processors, true );
+		if ( ( empty( $args['processor'] ) || 'mycred' === $args['processor'] ) && $allow_mycred && class_exists( 'Profilegrid_Mycred_Public' ) && class_exists( 'WC_Order' ) ) {
+			// Try to find orders where payment method mentions mycred or has meta set by myCred
+			$mycred_order_ids = $wpdb->get_col( "SELECT ID FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_payment_method' AND pm.meta_value LIKE '%mycred%' WHERE p.post_type = 'shop_order'" );
+			// also include orders where custom meta 'pg_mycred' exists
+			$extra_ids = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s", 'pg_mycred' ) );
+			$mycred_order_ids = array_unique( array_merge( (array) $mycred_order_ids, (array) $extra_ids ) );
+			if ( ! empty( $mycred_order_ids ) ) {
+				foreach ( $mycred_order_ids as $order_id ) {
+					$order = wc_get_order( absint( $order_id ) );
+					if ( ! $order ) {
+						continue;
+					}
+					$ord_obj = new stdClass();
+					$ord_obj->id = 'order_' . $order->get_id();
+					$ord_obj->txn_id = $order->get_transaction_id() ? $order->get_transaction_id() : 'order_' . $order->get_id();
+					$ord_obj->log = maybe_serialize( array( 'order_id' => $order->get_id() ) );
+					$ord_obj->posted_date = $order->get_date_created()
+						? $order->get_date_created()->date( 'Y-m-d H:i:s' )
+						: ( $order->get_date_paid() ? $order->get_date_paid()->date( 'Y-m-d H:i:s' ) : current_time( 'mysql' ) );
+					$ord_obj->gid = 0;
+					$ord_obj->status = $order->get_status();
+					$ord_obj->invoice = $order->get_id();
+					$ord_obj->amount = (float) $order->get_total();
+					$ord_obj->currency = $order->get_currency();
+					$ord_obj->pay_processor = 'mycred';
+					$ord_obj->uid = (int) $order->get_user_id();
+					$all_items[] = $ord_obj;
+				}
+			}
+		}
+
+		// Normalize and sort the merged results in PHP
+		$map_status = function( $status ) {
+			// Normalize common statuses
+			if ( in_array( $status, array( 'completed', 'wc-completed' ), true ) ) {
+				return 'completed';
+			}
+			if ( in_array( $status, array( 'refunded', 'wc-refunded' ), true ) ) {
+				return 'refunded';
+			}
+			if ( in_array( $status, array( 'pending', 'wc-pending' ), true ) ) {
+				return 'pending';
+			}
+			return $status;
+		};
+
+		foreach ( $all_items as $idx => $it ) {
+			// ensure object
+			if ( is_array( $it ) ) {
+				$it = (object) $it;
+			}
+			$all_items[ $idx ]->status = isset( $it->status ) ? $map_status( $it->status ) : '';
+			$all_items[ $idx ]->pay_processor = isset( $it->pay_processor ) ? $it->pay_processor : '';
+			$all_items[ $idx ]->posted_date = isset( $it->posted_date ) ? $it->posted_date : ( isset( $it->posted ) ? $it->posted : '' );
+		}
+
+		// Sort
+		usort( $all_items, function ( $a, $b ) use ( $order_column, $order ) {
+			$a_col = isset( $a->{$order_column} ) ? $a->{$order_column} : '';
+			$b_col = isset( $b->{$order_column} ) ? $b->{$order_column} : '';
+
+			if ( $a_col == $b_col ) {
+				return 0;
+			}
+
+			if ( 'ASC' === strtoupper( $order ) ) {
+				return ( $a_col < $b_col ) ? -1 : 1;
+			}
+
+			return ( $a_col > $b_col ) ? -1 : 1;
+		} );
+
+		$total = count( $all_items );
+		$items = array_slice( $all_items, $offset, $per_page );
+
+		return array(
+			'items' => $items,
+			'total' => $total,
+		);
+	}
+
+	private function pg_get_payment_user_ids_by_keyword( $keyword ) {
+		global $wpdb;
+
+		$keyword = trim( $keyword );
+		if ( '' === $keyword ) {
+			return array();
+		}
+
+		$like = '%' . $wpdb->esc_like( $keyword ) . '%';
+
+		$sql = $wpdb->prepare(
+			"SELECT ID FROM {$wpdb->users} WHERE display_name LIKE %s OR user_login LIKE %s OR user_email LIKE %s",
+			$like,
+			$like,
+			$like
+		);
+
+		return $wpdb->get_col( $sql );
+	}
+
+	public function pg_get_payment_distinct_values( $column ) {
+		global $wpdb;
+
+		$map = array(
+			'status'        => 'status',
+			'pay_processor' => 'pay_processor',
+		);
+
+		if ( ! isset( $map[ $column ] ) ) {
+			return array();
+		}
+
+		$field = $map[ $column ];
+		$table = $wpdb->prefix . 'promag_paypal_log';
+
+		if ( 'pay_processor' === $column ) {
+			$db_values    = $wpdb->get_col( "SELECT DISTINCT pay_processor FROM {$table} WHERE pay_processor != '' ORDER BY pay_processor ASC" );
+			$enabled_list = array_keys( $this->pg_get_enabled_payment_processors() );
+			$results      = array_unique( array_merge( (array) $db_values, (array) $enabled_list ) );
+			return array_filter( array_map( 'sanitize_text_field', (array) $results ) );
+		}
+
+		$results = $wpdb->get_col( "SELECT DISTINCT {$field} FROM {$table} WHERE {$field} != '' ORDER BY {$field} ASC" );
+
+		return array_filter( array_map( 'sanitize_text_field', (array) $results ) );
+	}
+
+	/**
+	 * Insert a payment log entry if it does not already exist.
+	 *
+	 * @since 5.9.7.0
+	 *
+	 * @param int    $uid       User ID.
+	 * @param int    $gid       Group ID.
+	 * @param string $processor Payment processor slug.
+	 * @param string $status    Payment status.
+	 * @param float  $amount    Amount.
+	 * @param string $currency  Currency code.
+	 * @param string $txn_id    Transaction id.
+	 * @param string $invoice   Invoice id/reference.
+	 * @param array  $log       Extra log payload.
+	 */
+	public function pg_insert_payment_log_entry( $uid, $gid, $processor, $status = 'completed', $amount = null, $currency = '', $txn_id = '', $invoice = '', $log = array() ) {
+		$dbhandler = new PM_DBhandler();
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'promag_paypal_log';
+
+		// Prevent duplicates by transaction id.
+		if ( ! empty( $txn_id ) ) {
+			$existing = $dbhandler->pm_count( 'PAYPAL_LOG', array( 'txn_id' => $txn_id ), '*' );
+			if ( $existing > 0 ) {
+				return;
+			}
+		}
+
+		// Prevent duplicates by user/group/status/processor if already logged.
+		$existing_row = $dbhandler->get_all_result(
+			'PAYPAL_LOG',
+			'*',
+			array(
+				'uid'          => (int) $uid,
+				'gid'          => (int) $gid,
+				'status'       => sanitize_text_field( $status ),
+				'pay_processor'=> sanitize_text_field( $processor ),
+			),
+			'results',
+			0,
+			1
+		);
+		if ( ! empty( $existing_row ) ) {
+			return;
+		}
+
+		if ( null === $amount ) {
+			$amount = $this->profile_magic_check_paid_group( $gid );
+		}
+		$amount   = is_numeric( $amount ) ? (float) $amount : 0;
+		$currency = $currency ? $currency : $dbhandler->get_global_option_value( 'pm_paypal_currency', 'USD' );
+
+		if ( empty( $txn_id ) ) {
+			$txn_id = 'pg_' . sanitize_key( $processor ) . '_' . (int) $uid . '_' . (int) $gid . '_' . time();
+		}
+
+		if ( empty( $invoice ) ) {
+			$invoice_gid = get_user_meta( $uid, 'pm_invoice_' . $gid, true );
+			$invoice     = $invoice_gid ? $invoice_gid : get_user_meta( $uid, 'pm_invoice', true );
+		}
+		if ( empty( $invoice ) ) {
+			$invoice = $txn_id;
+		}
+
+		$log_payload = empty( $log ) ? array( 'source' => 'pg_auto_log' ) : $log;
+		$log_payload = maybe_serialize( $log_payload );
+
+		$dbhandler->insert_row(
+			'PAYPAL_LOG',
+			array(
+				'txn_id'        => sanitize_text_field( $txn_id ),
+				'log'           => $log_payload,
+				'posted_date'   => current_time( 'mysql' ),
+				'gid'           => (int) $gid,
+				'status'        => sanitize_text_field( $status ),
+				'invoice'       => sanitize_text_field( $invoice ),
+				'amount'        => $amount,
+				'currency'      => sanitize_text_field( $currency ),
+				'pay_processor' => sanitize_key( $processor ),
+				'pay_type'      => 'one_time',
+				'uid'           => (int) $uid,
+			),
+			array( '%s', '%s', '%s', '%d', '%s', '%s', '%f', '%s', '%s', '%s', '%d' )
+		);
 	}
 
 	public function pm_get_user_profile_url( $uid ) {
@@ -3568,22 +4054,29 @@ class PM_request {
 	}
 
 	public function pm_change_date_in_different_format( $date, $tab = '' ) {
-		$timestamp    = strtotime( $date );
-		$current_year = gmdate( 'Y' );
-		$actual_year  = gmdate( 'Y', $timestamp );
+		if ( empty( $date ) ) {
+			return '';
+		}
+		$timestamp = strtotime( $date );
+		if ( ! $timestamp ) {
+			return '';
+		}
+		$timezone     = wp_timezone();
+		$current_year = wp_date( 'Y', time(), $timezone );
+		$actual_year  = wp_date( 'Y', $timestamp, $timezone );
 		switch ( $tab ) {
 			case 'request':
 				if ( $current_year > $actual_year ) {
-					$date = gmdate( 'h:iA jS M Y', $timestamp );
+					$date = wp_date( 'h:iA jS M Y', $timestamp, $timezone );
 				} else {
-					$date = gmdate( 'h:iA jS M', $timestamp );
+					$date = wp_date( 'h:iA jS M', $timestamp, $timezone );
 				}
 				break;
 			default:
 				if ( $current_year > $actual_year ) {
-					$date = gmdate( 'jS M Y', $timestamp );
+					$date = wp_date( 'jS M Y', $timestamp, $timezone );
 				} else {
-					$date = gmdate( 'jS M', $timestamp );
+					$date = wp_date( 'jS M', $timestamp, $timezone );
 				}
 				break;
 		}
@@ -4197,10 +4690,18 @@ class PM_request {
 							?>
 							<div class="pm-group-signup">
                             <?php 
+                                $basic_function = class_exists( 'Profile_Magic_Functions' ) ? new Profile_Magic_Functions($this->profile_magic, $this->version) : null;
+                                $nonce_field    = '';
+                                if ( $basic_function && method_exists( $basic_function, 'pm_render_nonce_field' ) ) {
+                                    ob_start();
+                                    $basic_function->pm_render_nonce_field( 'pg_join_group_action', 'pg_join_group_nonce' );
+                                    $nonce_field = ob_get_clean();
+                                }
                                 $form_html = '<form method="post" ' . wp_kses_post($action) . '>
                                 <input type="hidden" name="pg_uid" id="pg_uid" value="' . esc_attr($current_user->ID) . '" />
                                 <input type="hidden" name="pg_join_gid" id="pg_join_gid" value="' . esc_attr($gid) . '" />
                                 <input type="hidden" name="pg_join_group" id="pg_join_group" value="1" />
+                                ' . $nonce_field . '
                                 <button type="submit" class="pm_button">' . esc_html(apply_filters('profilegrid_join_group_label', __('Join Group', 'profilegrid-user-profiles-groups-and-communities'))) . '</button>
                                 
                                 </form>';
@@ -4222,10 +4723,18 @@ class PM_request {
 						?>
 						<div class="pm-group-signup">
                         <?php 
+                            $basic_function = class_exists( 'Profile_Magic_Functions' ) ? new Profile_Magic_Functions($this->profile_magic, $this->version) : null;
+                            $nonce_field    = '';
+                            if ( $basic_function && method_exists( $basic_function, 'pm_render_nonce_field' ) ) {
+                                ob_start();
+                                $basic_function->pm_render_nonce_field( 'pg_join_group_action', 'pg_join_group_nonce' );
+                                $nonce_field = ob_get_clean();
+                            }
                             $form_html = '<form method="post" ' . wp_kses_post($action) . '>
                             <input type="hidden" name="pg_uid" id="pg_uid" value="' . esc_attr($current_user->ID) . '" />
                             <input type="hidden" name="pg_join_gid" id="pg_join_gid" value="' . esc_attr($gid) . '" />
                             <input type="hidden" name="pg_join_group" id="pg_join_group" value="1" />
+                            ' . $nonce_field . '
                             <button type="submit" class="pm_button">' . esc_html(apply_filters('profilegrid_join_group_label', __('Join Group', 'profilegrid-user-profiles-groups-and-communities'))) . '</button>
                             
                             </form>';
@@ -4664,10 +5173,11 @@ class PM_request {
 			$date = $joining_dates[ $gid ];
 		} else {
 			$user = get_user_by( 'ID', $uid );
-			$date = $user->user_registered;
+			$date = $user ? $user->user_registered : '';
 		}
 
-		return $this->pm_change_date_in_different_format( $date );
+		$formatted_date = $this->pm_change_date_in_different_format( $date );
+		return $formatted_date ? $formatted_date : '';
 	}
 
 	public function is_user_online( $user_to_check ) {
@@ -4878,7 +5388,7 @@ class PM_request {
 		}
 
 		if ( $group_page == '0' ) {
-			$html = '<a onclick="pg_create_group_page(this,' . $gid . ')" title="' . esc_attr__( 'Click to create page for this group', 'profilegrid-user-profiles-groups-and-communities' ) . '"><i class="fa fa-plus"></i></a>';
+			$html = '<a href="#" class="pg-create-group-page" data-gid="' . $gid . '" title="' . esc_attr__( 'Click to create page for this group', 'profilegrid-user-profiles-groups-and-communities' ) . '"><i class="fa fa-plus"></i></a>';
 		} else {
 			$link = get_edit_post_link( $group_page );
 			$html = '<a href="' . $link . '" target="_blank" title="' . esc_attr__( 'Click to edit the page for this group', 'profilegrid-user-profiles-groups-and-communities' ) . '"><i class="fa fa-file"></i></a>';

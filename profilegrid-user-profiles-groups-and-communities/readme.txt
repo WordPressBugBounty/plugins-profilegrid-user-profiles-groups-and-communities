@@ -3,9 +3,9 @@ Contributors: profilegrid, metagauss
 Donate link: http://profilegrid.co
 Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.9.6.1
+Stable tag: 5.9.7.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -296,14 +296,6 @@ A selection of readymade profile page layouts to chose from! Each layout is uniq
 * Toggle Friend System On/ Off
 * All resending friend requests
 * Period after which resending request is allowed
-
-= Uploads =
-
-* Profile Image Maximum File Size (in bytes)
-* Cover Image Maximum File Size (in bytes)
-* Image Quality
-* Profile image minimum width
-* Cover image minimum width
 
 = Uploads =
 
@@ -672,6 +664,56 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 5.9.7.3: January 28, 2026 =
+* Security: Addressed and resolved several security vulnerabilities for safer usage.
+
+= 5.9.7.2 - January 20, 2026 =
+* Fixed: Issue with Group Wall Extension.
+
+= 5.9.7.1 - January 13, 2026 =
+* Fix: Minor registration form fixes and stability improvements.
+
+= 5.9.7.0 - January 12, 2026 =
+* New: Added a clear visual notification to alert users about unread private messages.
+* New: Added a new "Payments" section in the ProfileGrid admin area to view group membership payment details.
+* New: Added a "Group Membership" tab in Profile Settings on the My Profile page, allowing users to view their group membership payment history.
+* Fixed: Multiple extension-related issues.
+
+= 5.9.6.9 - January 3, 2026 =
+* Fixed: Multiple extension issues.
+* Updated: Minor CSS changes.
+
+= 5.9.6.8 — December 23, 2025 =
+* Added: REST API endpoints for third-party integrations.
+* Fixed: Issue with multi-page registration forms.
+
+= 5.9.6.7 — December 10, 2025 =
+* Added WebP and AVIF support for profile and cover images.
+* Updated multiple extensions for full WordPress 6.9 compatibility.
+* General fixes and stability improvements.
+
+= 5.9.6.6: December 1, 2025 =
+* Security: Addressed and resolved several security vulnerabilities for safer usage.
+* Enhancement: Enhanced nonce usage across sensitive workflows.
+
+= 5.9.6.5 - November 11, 2025 =
+* New: Added support for international phone number formatting.
+* Enhancement: Refined UI design for improved consistency and user experience.
+* Fix: Resolved issues affecting ProfileGrid User Reviews and Group Carousel extension sfunctionality.
+
+= 5.9.6.4: October 27, 2025 =
+* New: Introduced a new setting to preselect the default visibility for user-submitted blog posts.
+* Enhancements: Minor design adjustments for better UI consistency and user experience.
+* Fixed: Replaced the old geolocation API with a modern and more reliable provider to improve accuracy, speed, and privacy compliance.
+
+= 5.9.6.3: October 10, 2025 =
+* Fixed: Bug in password field where special characters were not saved correctly.
+
+= 5.9.6.2: October 7, 2025 =
+* Enhancements: Minor design adjustments for better UI consistency and user experience.
+* Fix: Minor bugs fixes.
+* Added: Remember me checkbox on login page.
 
 = 5.9.6.1: September 25, 2025 =
 * Enhancements: Minor design and validation adjustments for better UI consistency and user experience.
@@ -1492,6 +1534,57 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 5.9.7.3: January 28, 2026 =
+* Security: Addressed and resolved several security vulnerabilities for safer usage.
+
+= 5.9.7.2 - January 20, 2026 =
+* Fixed: Issue with Group Wall Extension.
+
+= 5.9.7.1 - January 13, 2026 =
+* Fix: Minor registration form fixes and stability improvements.
+
+= 5.9.7.0 - January 12, 2026 =
+* New: Added a clear visual notification to alert users about unread private messages.
+* New: Added a new "Payments" section in the ProfileGrid admin area to view group membership payment details.
+* New: Added a "Group Membership" tab in Profile Settings on the My Profile page, allowing users to view their group membership payment history.
+* Fixed: Multiple extension-related issues.
+
+= 5.9.6.9 - January 3, 2026 =
+* Fixed: Multiple extension issues.
+* Updated: Minor CSS changes.
+
+= 5.9.6.8 — December 23, 2025 =
+* Added: REST API endpoints for third-party integrations.
+* Fixed: Issue with multi-page registration forms.
+
+= 5.9.6.7 — December 10, 2025 =
+* Added WebP and AVIF support for profile and cover images.
+* Updated multiple extensions for full WordPress 6.9 compatibility.
+* General fixes and stability improvements.
+
+= 5.9.6.6: December 1, 2025 =
+* Security: Addressed and resolved several security vulnerabilities for safer usage.
+* Enhancement: Enhanced nonce usage across sensitive workflows.
+
+
+= 5.9.6.5 – November 11, 2025 =
+* New: Added support for international phone number formatting.
+* Enhancement: Refined UI design for improved consistency and user experience.
+* Fix: Resolved issues affecting ProfileGrid User Reviews and Group Carousel extension sfunctionality.
+
+= 5.9.6.4: October 27, 2025 =
+* New: Introduced a new setting to preselect the default visibility for user-submitted blog posts.
+* Enhancements: Minor design adjustments for better UI consistency and user experience.
+* Fixed: Replaced the old geolocation API with a modern and more reliable provider to improve accuracy, speed, and privacy compliance.
+
+= 5.9.6.3: October 10, 2025 =
+* Fixed: Bug in password field where special characters were not saved correctly.
+
+= 5.9.6.2: October 7, 2025 =
+* Enhancements: Minor design adjustments for better UI consistency and user experience.
+* Fix: Minor bugs fixes.
+* Added: Remember me checkbox on login page.
 
 = 5.9.6.1: September 25, 2025 =
 * Enhancements: Minor design and validation adjustments for better UI consistency and user experience.

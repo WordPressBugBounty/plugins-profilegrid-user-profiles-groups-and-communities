@@ -1,7 +1,14 @@
 jQuery( function( $ ) {
     $(".pg-license-block").keyup(function(e) {
         let prefix = $(this).data('key');
-        let license_key_length = $('#' + prefix + '_license_key' ).val();
+        let field = $('#' + prefix + '_license_key' );
+        let license_key_length = field.val();
+        // Strip whitespace so length checks aren't blocked by spaces.
+        let sanitized_key = ( license_key_length || '' ).replace(/\s+/g, '');
+        if ( sanitized_key !== license_key_length ) {
+            field.val( sanitized_key );
+            license_key_length = sanitized_key;
+        }
         // let child_length = $('.'+ prefix +  ' .' + prefix + '-license-status-block').children.length;
         if( license_key_length.length === 32 && prefix != 'undefined' && prefix != '' ){
             $('#' + prefix + '_license_activate' ).show();
@@ -19,7 +26,8 @@ jQuery( function( $ ) {
         e.preventDefault();
         let prefix = $(this).data('prefix');
         let key = $(this).data('key');
-        let license_key = $('#'+key + '_license_key').val();
+        let license_key = ($('#'+key + '_license_key').val() || '').replace(/\s+/g, '');
+        $('#'+key + '_license_key').val( license_key );
         let pg_license_activate = $('#' + key + '_license_activate').val();
         // $( '.'+ prefix +  ' .' + prefix + '-license-status-block' ).html( '' );
         $( '.'+ key +  ' .license-expire-date' ).html( '' );

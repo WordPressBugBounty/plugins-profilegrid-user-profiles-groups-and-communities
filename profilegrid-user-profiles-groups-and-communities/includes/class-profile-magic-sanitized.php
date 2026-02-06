@@ -2,6 +2,9 @@
 class PM_sanitizer {
 
 	public function get_sanitized_fields( $identifier, $field, $value ) {
+		if ( is_null( $value ) ) {
+			$value = '';
+		}
 		$sanitize_method = 'get_sanitized_' . strtolower( $identifier ) . '_field';
 
 		if ( method_exists( $this, $sanitize_method ) ) {
@@ -126,7 +129,7 @@ class PM_sanitizer {
 				$value = sanitize_text_field( $value );
 				break;
 			case 'admin_label':
-				$value = preg_replace( '/[^A-Za-z0-9 ]/', '', $value );
+				$value = preg_replace( '/[^A-Za-z0-9 ]/', '', (string) $value );
 				break;
 			case 'is_group_leader':
 				$value = sanitize_text_field( $value );
@@ -422,9 +425,9 @@ class PM_sanitizer {
 	public function get_sanitized_msg_conversation_field( $field, $value ) {
 		switch ( $field ) {
 			case 'content':
-				$value                 = wp_kses_post( $value );
+				$value                 = wp_kses_post( (string) $value );
 								$url   = '@(http)?(s)?(://)?(([a-zA-Z])([-\w]+\.)+([^\s\.]+[^\s]*)+[^,.\s])@';
-								$value = preg_replace( $url, '<a href="http$2://$4" target="_blank" title="$0">$0</a>', $value );
+								$value = preg_replace( $url, '<a href="http$2://$4" target="_blank" title="$0">$0</a>', (string) $value );
 
 				break;
 			default:
@@ -578,6 +581,18 @@ class PM_sanitizer {
                     $new_input[$key] = sanitize_user($val);
                     break;
                 case 'user_email':
+                case 'user_pass':
+                    $new_input[$key] = !empty($val) ? trim($val) : '';
+                    break;
+                case 'confirm_pass':
+                    $new_input[$key] = !empty($val) ? trim($val) : '';
+                    break;
+                case 'pass1':
+                    $new_input[$key] = !empty($val) ? trim($val) : '';
+                    break;
+                case 'pass2':
+                    $new_input[$key] = !empty($val) ? trim($val) : '';
+                    break;
                 case 'pm_email_address':
                     $new_input[$key] = sanitize_email($val);
                     break;

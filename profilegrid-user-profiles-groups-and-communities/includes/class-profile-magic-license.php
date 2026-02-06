@@ -35,6 +35,7 @@ class Profile_Magic_License {
                     if( isset( $license_data->error ) ){
                         switch( $license_data->error ) {
                             case 'expired' :
+                                /* translators: %s: License expiry date. */
                                 $message = sprintf(
                                     __( 'Your license key expired on %s.', 'profilegrid-user-profiles-groups-and-communities' ),
                                     date_i18n( get_option( 'date_format' ), strtotime( $license_data->expires, current_time( 'timestamp' ) ) )
@@ -81,7 +82,8 @@ class Profile_Magic_License {
                 if( $license_data->expires == 'lifetime' ){
                     $expire_date = __( 'Your license key is activated for lifetime', 'profilegrid-user-profiles-groups-and-communities' );
                 }else{
-                    $expire_date = sprintf( __( 'Your license Key expires on %s.', 'profilegrid-user-profiles-groups-and-communities' ), date( 'F d, Y', strtotime($license_data->expires) ) );
+                    /* translators: %s: License expiry date. */
+                    $expire_date = sprintf( __( 'Your license Key expires on %s.', 'profilegrid-user-profiles-groups-and-communities' ), gmdate( 'F d, Y', strtotime($license_data->expires) ) );
                 }
             }else{
                 $expire_date = '';
@@ -148,6 +150,7 @@ class Profile_Magic_License {
                     if( isset( $license_data->error ) ){
                         switch( $license_data->error ) {
                             case 'expired' :
+                                /* translators: %s: License expiry date. */
                                 $message = sprintf(
                                     __( 'Your license key expired on %s.' ),
                                     date_i18n( get_option( 'date_format' ), strtotime( $license_data->expires, current_time( 'timestamp' ) ) )
@@ -164,6 +167,7 @@ class Profile_Magic_License {
                                 $message = __( 'Your license is not active for this URL.', 'profilegrid-user-profiles-groups-and-communities'   );
                                 break;
                             case 'item_name_mismatch' :
+                                /* translators: %s: Product name. */
                                 $message = sprintf( __( 'This appears to be an invalid license key for %s.', 'profilegrid-user-profiles-groups-and-communities'   ), $item_name );
                                 break;
                             case 'no_activations_left':
@@ -195,7 +199,8 @@ class Profile_Magic_License {
                 if( $license_data->expires == 'lifetime' ){
                     $expire_date = __( 'Your license key is activated for lifetime', 'profilegrid-user-profiles-groups-and-communities' );
                 }else{
-                    $expire_date = sprintf( __( 'Your License Key expires on %s.', 'profilegrid-user-profiles-groups-and-communities' ), date('F d, Y', strtotime( $license_data->expires ) ) );
+                    /* translators: %s: License expiry date. */
+                    $expire_date = sprintf( __( 'Your License Key expires on %s.', 'profilegrid-user-profiles-groups-and-communities' ), gmdate('F d, Y', strtotime( $license_data->expires ) ) );
                 }
             }else{
                 $expire_date = '';

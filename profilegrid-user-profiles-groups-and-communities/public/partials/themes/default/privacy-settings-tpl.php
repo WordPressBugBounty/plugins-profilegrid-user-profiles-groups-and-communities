@@ -1,3 +1,6 @@
+<?php
+$basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+?>
 <div class="pmagic">   
 <!-----Form Starts----->
 <form class="pmagic-form pm-dbfl pg-group-reg-form" name="pm_privacy_form" id="pm_privacy_form" method="post">
@@ -23,19 +26,18 @@
         <div class="pm-col">
             <div class="pm-form-field-icon"></div>
             <div class="pm-field-lable">
-                <label for="pm_hide_my_profile"><?php esc_html_e('Hide My Profile From Groups, Directories and Search Results','profilegrid-user-profiles-groups-and-communities');?></label>
+                <label for="pm_hide_my_profile_0"><?php esc_html_e('Hide My Profile From Groups, Directories and Search Results','profilegrid-user-profiles-groups-and-communities');?></label>
             </div>
             <div class="pm-field-input pm_required">
                 <div class="pmradio">
                    <div class="pm-radio-option">
-                       <input type="radio" class="pg-hide-privacy-profile" name="pm_hide_my_profile" value="0" <?php if($pmrequests->profile_magic_get_user_field_value($uid,'pm_hide_my_profile')==0 || $pmrequests->profile_magic_get_user_field_value($uid,'pm_hide_my_profile')=='')echo 'checked';?>> 
-                       <label class="pg-hide-my-profile"><?php  esc_html_e('No','profilegrid-user-profiles-groups-and-communities'); ?></label>
+                       <input type="radio" class="pg-hide-privacy-profile" id="pm_hide_my_profile_0" name="pm_hide_my_profile" value="0" <?php if($pmrequests->profile_magic_get_user_field_value($uid,'pm_hide_my_profile')==0 || $pmrequests->profile_magic_get_user_field_value($uid,'pm_hide_my_profile')=='')echo 'checked';?>> 
+                       <label class="pg-hide-my-profile" for="pm_hide_my_profile_0"><?php  esc_html_e('No','profilegrid-user-profiles-groups-and-communities'); ?></label>
                    </div>
                     <div class="pm-radio-option">
-                       <input type="radio" class="pg-hide-privacy-profile" name="pm_hide_my_profile" value="1" <?php checked($pmrequests->profile_magic_get_user_field_value($uid,'pm_hide_my_profile'),1);?>> 
-                       <label class="pg-hide-my-profile"> <?php esc_html_e('Yes','profilegrid-user-profiles-groups-and-communities'); ?></label>
+                       <input type="radio" class="pg-hide-privacy-profile" id="pm_hide_my_profile_1" name="pm_hide_my_profile" value="1" <?php checked($pmrequests->profile_magic_get_user_field_value($uid,'pm_hide_my_profile'),1);?>> 
+                       <label class="pg-hide-my-profile" for="pm_hide_my_profile_1"> <?php esc_html_e('Yes','profilegrid-user-profiles-groups-and-communities'); ?></label>
                    </div>
-                            
                 </div>
             </div>
         </div>
@@ -43,9 +45,9 @@
     <?php endif;?>
     <div class="buttonarea pm-full-width-container">
         <div id="pm_reset_passerror" style="display:none;"></div>
-        <input type="hidden" name="user_id" id="user_id" value="<?php echo esc_attr($uid); ?>" />
-         <?php wp_nonce_field('pm_privacy_settings_form'); ?>
-      <input type="submit" value="<?php esc_attr_e('Submit','profilegrid-user-profiles-groups-and-communities');?>" name="pg_privacy_submit">
+        <input type="hidden" name="user_id" value="<?php echo esc_attr($uid); ?>" />
+        <?php $basic_function->pm_render_nonce_field( 'pm_privacy_settings_form' ); ?>
+        <input type="submit" value="<?php esc_attr_e('Submit','profilegrid-user-profiles-groups-and-communities');?>" name="pg_privacy_submit">
     </div>
   </form>
 </div>

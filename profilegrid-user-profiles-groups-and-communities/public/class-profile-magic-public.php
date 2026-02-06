@@ -105,11 +105,12 @@ class Profile_Magic_Public {
 	public function register_scripts() {
 		$dbhandler  = new PM_DBhandler();
 		$pmrequests = new PM_request();
-                $pm_sanitizer = new PM_sanitizer;
+		$pm_sanitizer = new PM_sanitizer;
                 $request = $pm_sanitizer->sanitize($_REQUEST);
 		wp_register_script( 'pg-profile-menu.js', plugin_dir_url( __FILE__ ) . 'js/pg-profile-menu.js', array( 'jquery' ), $this->version, false );
 		wp_register_script( $this->profile_magic, plugin_dir_url( __FILE__ ) . 'js/profile-magic-public.js', array( 'jquery' ), $this->version, false );
 		wp_register_script( 'modernizr-custom.min.js', plugin_dir_url( __FILE__ ) . 'js/modernizr-custom.min.js', array( 'jquery' ), $this->version, false );
+		wp_register_script( 'profile-magic-multistep-form', plugin_dir_url( __FILE__ ) . 'js/profile-magic-multistep-form.js', array( 'jquery', $this->profile_magic ), $this->version, true );
 		wp_register_script( 'profile-magic-footer.js', plugin_dir_url( __FILE__ ) . 'js/profile-magic-footer.js', array( 'jquery' ), $this->version, true );
 		wp_register_script( 'profile-magic-friends-public.js', plugin_dir_url( __FILE__ ) . 'js/profile-magic-friends-public.js', array( 'jquery' ), $this->version, false );
 		wp_register_script( 'pg-password-checker.js', plugin_dir_url( __FILE__ ) . 'js/pg-password-checker.js', array( 'jquery' ), $this->version, true );
@@ -142,7 +143,9 @@ class Profile_Magic_Public {
 			$error['show_less']                    = esc_html__( 'Show less', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['user_not_exit']                = esc_html__( 'Username does not exists.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['password_change_successfully'] = esc_html__( 'Password changed Successfully', 'profilegrid-user-profiles-groups-and-communities' );
-			$error['allow_file_ext']               = $dbhandler->get_global_option_value( 'pm_allow_file_types', 'jpg|jpeg|png|gif' );
+			$allow_file_ext                        = $dbhandler->get_global_option_value( 'pm_allow_file_types', 'jpg|jpeg|png|gif|webp|avif' );
+			$allow_file_ext                        = implode( '|', array_unique( array_filter( explode( '|', strtolower( $allow_file_ext . '|webp|avif' ) ) ) ) );
+			$error['allow_file_ext']               = $allow_file_ext;
 			$error['valid_phone_number']           = esc_html__( 'Please enter a valid phone number.', 'profilegrid-user-profiles-groups-and-communities' );
 		$error['valid_mobile_number']              = esc_html__( 'Please enter a valid mobile number.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_facebook_url']           = esc_html__( 'Please enter a valid Facebook url.', 'profilegrid-user-profiles-groups-and-communities' );
@@ -268,7 +271,9 @@ class Profile_Magic_Public {
 			$error['show_less']                    = esc_html__( 'Show less', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['user_not_exit']                = esc_html__( 'Username does not exists.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['password_change_successfully'] = esc_html__( 'Password changed Successfully', 'profilegrid-user-profiles-groups-and-communities' );
-			$error['allow_file_ext']               = $dbhandler->get_global_option_value( 'pm_allow_file_types', 'jpg|jpeg|png|gif' );
+			$allow_file_ext                        = $dbhandler->get_global_option_value( 'pm_allow_file_types', 'jpg|jpeg|png|gif|webp|avif' );
+			$allow_file_ext                        = implode( '|', array_unique( array_filter( explode( '|', strtolower( $allow_file_ext . '|webp|avif' ) ) ) ) );
+			$error['allow_file_ext']               = $allow_file_ext;
 			$error['valid_phone_number']           = esc_html__( 'Please enter a valid phone number.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_mobile_number']          = esc_html__( 'Please enter a valid mobile number.', 'profilegrid-user-profiles-groups-and-communities' );
 			$error['valid_facebook_url']           = esc_html__( 'Please enter a valid Facebook url.', 'profilegrid-user-profiles-groups-and-communities' );
@@ -609,7 +614,7 @@ class Profile_Magic_Public {
 		 $pmrequests = new PM_request();
 		$checkurl    = $pmrequests->profile_magic_get_frontend_url( 'pm_forget_password_page', '' );
 		if ( ! empty( $checkurl ) ) {
-			if ( isset($_SERVER['REQUEST_METHOD']) && 'POST' == sanitize_text_field($_SERVER['REQUEST_METHOD'] )) {
+			if ( isset($_SERVER['REQUEST_METHOD']) && 'POST' == sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) )) {
 					$rp_key   = $request['rp_key'];
 					$rp_login = $request['rp_login'];
 
@@ -724,7 +729,7 @@ class Profile_Magic_Public {
 			} else {
 				$reset_process = true;
 			}
-			if ( isset($_SERVER['REQUEST_METHOD']) && 'POST' == sanitize_text_field($_SERVER['REQUEST_METHOD']) && $reset_process ) {
+			if ( isset($_SERVER['REQUEST_METHOD']) && 'POST' == sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) && $reset_process ) {
 					$errors = retrieve_password();
 				if ( is_wp_error( $errors ) ) {
 						// Errors found
@@ -770,6 +775,7 @@ class Profile_Magic_Public {
             
                 // Create new message
                 $msg  = __( 'Hello!', 'profilegrid-user-profiles-groups-and-communities' ) . "\r\n\r\n";
+                /* translators: %s: User email address. */
                 $msg .= sprintf( __( 'You asked us to reset your password for your account using the email address %s.', 'profilegrid-user-profiles-groups-and-communities' ), $user_email ) . "\r\n\r\n";
                 $msg .= __( "If this was a mistake, or you didn't ask for a password reset, just ignore this email and nothing will happen.", 'profilegrid-user-profiles-groups-and-communities' ) . "\r\n\r\n";
                 $msg .= __( 'To reset your password, visit the following address:', 'profilegrid-user-profiles-groups-and-communities' ) . "\r\n\r\n";
@@ -790,7 +796,7 @@ class Profile_Magic_Public {
                 $request = $pm_sanitizer->sanitize($_REQUEST);
 		$checkurl   = $pmrequests->profile_magic_get_frontend_url( 'pm_forget_password_page', '' );
 		if ( ! empty( $checkurl ) ) {
-			if ( isset($_SERVER['REQUEST_METHOD']) && 'GET' == sanitize_text_field($_SERVER['REQUEST_METHOD']) ) {
+			if ( isset($_SERVER['REQUEST_METHOD']) && 'GET' == sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) ) {
 					// Verify key / login combo
 					$user = check_password_reset_key($request['key'], $request['login'] );
 				if ( ! $user || is_wp_error( $user ) ) {
@@ -1180,7 +1186,7 @@ class Profile_Magic_Public {
 				if ( isset( $field_options['admin_only'] ) && $field_options['admin_only'] == '1' && ! is_super_admin() ) {
                                     continue;
 				}
-				$field_html = ' <li class="pm-filter-item"><input class="pm-filter-checkbox" type="checkbox" name="match_fields" onclick="pm_advance_user_search()" ' . $ischecked . ' value="' . $field->field_key . '" ><span class="pm-filter-value">' . esc_html__( $field->field_name, 'profilegrid-user-profiles-groups-and-communities' ) . '</span></li>';
+				$field_html = ' <li class="pm-filter-item"><input class="pm-filter-checkbox" type="checkbox" name="match_fields" onclick="pm_advance_user_search()" ' . $ischecked . ' value="' . $field->field_key . '" ><span class="pm-filter-value">' . esc_html( $field->field_name ) . '</span></li>';
                                 $resp .= apply_filters('pg_advance_search_field_html',$field_html, $field);
                         }
 		}
@@ -1242,7 +1248,10 @@ class Profile_Magic_Public {
                 if ( !isset( $nonce ) || ! wp_verify_nonce( wp_unslash($nonce), 'ajax-nonce' ) ) {
                     die(esc_html__('Failed security check','profilegrid-user-profiles-groups-and-communities') );
                 }
-		 $active_tid = sanitize_text_field(wp_unslash($_POST['tid']));
+		 $active_tid = '';
+if ( isset( $_POST['tid'] ) ) {
+    $active_tid = sanitize_text_field( wp_unslash( $_POST['tid'] ) );
+}
 		$result      = $pmmessenger->pm_messenger_show_threads( $active_tid );
 		echo wp_kses_post( $result );
 		die;
@@ -1259,7 +1268,7 @@ class Profile_Magic_Public {
                         if(isset($post['rid']) && !empty($post['rid'])){
                             $rid     = intval($post['rid']);
                         }else{
-                            $rid = '';
+                            $rid = 0;
                         }
                         
                         if(isset($post['mid']) && !empty($post['mid'])){
@@ -1276,19 +1285,27 @@ class Profile_Magic_Public {
                         if(isset($post['tid'])){
                             $tid = intval($post['tid']);
                         }else{
-                            $tid = '';
+                            $tid = 0;
                         }
                         //echo $rid.' '.$content.' '.$tid;
 			if ( $mid == '' ) {
 				if ($tid == 0){
-				$result = $pmmessenger->pm_messenger_send_new_message( $rid, $content );
+					if ( $rid > 0 && $content !== '' ) {
+						$result = $pmmessenger->pm_messenger_send_new_message( $rid, $content );
+					} else {
+						$result = __( 'not sent', 'profilegrid-user-profiles-groups-and-communities' );
+					}
 			}else{
-				$result = $pmmessenger->pm_messenger_send_new_message( $rid, $content,$tid );
+				if ( $rid > 0 && $content !== '' ) {
+					$result = $pmmessenger->pm_messenger_send_new_message( $rid, $content,$tid );
+				} else {
+					$result = __( 'not sent', 'profilegrid-user-profiles-groups-and-communities' );
+				}
 				}
 			} else {
 				$result = $pmmessenger->pm_messenger_send_edit_message( $rid, $mid, $content );
 			}
-			echo $result;
+			echo wp_kses_post( $result );
 		} else {
 			 esc_html_e( ' no post created', 'profilegrid-user-profiles-groups-and-communities' );
 		}
@@ -1300,6 +1317,7 @@ class Profile_Magic_Public {
 		$pmmessenger = new ProfileMagic_Chat();
                 $pmrequests   = new PM_request();
 		$tid         = filter_input( INPUT_POST, 'tid' );
+		$tid         = absint( $tid );
 		$loadnum     = filter_input( INPUT_POST, 'loadnum' );
 		$timezone    = filter_input( INPUT_POST, 'timezone' );
 		$nonce    = filter_input( INPUT_POST, 'nonce' );
@@ -1327,7 +1345,7 @@ class Profile_Magic_Public {
                  if($tid!=0)
                  {
                     $return     = $pmmessenger->pm_get_messenger_notification( $timestamp, $activity, $tid );
-                    echo $return;
+                    echo wp_kses_post( $return );
                  }
 		die;
 	}
@@ -1352,6 +1370,29 @@ class Profile_Magic_Public {
 			$return      = $pmmessenger->pm_messenger_notification_extra_data();
 			echo wp_kses_post( $return );
 			die;
+	}
+
+	public function pm_unread_message_summary() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( __( 'Not logged in', 'profilegrid-user-profiles-groups-and-communities' ) );
+		}
+
+		check_ajax_referer( 'ajax-nonce', 'nonce' );
+
+		$pmrequests = new PM_request();
+		$uid        = get_current_user_id();
+		$summary    = $pmrequests->pm_get_unread_message_summary( $uid );
+		$count      = isset( $summary['count'] ) ? (int) $summary['count'] : 0;
+		$latest_ts  = isset( $summary['latest'] ) ? (int) $summary['latest'] : 0;
+		$dismissed  = (int) get_user_meta( $uid, 'pg_msg_unread_dismissed_at', true );
+
+		wp_send_json_success(
+			array(
+				'count'     => $count,
+				'latest_ts' => $latest_ts,
+				'dismissed' => $dismissed,
+			)
+		);
 	}
 
 	public function pm_autocomplete_user_search() {
@@ -1989,6 +2030,7 @@ class Profile_Magic_Public {
 		$dbhandler->update_row( $identifier, 'id', $requests->id, $data, array( '%s', '%d' ), '%d' );
 			$username2 = $pmrequests->pm_get_display_name( $u2 );
 			do_action( 'pm_friend_request_rejected', $u2, $u1 );
+			/* translators: %s: Display name. */
 			echo '<b>' . esc_html__( 'Request Rejected!', 'profilegrid-user-profiles-groups-and-communities' ) . '</b><br />' . sprintf( esc_html__( 'You cancelled friend request from %s.', 'profilegrid-user-profiles-groups-and-communities' ), esc_html($username2) );
 		die;
 	}
@@ -2047,6 +2089,7 @@ class Profile_Magic_Public {
 				echo '<b>' . esc_html__( 'Request Removed!', 'profilegrid-user-profiles-groups-and-communities' ) . '</b>';
 			else :
 					 $username2 = $pmrequests->pm_get_display_name( $u2 );
+				/* translators: %s: Display name. */
 				echo '<b>' . esc_html__( 'Friend Removed!', 'profilegrid-user-profiles-groups-and-communities' ) . '</b><br />' . sprintf( esc_html__( 'You have removed %s from your friend list.', 'profilegrid-user-profiles-groups-and-communities' ), wp_kses_post($username2) );
 				endif;
 
@@ -2179,7 +2222,7 @@ class Profile_Magic_Public {
 				<div class="pm-col">
 					<div class="pm-form-field-icon"></div>
 					<div class="pm-field-lable">
-						<label for=""><?php esc_html_e( 'Price', 'profilegrid-user-profiles-groups-and-communities' ); ?></label>
+						<label><?php esc_html_e( 'Price', 'profilegrid-user-profiles-groups-and-communities' ); ?></label>
 					</div>
 					<div class="pm-field-input">
 						<div class="pm_group_price">
@@ -2201,7 +2244,7 @@ class Profile_Magic_Public {
 				<div class="pm-col">
 					<div class="pm-form-field-icon"></div>
 					<div class="pm-field-lable">
-						<label for=""><?php esc_html_e( 'Payment Method', 'profilegrid-user-profiles-groups-and-communities' ); ?><sup>*</sup></label>
+						<label for="pm_payment_method"><?php esc_html_e( 'Payment Method', 'profilegrid-user-profiles-groups-and-communities' ); ?><sup>*</sup></label>
 					</div>
 					<div class="pm-field-input pm_radiorequired">
 						<div class="pmradio">
@@ -3071,27 +3114,47 @@ class Profile_Magic_Public {
 	}
 
 	public function pm_remove_user_from_group() {
+		// SECURITY: authentication required.
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( esc_html__( 'Authentication required', 'profilegrid-user-profiles-groups-and-communities' ) );
+			return;
+		}
+
 		$pmrequests      = new PM_request();
 		$pm_emails       = new PM_Emails();
 		$html_generator  = new PM_HTML_Creator( $this->profile_magic, $this->version );
-		$user_id         = filter_input( INPUT_POST, 'user_id' );
-		$gid             = filter_input( INPUT_POST, 'gid' );
+		$user_id_raw     = isset( $_POST['user_id'] ) ? wp_unslash( $_POST['user_id'] ) : '';
+		$gid             = isset( $_POST['gid'] ) ? absint( $_POST['gid'] ) : 0;
 		$current_user    = wp_get_current_user();
-		$retrieved_nonce = filter_input( INPUT_POST, '_wpnonce' );
+		$retrieved_nonce = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+		$basic_functions = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
 
+		// SECURITY: CSRF check.
 		if ( ! wp_verify_nonce( $retrieved_nonce, 'remove_pm_user_from_group' ) ) {
-			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
+			wp_send_json_error( esc_html__( 'Security check failed', 'profilegrid-user-profiles-groups-and-communities' ) );
+			return;
 		}
-		if ( is_numeric( $user_id ) ) {
-			$result = $pmrequests->pg_leave_group( $user_id, $gid );
+
+		// SECURITY: authorization check.
+		$current_user_id = get_current_user_id();
+		if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) && ! $basic_functions->pm_user_is_group_manager( $current_user_id, $gid ) ) {
+			wp_send_json_error( esc_html__( 'Insufficient permissions', 'profilegrid-user-profiles-groups-and-communities' ) );
+			return;
+		}
+
+		if ( is_numeric( $user_id_raw ) ) {
+			$user_id = absint( $user_id_raw );
+			$result  = $pmrequests->pg_leave_group( $user_id, $gid );
 			if ( $current_user->ID != $user_id ) {
 				$pm_emails->pm_send_group_based_notification( $gid, $user_id, 'on_membership_terminate' );
 				/* $pm_emails->pm_send_remove_from_group_user_notification($user_id, $gid); */
 			}
 			$html_generator->pm_remove_user_success_popup( $result );
 		} else {
-			$ids = maybe_unserialize( $pmrequests->pm_encrypt_decrypt_pass( 'decrypt', $user_id ) );
+			$user_id_raw = sanitize_text_field( $user_id_raw );
+			$ids         = maybe_unserialize( $pmrequests->pm_encrypt_decrypt_pass( 'decrypt', $user_id_raw ) );
 			foreach ( $ids as $id ) {
+				$id     = absint( $id );
 				$result = $pmrequests->pg_leave_group( $id, $gid );
 				$pm_emails->pm_send_group_based_notification( $gid, $id, 'on_membership_terminate' );
 
@@ -3113,24 +3176,46 @@ class Profile_Magic_Public {
         }
 
 	public function pm_activate_user_in_group() {
-            $pm_sanitizer = new PM_sanitizer;
-                
-            if ( !isset( $_POST['nonce'] ) || ! wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'ajax-nonce' ) ) {
-                die(esc_html__('Failed security check','profilegrid-user-profiles-groups-and-communities') );
+            // SECURITY: authentication required.
+            if ( ! is_user_logged_in() ) {
+                wp_send_json_error( esc_html__( 'Authentication required', 'profilegrid-user-profiles-groups-and-communities' ) );
+                return;
             }
-                $post = $pm_sanitizer->sanitize($_POST);
+            $pm_sanitizer = new PM_sanitizer;
+
+            $nonce = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+            $nonce_ok = false;
+            if ( ! empty( $nonce ) && wp_verify_nonce( $nonce, 'activate_pm_user_in_group' ) ) {
+                $nonce_ok = true;
+            } else {
+                // Fallback to existing AJAX nonce.
+                check_ajax_referer( 'ajax-nonce', 'nonce', true );
+                $nonce_ok = true;
+            }
+            $post = $pm_sanitizer->sanitize($_POST);
 		$pmrequests = new PM_request();
 		$pmemails   = new PM_Emails();
-		$user_id    = $post['uid'];
-		$gid        = $post['gid'];
+		$user_id    = isset( $post['uid'] ) ? $post['uid'] : array();
+		$gid        = isset( $post['gid'] ) ? absint( $post['gid'] ) : 0;
+		$basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+
+            // SECURITY: authorization check.
+            $current_user_id = get_current_user_id();
+            if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) && ! $basic_function->pm_user_is_group_manager( $current_user_id, $gid ) ) {
+                wp_send_json_error( esc_html__( 'Insufficient permissions', 'profilegrid-user-profiles-groups-and-communities' ) );
+                return;
+            }
+
 		if ( is_array( $user_id ) ) {
 			foreach ( $user_id as $id ) {
+                $id = absint( $id );
 				update_user_meta( $id, 'rm_user_status', '0' );
 				if ( ! empty( $gid ) ) {
 					$pmemails->pm_send_group_based_notification( $gid, $id, 'on_user_activate' );
 				}
 			}
 		} else {
+			$user_id = absint( $user_id );
 			update_user_meta( $user_id, 'rm_user_status', '0' );
 			if ( ! empty( $gid ) ) {
 				$pmemails->pm_send_group_based_notification( $gid, $user_id, 'on_user_activate' );
@@ -3165,16 +3250,32 @@ class Profile_Magic_Public {
 	}
 
 	public function pm_deactivate_user_from_group() {
+		// SECURITY: block unauthenticated requests.
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( esc_html__( 'Authentication required', 'profilegrid-user-profiles-groups-and-communities' ) );
+		}
+
 		$pmrequests      = new PM_request();
 		$pmemails        = new PM_Emails();
 		$html_generator  = new PM_HTML_Creator( $this->profile_magic, $this->version );
-		$user_id         = filter_input( INPUT_POST, 'user_id' );
-		$gid             = filter_input( INPUT_POST, 'gid' );
-		$retrieved_nonce = filter_input( INPUT_POST, '_wpnonce' );
+		$user_id_raw     = filter_input( INPUT_POST, 'user_id' );
+		$gid             = absint( filter_input( INPUT_POST, 'gid' ) );
+		$retrieved_nonce = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+
+		// SECURITY: CSRF check on the specific action nonce.
 		if ( ! wp_verify_nonce( $retrieved_nonce, 'deactivate_pm_user_from_group' ) ) {
-			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
+			wp_send_json_error( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
 		}
-		if ( is_numeric( $user_id ) ) {
+
+		$current_user_id = get_current_user_id();
+		$basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+		// SECURITY: capability/authorization check.
+		if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) && ! $basic_function->pm_user_is_group_manager( $current_user_id, $gid ) ) {
+			wp_send_json_error( esc_html__( 'Insufficient permissions', 'profilegrid-user-profiles-groups-and-communities' ) );
+		}
+
+		if ( is_numeric( $user_id_raw ) ) {
+			$user_id = absint( $user_id_raw );
 			update_user_meta( $user_id, 'rm_user_status', '1' );
 			do_action( 'pg_user_suspended', $user_id );
 			if ( ! empty( $gid ) ) {
@@ -3182,8 +3283,13 @@ class Profile_Magic_Public {
 			}
 			$html_generator->pm_deactivate_user_success_popup( 'success' );
 		} else {
-			$ids = maybe_unserialize( $pmrequests->pm_encrypt_decrypt_pass( 'decrypt', $user_id ) );
+			$user_id       = sanitize_text_field( $user_id_raw );
+			$ids           = maybe_unserialize( $pmrequests->pm_encrypt_decrypt_pass( 'decrypt', $user_id ) );
 			foreach ( $ids as $id ) {
+				$id = absint( $id );
+				if ( 0 === $id ) {
+					continue;
+				}
 				update_user_meta( $id, 'rm_user_status', '1' );
 				do_action( 'pg_user_suspended', $id );
 				if ( ! empty( $gid ) ) {
@@ -3204,6 +3310,11 @@ class Profile_Magic_Public {
 	}
 
 	public function pm_reset_user_password() {
+		// SECURITY: authentication required.
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( esc_html__( 'Authentication required', 'profilegrid-user-profiles-groups-and-communities' ) );
+			return;
+		}
 		$html_generator  = new PM_HTML_Creator( $this->profile_magic, $this->version );
 		$pmrequests      = new PM_request();
 		$pmemail         = new PM_Emails();
@@ -3212,8 +3323,17 @@ class Profile_Magic_Public {
 		$password        = filter_input( INPUT_POST, 'pm_new_pass' );
 		$send_email      = filter_input( INPUT_POST, 'pm_email_password_to_user' );
 		$retrieved_nonce = filter_input( INPUT_POST, '_wpnonce' );
+		// SECURITY: CSRF check.
 		if ( ! wp_verify_nonce( $retrieved_nonce, 'reset_pm_user_password' ) ) {
-			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
+			wp_send_json_error( esc_html__( 'Security check failed', 'profilegrid-user-profiles-groups-and-communities' ) );
+			return;
+		}
+		// SECURITY: authorization check.
+		$current_user_id = get_current_user_id();
+		$basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+		if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) && ! $basic_function->pm_user_is_group_manager( $current_user_id, absint( $gid ) ) ) {
+			wp_send_json_error( esc_html__( 'Insufficient permissions', 'profilegrid-user-profiles-groups-and-communities' ) );
+			return;
 		}
                 if ( ! current_user_can( 'edit_users' ) ) {
                         die( esc_html__( 'You are not authorized to perform this operation.', 'profilegrid-user-profiles-groups-and-communities' ) );
@@ -3266,18 +3386,36 @@ class Profile_Magic_Public {
 	}
 
 	public function pm_decline_join_group_request() {
-            $pm_sanitizer = new PM_sanitizer;
-                
-            if ( !isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'])), 'ajax-nonce' ) ) {
-                die(esc_html__('Failed security check','profilegrid-user-profiles-groups-and-communities') );
+            // SECURITY: authentication required.
+            if ( ! is_user_logged_in() ) {
+                wp_send_json_error( esc_html__( 'Authentication required', 'profilegrid-user-profiles-groups-and-communities' ) );
+                return;
             }
-                $post = $pm_sanitizer->sanitize($_POST);
+            $pm_sanitizer = new PM_sanitizer;
+
+            $nonce     = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+            $nonce_ok  = false;
+            if ( ! empty( $nonce ) && wp_verify_nonce( $nonce, 'decline_pm_join_request' ) ) {
+                $nonce_ok = true;
+            } else {
+                // Fallback to existing AJAX nonce parameter.
+                check_ajax_referer( 'ajax-nonce', 'nonce', true );
+                $nonce_ok = true;
+            }
+            $post = $pm_sanitizer->sanitize($_POST);
 		$dbhandler  = new PM_DBhandler();
 		$pmrequests = new PM_request();
 		$pmemails   = new PM_Emails();
                 $current_user = wp_get_current_user();
-		$uid        = $post['uid'];
-                $gid        = filter_input( INPUT_POST, 'gid' );
+		$uid        = isset( $post['uid'] ) ? $post['uid'] : '';
+                $gid        = isset( $_POST['gid'] ) ? absint( $_POST['gid'] ) : 0;
+			$basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+            // SECURITY: authorization check.
+            $current_user_id = get_current_user_id();
+            if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) && ! $basic_function->pm_user_is_group_manager( $current_user_id, $gid ) ) {
+                wp_send_json_error( esc_html__( 'Insufficient permissions', 'profilegrid-user-profiles-groups-and-communities' ) );
+                return;
+            }
                 $is_leader = $pmrequests->pg_check_in_single_group_is_user_group_leader($current_user->ID, $gid);
                 if($is_leader==true || current_user_can( 'manage_options' ))
                 {
@@ -3285,21 +3423,21 @@ class Profile_Magic_Public {
 
                             $where      = array(
                                     'gid' => $gid,
-                                    'uid' => $uid,
+                                    'uid' => absint( $uid ),
                             );
                             $data       = array( 'status' => '2' );
                             $request_id = $dbhandler->get_value_with_multicondition( 'REQUESTS', 'id', $where );
                             // $dbhandler->update_row('REQUESTS','id', $request_id,$data);
                             $dbhandler->remove_row( 'REQUESTS', 'id', $request_id );
-                            $pmemails->pm_send_group_based_notification( $gid, $uid, 'on_request_denied' );
-                            do_action( 'pm_user_membership_request_denied', $gid, $uid );
+                            $pmemails->pm_send_group_based_notification( $gid, absint( $uid ), 'on_request_denied' );
+                            do_action( 'pm_user_membership_request_denied', $gid, absint( $uid ) );
                     } else {
                             $ids = maybe_unserialize( $uid );
                             foreach ( $ids as $id ) {
 
                                     $where      = array(
                                             'gid' => $gid,
-                                            'uid' => $id,
+                                            'uid' => absint( $id ),
                                     );
                                     $data       = array( 'status' => '2' );
                                     $request_id = $dbhandler->get_value_with_multicondition( 'REQUESTS', 'id', $where );
@@ -3317,18 +3455,36 @@ class Profile_Magic_Public {
 	}
 
 	public function pm_approve_join_group_request() {
-            $pm_sanitizer = new PM_sanitizer;
-                
-            if ( !isset( $_POST['nonce'] ) || ! wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'ajax-nonce' ) ) {
-                die(esc_html__('Failed security check','profilegrid-user-profiles-groups-and-communities') );
+            // SECURITY: authentication required.
+            if ( ! is_user_logged_in() ) {
+                wp_send_json_error( esc_html__( 'Authentication required', 'profilegrid-user-profiles-groups-and-communities' ) );
+                return;
             }
-                $post = $pm_sanitizer->sanitize($_POST);
+            $pm_sanitizer = new PM_sanitizer;
+
+            $nonce     = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+            $nonce_ok  = false;
+            if ( ! empty( $nonce ) && wp_verify_nonce( $nonce, 'approve_pm_join_request' ) ) {
+                $nonce_ok = true;
+            } else {
+                // Fallback to existing AJAX nonce parameter.
+                check_ajax_referer( 'ajax-nonce', 'nonce', true );
+                $nonce_ok = true;
+            }
+            $post = $pm_sanitizer->sanitize($_POST);
 		$pmrequest            = new PM_request();
 		$dbhandler            = new PM_DBhandler();
                 $current_user = wp_get_current_user();
                 $path                 = plugins_url( '/partials/images/popup-close.png', __FILE__ );
-		$gid                  = filter_input( INPUT_POST, 'gid' );
-		$uid                  = $post['uid'];
+		$gid                  = isset( $_POST['gid'] ) ? absint( $_POST['gid'] ) : 0;
+		$uid                  = isset( $post['uid'] ) ? $post['uid'] : '';
+		$basic_functions	  = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+            // SECURITY: authorization check.
+            $current_user_id = get_current_user_id();
+            if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) && ! $basic_functions->pm_user_is_group_manager( $current_user_id, $gid ) ) {
+                wp_send_json_error( esc_html__( 'Insufficient permissions', 'profilegrid-user-profiles-groups-and-communities' ) );
+                return;
+            }
 		$meta_query_array     = $pmrequest->pm_get_user_meta_query( array( 'gid' => $gid ) );
 		$is_group_limit       = $dbhandler->get_value( 'GROUPS', 'is_group_limit', $gid );
 		$limit                = $dbhandler->get_value( 'GROUPS', 'group_limit', $gid );
@@ -3343,14 +3499,14 @@ class Profile_Magic_Public {
 			if ( $limit > $total_users_in_group ) {
 				if ( is_numeric( $uid ) ) {
 
-					$pmrequest->profile_magic_join_group_fun( $uid, $gid, 'open' );
-					do_action( 'pm_user_membership_request_approve', $gid, $uid );
+					$pmrequest->profile_magic_join_group_fun( absint( $uid ), $gid, 'open' );
+					do_action( 'pm_user_membership_request_approve', $gid, absint( $uid ) );
 				} else {
 					$ids = maybe_unserialize( $uid );
                                         
 					foreach ( $ids as $id ) {
-						$pmrequest->profile_magic_join_group_fun( $id, $gid, 'open' );
-						 do_action( 'pm_user_membership_request_approve', $gid, $id );
+						$pmrequest->profile_magic_join_group_fun( absint( $id ), $gid, 'open' );
+						 do_action( 'pm_user_membership_request_approve', $gid, absint( $id ) );
 					}
 				}
 				echo 'success';
@@ -3367,7 +3523,7 @@ class Profile_Magic_Public {
 				<div class="pm-dbfl pm-pad10 pg-group-setting-popup-wrap">  
 					<div class="pmrow">  
 						<div class="pm-col">
-							<p><?php esc_html_e( sprintf( '%s', $message ), 'profilegrid-user-profiles-groups-and-communities' ); ?> </p>         
+							<p><?php echo esc_html( $message ); ?> </p>         
 						</div>
 					</div>            
 				</div>
@@ -3381,13 +3537,13 @@ class Profile_Magic_Public {
 		} else {
 			if ( is_numeric( $uid ) ) {
 
-				$pmrequest->profile_magic_join_group_fun( $uid, $gid, 'open' );
-				 do_action( 'pm_user_membership_request_approve', $gid, $uid );
+				$pmrequest->profile_magic_join_group_fun( absint( $uid ), $gid, 'open' );
+				 do_action( 'pm_user_membership_request_approve', $gid, absint( $uid ) );
 			} else {
 				$ids = maybe_unserialize( $uid );
 				foreach ( $ids as $id ) {
-					$pmrequest->profile_magic_join_group_fun( $id, $gid, 'open' );
-					 do_action( 'pm_user_membership_request_approve', $gid, $id );
+					$pmrequest->profile_magic_join_group_fun( absint( $id ), $gid, 'open' );
+					 do_action( 'pm_user_membership_request_approve', $gid, absint( $id ) );
 				}
 			}
 			echo 'success';
@@ -3668,6 +3824,351 @@ class Profile_Magic_Public {
 			echo do_shortcode( '[RM_Front_Submissions view="addresses"]' );
 			echo '</div></div>';
 		}
+	}
+
+	public function pg_group_membership_settings_tab( $uid, $gid ) {
+		$current_user = get_current_user_id();
+
+		if ( ! $current_user || absint( $uid ) !== $current_user ) {
+			return;
+		}
+
+		echo '<li class="pm-dbfl pm-border-bt pm-pad10"><a class="pm-dbfl" href="#pg-group-membership-tab">' . esc_html__( 'Group Membership', 'profilegrid-user-profiles-groups-and-communities' ) . '</a></li>';
+	}
+
+	public function pg_group_membership_settings_tab_content( $uid, $gid ) {
+		$current_user = get_current_user_id();
+
+		if ( ! $current_user || absint( $uid ) !== $current_user ) {
+			return;
+		}
+
+		$pmrequests = new PM_request();
+		$dbhandler  = new PM_DBhandler();
+
+		$paged = filter_input( INPUT_GET, 'pg_gm_page', FILTER_VALIDATE_INT );
+		$paged = ( $paged && $paged > 0 ) ? $paged : 1;
+
+		$per_page = apply_filters( 'pg_group_membership_user_payments_per_page', 10 );
+		$per_page = max( 1, absint( $per_page ) );
+
+		$query_args = array(
+			'user_id' => $current_user,
+			'paged'   => $paged,
+			'per_page'=> $per_page,
+			'orderby' => 'posted_date',
+			'order'   => 'DESC',
+		);
+
+		$payments = $pmrequests->pg_get_group_membership_payments( $query_args );
+		$items    = isset( $payments['items'] ) ? $payments['items'] : array();
+		$total    = isset( $payments['total'] ) ? (int) $payments['total'] : 0;
+
+		$total_pages = ( $per_page > 0 ) ? ceil( $total / $per_page ) : 1;
+		$total_pages = max( 1, $total_pages );
+
+		$group_names = array();
+		if ( ! empty( $items ) ) {
+			$group_ids = array_unique( array_filter( array_map( 'intval', wp_list_pluck( $items, 'gid' ) ) ) );
+			foreach ( $group_ids as $group_id ) {
+				$group_names[ $group_id ] = $dbhandler->get_value( 'GROUPS', 'group_name', $group_id, 'id' );
+			}
+		}
+
+		$current_request = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+		$current_url     = $current_request ? home_url( $current_request ) : $pmrequests->pm_get_user_profile_url( $uid );
+		$base_url        = remove_query_arg( 'pg_gm_page', $current_url );
+
+		$pagination_links = paginate_links(
+			array(
+				'base'      => add_query_arg( 'pg_gm_page', '%#%', $base_url ) . '#pg-group-membership-tab',
+				'format'    => '',
+				'current'   => $paged,
+				'total'     => $total_pages,
+				'add_args'  => false,
+				'prev_text' => __( '&laquo;', 'profilegrid-user-profiles-groups-and-communities' ),
+				'next_text' => __( '&raquo;', 'profilegrid-user-profiles-groups-and-communities' ),
+			)
+		);
+
+		?>
+		<div id="pg-group-membership-tab" class="pm-blog-desc-wrap pm-difl pm-section-content pg-group-membership-tab">
+			<div class="pg-group-membership-table-wrap">
+				<table class="pg-group-membership-table">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Group', 'profilegrid-user-profiles-groups-and-communities' ); ?></th>
+							<th><?php esc_html_e( 'Amount', 'profilegrid-user-profiles-groups-and-communities' ); ?></th>
+							<th><?php esc_html_e( 'Gateway', 'profilegrid-user-profiles-groups-and-communities' ); ?></th>
+							<th><?php esc_html_e( 'Status', 'profilegrid-user-profiles-groups-and-communities' ); ?></th>
+							<th><?php esc_html_e( 'Date', 'profilegrid-user-profiles-groups-and-communities' ); ?></th>
+							<th><?php esc_html_e( 'Reference #', 'profilegrid-user-profiles-groups-and-communities' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php if ( empty( $items ) ) : ?>
+							<tr>
+								<td colspan="6"><?php esc_html_e( 'No group membership payments found yet.', 'profilegrid-user-profiles-groups-and-communities' ); ?></td>
+							</tr>
+						<?php else : ?>
+							<?php foreach ( $items as $item ) : ?>
+								<?php
+								$group_label = isset( $group_names[ $item->gid ] ) ? $group_names[ $item->gid ] : sprintf( __( 'Group #%d', 'profilegrid-user-profiles-groups-and-communities' ), (int) $item->gid );
+								$group_amount = $pmrequests->profile_magic_check_paid_group( (int) $item->gid );
+								if ( is_numeric( $group_amount ) ) {
+									$amount = number_format_i18n( (float) $group_amount, 2 );
+								} elseif ( is_numeric( $item->amount ) ) {
+									$amount = number_format_i18n( (float) $item->amount, 2 );
+								} else {
+									$amount = $item->amount;
+								}
+								$currency    = ! empty( $item->currency ) ? strtoupper( $item->currency ) : '';
+								$amount_text = trim( $currency . ' ' . $amount );
+								$date_format = get_option( 'date_format' );
+								$date_value  = '';
+								$raw_date    = isset( $item->posted_date ) ? $item->posted_date : '';
+								if ( ! empty( $raw_date ) && $raw_date !== '0000-00-00' && $raw_date !== '0000-00-00 00:00:00' ) {
+									if ( is_numeric( $raw_date ) ) {
+										$timestamp = (int) $raw_date;
+										if ( $timestamp > 0 ) {
+											$date_value = wp_date( $date_format, $timestamp, wp_timezone() );
+										}
+									} else {
+										$timestamp = strtotime( $raw_date );
+										if ( $timestamp && $timestamp > 0 ) {
+											$date_value = mysql2date( $date_format, $raw_date, true );
+										}
+									}
+								}
+								if ( empty( $date_value ) ) {
+									$timestamp = 0;
+									$raw_log   = isset( $item->log ) ? $item->log : '';
+									if ( ! empty( $raw_log ) ) {
+										$log_data = maybe_unserialize( $raw_log );
+										if ( is_string( $log_data ) ) {
+											$decoded = json_decode( $log_data, true );
+											if ( json_last_error() === JSON_ERROR_NONE ) {
+												$log_data = $decoded;
+											}
+										}
+										if ( is_object( $log_data ) ) {
+											$log_data = (array) $log_data;
+										}
+										if ( is_array( $log_data ) ) {
+											$date_keys = array( 'payment_date', 'payment_date_time', 'create_time', 'created', 'created_at', 'time_created', 'timestamp', 'date', 'payment_time' );
+											foreach ( $date_keys as $date_key ) {
+												if ( ! empty( $log_data[ $date_key ] ) ) {
+													$candidate = $log_data[ $date_key ];
+													if ( is_numeric( $candidate ) ) {
+														$timestamp = (int) $candidate;
+														if ( $timestamp > 0 ) {
+															break;
+														}
+													}
+													$candidate_timestamp = strtotime( (string) $candidate );
+													if ( $candidate_timestamp ) {
+														$timestamp = $candidate_timestamp;
+														break;
+													}
+												}
+											}
+										}
+									}
+									if ( $timestamp > 0 ) {
+										$date_value = wp_date( $date_format, $timestamp, wp_timezone() );
+									}
+								}
+								if ( empty( $date_value ) ) {
+									$txn_id = isset( $item->txn_id ) ? $item->txn_id : '';
+									if ( is_string( $txn_id ) && preg_match( '/_(\\d{9,})$/', $txn_id, $matches ) ) {
+										$timestamp = (int) $matches[1];
+										if ( $timestamp > 0 ) {
+											$date_value = wp_date( $date_format, $timestamp, wp_timezone() );
+										}
+									}
+								}
+								$date_value = $date_value ? $date_value : __( 'N/A', 'profilegrid-user-profiles-groups-and-communities' );
+								$status      = ! empty( $item->status ) ? ucfirst( $item->status ) : '';
+								$processor   = ! empty( $item->pay_processor ) ? $pmrequests->pg_get_payment_processor_label( $item->pay_processor ) : '';
+								$reference   = ! empty( $item->invoice ) ? $item->invoice : $item->txn_id;
+								$reference   = $reference ? $reference : __( 'N/A', 'profilegrid-user-profiles-groups-and-communities' );
+								?>
+								<tr>
+									<td><?php echo esc_html( $group_label ); ?></td>
+									<td><?php echo esc_html( $amount_text ); ?></td>
+									<td><?php echo esc_html( $processor ); ?></td>
+									<td><?php echo esc_html( $status ); ?></td>
+									<td><?php echo esc_html( $date_value ); ?></td>
+									<td><?php echo esc_html( $reference ); ?></td>
+								</tr>
+							<?php endforeach; ?>
+						<?php endif; ?>
+					</tbody>
+				</table>
+
+				<?php if ( $pagination_links ) : ?>
+					<div class="pg-pagination pg-group-membership-pagination">
+						<?php echo wp_kses_post( (string) $pagination_links ); ?>
+					</div>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	public function pg_log_payment_complete( $gid, $uid ) {
+		$pmrequests = new PM_request();
+		$dbhandler  = new PM_DBhandler();
+
+		$existing = $dbhandler->get_all_result(
+			'PAYPAL_LOG',
+			'id',
+			array(
+				'uid'    => (int) $uid,
+				'gid'    => (int) $gid,
+				'status' => 'completed',
+			),
+			'results',
+			0,
+			1
+		);
+		if ( ! empty( $existing ) ) {
+			return;
+		}
+
+		$processor     = 'paypal';
+		$group_status  = maybe_unserialize( get_user_meta( $uid, 'pm_group_payment_status', true ) );
+		if ( is_array( $group_status ) && isset( $group_status[ $gid ] ) ) {
+			if ( 'succeeded' === $group_status[ $gid ] || 'stripe' === $group_status[ $gid ] ) {
+				$processor = 'stripe';
+			}
+		}
+
+		$txn_id  = get_user_meta( $uid, 'pm_txn_id', true );
+		$invoice = get_user_meta( $uid, 'pm_invoice_' . $gid, true );
+		if ( empty( $invoice ) ) {
+			$invoice = get_user_meta( $uid, 'pm_invoice', true );
+		}
+
+		$pmrequests->pg_insert_payment_log_entry(
+			$uid,
+			$gid,
+			$processor,
+			'completed',
+			null,
+			'',
+			$txn_id,
+			$invoice,
+			array( 'source' => 'profilegrid_payment_complete' )
+		);
+
+		// Safety: ensure membership is attached if not already present.
+		$user_groups = $pmrequests->profile_magic_get_user_field_value( $uid, 'pm_group' );
+		$user_groups = $pmrequests->pg_filter_users_group_ids( $user_groups );
+		$already_in  = is_array( $user_groups ) ? in_array( $gid, $user_groups, true ) : ( (int) $user_groups === (int) $gid );
+		if ( ! $already_in ) {
+			$group_type = $pmrequests->profile_magic_get_group_type( $gid );
+			$pmrequests->profile_magic_join_group_fun( $uid, $gid, $group_type );
+		}
+	}
+
+	public function pg_log_woo_wallet_payment( $order_id, $response = null ) {
+		if ( ! class_exists( 'WC_Order' ) ) {
+			return;
+		}
+
+		$order = wc_get_order( absint( $order_id ) );
+		if ( ! $order ) {
+			return;
+		}
+
+		$user_id = $order->get_user_id();
+		if ( ! $user_id ) {
+			return;
+		}
+
+		$pmrequests = new PM_request();
+		$gids       = $pmrequests->profile_magic_get_user_field_value( $user_id, 'pm_group' );
+		$gid        = $pmrequests->pg_filter_users_group_ids( $gids );
+		if ( is_array( $gid ) ) {
+			$gid = reset( $gid );
+		}
+		if ( empty( $gid ) ) {
+			return;
+		}
+
+		$txn_id   = $order->get_transaction_id();
+		$invoice  = $order->get_id();
+		$amount   = $order->get_total();
+		$currency = $order->get_currency();
+		$status   = $order->get_status();
+		if ( 'completed' !== $status && 'processing' !== $status && 'succeeded' !== $status ) {
+			return;
+		}
+
+		$pmrequests->pg_insert_payment_log_entry(
+			$user_id,
+			$gid,
+			'terawallet',
+			'completed',
+			$amount,
+			$currency,
+			$txn_id ? $txn_id : '',
+			$invoice,
+			array( 'source' => 'woo_wallet_payment_processed', 'order_id' => $order_id )
+		);
+	}
+
+	public function pg_log_mycred_payment( $order_id ) {
+		if ( ! class_exists( 'WC_Order' ) ) {
+			return;
+		}
+
+		$order = wc_get_order( absint( $order_id ) );
+		if ( ! $order ) {
+			return;
+		}
+
+		$payment_method = $order->get_payment_method();
+		if ( false === stripos( $payment_method, 'mycred' ) ) {
+			return;
+		}
+
+		$user_id = $order->get_user_id();
+		if ( ! $user_id ) {
+			return;
+		}
+
+		$pmrequests = new PM_request();
+		$gids       = $pmrequests->profile_magic_get_user_field_value( $user_id, 'pm_group' );
+		$gid        = $pmrequests->pg_filter_users_group_ids( $gids );
+		if ( is_array( $gid ) ) {
+			$gid = reset( $gid );
+		}
+		if ( empty( $gid ) ) {
+			return;
+		}
+
+		$txn_id   = $order->get_transaction_id();
+		$invoice  = $order->get_id();
+		$amount   = $order->get_total();
+		$currency = $order->get_currency();
+		$status   = $order->get_status();
+		if ( 'completed' !== $status && 'processing' !== $status && 'succeeded' !== $status ) {
+			return;
+		}
+
+		$pmrequests->pg_insert_payment_log_entry(
+			$user_id,
+			$gid,
+			'mycred',
+			'completed',
+			$amount,
+			$currency,
+			$txn_id ? $txn_id : '',
+			$invoice,
+			array( 'source' => 'woocommerce_payment_complete', 'order_id' => $order_id )
+		);
 	}
 
 	public function pg_forget_password_page( $lostpassword_url, $redirect ) {
@@ -3996,7 +4497,12 @@ class Profile_Magic_Public {
 			$profilechat->pg_show_message_tab_html( $uid, $rid, $tid );
 			?>
 			
-			
+                            <div id="pm-edit-group-popup" style="display: none;">
+                                <div class="pm-popup-container" id="pg_message_html_container">
+
+
+                                </div>
+                            </div>
 			</div>
 			<?php
 		endif;
@@ -5575,7 +6081,7 @@ class Profile_Magic_Public {
 			'<p class="logged-in-as">%s%s</p>',
 			sprintf(
 				/* translators: 1: User name, 2: Edit user link, 3: Logout URL. */
-				__( 'Logged in as %1$s. <a href="%2$s">Edit your profile</a>. <a href="%3$s">Log out?</a>' ),
+				__( 'Logged in as %1$s. <a href="%2$s">Edit your profile</a>. <a href="%3$s">Log out?</a>', 'profilegrid-user-profiles-groups-and-communities' ),
 				$user_identity,
 				$redirect_url,
 				/** This filter is documented in wp-includes/link-template.php */
@@ -5588,5 +6094,215 @@ class Profile_Magic_Public {
 
             return $defaults;
         }
-}
 
+		public function pg_unread_message_toast_html() {
+			if ( ! is_user_logged_in() ) {
+				return;
+			}
+
+			$dbhandler = new PM_DBhandler();
+			if ( $dbhandler->get_global_option_value( 'pm_enable_private_messaging', '1' ) != '1' ) {
+				return;
+			}
+
+			$pmrequests  = new PM_request();
+			$current_uid = get_current_user_id();
+			$summary     = $pmrequests->pm_get_unread_message_summary( $current_uid );
+			$unread      = isset( $summary['count'] ) ? (int) $summary['count'] : 0;
+			$latest_ts   = isset( $summary['latest'] ) ? (int) $summary['latest'] : 0;
+			$dismissed   = (int) get_user_meta( $current_uid, 'pg_msg_unread_dismissed_at', true );
+			$show_toast  = ( $unread > 0 && ( $latest_ts === 0 || $dismissed < $latest_ts ) );
+
+			$message_url = $pmrequests->pm_get_user_profile_url( $current_uid );
+			$message_url = $message_url ? $message_url . '#pg-messages' : '';
+
+			if ( $message_url === '' ) {
+				return;
+			}
+
+			?>
+			<style id="pg-unread-toast-style">
+				#pg-unread-toast {
+					position: fixed;
+					right: 20px;
+					bottom: 20px;
+					z-index: 99999;
+					max-width: 320px;
+					background: #1f2937;
+					color: #fff;
+					border-radius: 6px;
+					box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+					padding: 12px 14px;
+					display: none;
+					align-items: center;
+					gap: 10px;
+				}
+				#pg-unread-toast.pg-unread-toast--show {
+					display: flex;
+				}
+				.pg-unread-toast__text {
+					flex: 1 1 auto;
+					font-size: 14px;
+					line-height: 1.4;
+					margin: 0;
+				}
+				.pg-unread-toast__action {
+					background: #0d9488;
+					color: #fff;
+					border: none;
+					border-radius: 4px;
+					padding: 6px 10px;
+					cursor: pointer;
+					font-size: 13px;
+				}
+				.pg-unread-toast__action:hover {
+					background: #0f766e;
+				}
+				.pg-unread-toast__close {
+					background: transparent;
+					color: #fff;
+					border: none;
+					font-size: 16px;
+					line-height: 1;
+					padding: 2px 6px;
+					cursor: pointer;
+				}
+				@media (max-width: 480px) {
+					#pg-unread-toast {
+						right: 12px;
+						bottom: 12px;
+						max-width: calc(100% - 24px);
+					}
+				}
+			</style>
+			<div id="pg-unread-toast" class="pg-unread-toast" data-target="<?php echo esc_url( $message_url ); ?>" data-count="<?php echo esc_attr( $unread ); ?>" data-latest="<?php echo esc_attr( $latest_ts ); ?>" data-dismissed="<?php echo esc_attr( $dismissed ); ?>" data-show="<?php echo esc_attr( $show_toast ? 1 : 0 ); ?>">
+				<span class="pg-unread-toast__text"></span>
+				<button type="button" class="pg-unread-toast__action"><?php esc_html_e( 'Open', 'profilegrid-user-profiles-groups-and-communities' ); ?></button>
+				<button type="button" class="pg-unread-toast__close" aria-label="<?php esc_attr_e( 'Dismiss', 'profilegrid-user-profiles-groups-and-communities' ); ?>">×</button>
+			</div>
+			<script>
+				(function () {
+					var toast = document.getElementById('pg-unread-toast');
+					if (!toast) {
+						return;
+					}
+					var target = toast.getAttribute('data-target');
+					var latest = parseInt(toast.getAttribute('data-latest'), 10) || 0;
+					var dismissed = parseInt(toast.getAttribute('data-dismissed'), 10) || 0;
+					var count = parseInt(toast.getAttribute('data-count'), 10) || 0;
+					var show = parseInt(toast.getAttribute('data-show'), 10) || 0;
+					var text = toast.querySelector('.pg-unread-toast__text');
+					var openBtn = toast.querySelector('.pg-unread-toast__action');
+					var closeBtn = toast.querySelector('.pg-unread-toast__close');
+					var hideToast = function () {
+						toast.classList.remove('pg-unread-toast--show');
+					};
+					var singleLabel = "<?php echo esc_js( __( 'You have 1 unread message', 'profilegrid-user-profiles-groups-and-communities' ) ); ?>";
+					var multiLabel = "<?php echo esc_js( __( 'You have {{count}} unread messages', 'profilegrid-user-profiles-groups-and-communities' ) ); ?>";
+					var buildLabel = function (countValue) {
+						if (countValue === 1) {
+							return singleLabel;
+						}
+						return multiLabel.replace('{{count}}', countValue);
+					};
+					var renderToast = function (countValue, latestValue, dismissedValue) {
+						if (!countValue || (latestValue > 0 && dismissedValue >= latestValue)) {
+							hideToast();
+							return;
+						}
+						if (text) {
+							text.textContent = buildLabel(countValue);
+						}
+						toast.classList.add('pg-unread-toast--show');
+					};
+
+					if (show) {
+						renderToast(count, latest, dismissed);
+					}
+
+					if (openBtn && target) {
+						openBtn.addEventListener('click', function (e) {
+							e.preventDefault();
+							window.location.href = target;
+						});
+					}
+
+					if (closeBtn) {
+						closeBtn.addEventListener('click', function (e) {
+							e.preventDefault();
+							hideToast();
+							dismissed = latest;
+
+							if (!window.pm_ajax_object || !pm_ajax_object.ajax_url || !pm_ajax_object.nonce) {
+								return;
+							}
+
+							var formData = new FormData();
+							formData.append('action', 'pm_dismiss_unread_message_toast');
+							formData.append('nonce', pm_ajax_object.nonce);
+							formData.append('latest_ts', latest);
+
+							fetch(pm_ajax_object.ajax_url, {
+								method: 'POST',
+								credentials: 'same-origin',
+								body: formData
+							});
+						});
+					}
+
+					var fetchSummary = function () {
+						if (!window.pm_ajax_object || !pm_ajax_object.ajax_url || !pm_ajax_object.nonce) {
+							return;
+						}
+
+						var data = new FormData();
+						data.append('action', 'pm_unread_message_summary');
+						data.append('nonce', pm_ajax_object.nonce);
+
+						fetch(pm_ajax_object.ajax_url, {
+							method: 'POST',
+							credentials: 'same-origin',
+							body: data
+						})
+						.then(function (response) { return response.json(); })
+						.then(function (response) {
+							if (!response || !response.success || !response.data) {
+								return;
+							}
+							var latestValue = parseInt(response.data.latest_ts, 10) || 0;
+							var dismissedValue = parseInt(response.data.dismissed, 10) || 0;
+							var countValue = parseInt(response.data.count, 10) || 0;
+							latest = latestValue;
+							dismissed = dismissedValue;
+							renderToast(countValue, latestValue, dismissedValue);
+						})
+						.catch(function () {
+							return;
+						});
+					};
+
+					setInterval(fetchSummary, 8000);
+				})();
+			</script>
+			<?php
+		}
+
+		public function pm_dismiss_unread_message_toast() {
+			if ( ! is_user_logged_in() ) {
+				wp_send_json_error( __( 'Not logged in', 'profilegrid-user-profiles-groups-and-communities' ) );
+			}
+
+			check_ajax_referer( 'ajax-nonce', 'nonce' );
+
+			$latest_ts = isset( $_POST['latest_ts'] ) ? absint( wp_unslash( $_POST['latest_ts'] ) ) : 0;
+			$uid       = get_current_user_id();
+
+			update_user_meta( $uid, 'pg_msg_unread_dismissed_at', $latest_ts );
+
+			wp_send_json_success(
+				array(
+					'dismissed_at' => $latest_ts,
+				)
+			);
+		}
+}

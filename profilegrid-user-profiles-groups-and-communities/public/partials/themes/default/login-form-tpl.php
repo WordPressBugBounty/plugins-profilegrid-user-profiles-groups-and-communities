@@ -11,7 +11,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     wp_logout();
  
     // Redirect or display a message after logout.
-    wp_redirect(home_url()); // You can change the URL to your desired redirect location.
+    wp_safe_redirect(home_url()); // You can change the URL to your desired redirect location.
     exit;
 }
 ?>
@@ -39,11 +39,20 @@ else:
 		
  
 <!-----Form Starts----->
-  <form class="pmagic-form pm-dbfl pm-bg-lt" method="post" action="" id="pm_login_form" name="pm_login_form">
-  <?php wp_nonce_field('pm_login_form'); ?>
+  <form class="pmagic-form 1 pm-dbfl pm-bg-lt" method="post" action="" id="pm_login_form" name="pm_login_form">
+  <?php
+  $basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+  $basic_function->pm_render_nonce_field( 'pm_login_form' ); 
+   ?>
             <input type="text" name="<?php echo esc_attr('user_login');?>" id="<?php echo esc_attr('user_login');?>" placeholder="<?php esc_attr_e('Email or Username','profilegrid-user-profiles-groups-and-communities');?>" required="required">
             <input type="password" name="<?php echo esc_attr('user_pass');?>" id="<?php echo esc_attr('user_pass');?>" placeholder="<?php esc_attr_e('Password','profilegrid-user-profiles-groups-and-communities');?>" required="required">
             <span id="pg-toggle-password" class="pg-toggle-password fa fa-fw fa-eye-slash"></span>
+            <div class="pg-login-remember">
+                <label>
+                    <input name="<?php echo esc_attr('rememberme');?>" type="checkbox" id="pg-rememberme" value="1" />
+                    <?php esc_html_e('Remember Me','profilegrid-user-profiles-groups-and-communities');?>
+                </label>
+            </div>
             <?php do_action('profile_magic_show_captcha_in_login');?>
             <div class="pm-login-box-bottom-container pm-dbfl pm-bg pm-border">
                 <input type="submit" value="<?php esc_attr_e('Login','profilegrid-user-profiles-groups-and-communities');?>" name="login_form_submit" class="pm-difl">

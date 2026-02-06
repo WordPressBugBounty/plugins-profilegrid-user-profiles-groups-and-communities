@@ -12,7 +12,7 @@ class PM_Export_Import {
 		}
 
         //Getting the text generated to download
-        $generatedDate = date( 'd-m-Y His' );
+        $generatedDate = gmdate( 'd-m-Y His' );
         header( 'Content-Type: text/csv' );
         header( 'Content-Disposition: attachment; filename="' . $filename . '-' . $generatedDate . '.csv"' );
         header( 'Pragma: no-cache' );
@@ -27,7 +27,7 @@ class PM_Export_Import {
         $additional    = " `option_name` LIKE 'pg_%' or `option_name` LIKE 'pm_%'";
         $options       = $dbhandler->get_all_result( 'WP_OPTION', array( 'option_name', 'option_value' ), 1, 'results', 0, false, $sort_by = 'option_id', false, $additional, 'ARRAY_A' );
         $data          = wp_json_encode( $options );
-        $generatedDate = date( 'd-m-Y His' );
+        $generatedDate = gmdate( 'd-m-Y His' );
         header( 'Content-Disposition: attachment; filename="' . $filename . '-' . $generatedDate . '.json"' );
         header( 'Pragma: no-cache' );
         header( 'Expires: 0' );
@@ -235,6 +235,7 @@ class PM_Export_Import {
 			} else {
 				// return log
 				$log['status']  = 0;
+				// translators: %s: user email.
 				$log['message'] = sprintf( __( 'There\'s already a user with <b>%s</b> email. So we skipped it.', 'profilegrid-user-profiles-groups-and-communities' ), $user_email );
 				return $log;
 			}
@@ -251,7 +252,8 @@ class PM_Export_Import {
 
 			} else {
 				$log['status']  = 0;
-				$log['message'] = sprintf( __( 'Invalid Email format for User ' . '<b>%s</b>', 'profilegrid-user-profiles-groups-and-communities' ), $uemail );
+				// translators: %s: user email.
+				$log['message'] = sprintf( __( 'Invalid Email format for User <b>%s</b>', 'profilegrid-user-profiles-groups-and-communities' ), $uemail );
 				return $log;
 			}
 			if ( is_numeric( $user_id ) ) :
@@ -260,6 +262,7 @@ class PM_Export_Import {
 				$log['status'] = 1;
 			else :
 				$log['status']  = 0;
+				// translators: 1: username, 2: email.
 				$log['message'] = sprintf( __( 'User not created with following username <b>%1$s</b> and email <b>%2$s<b>', 'profilegrid-user-profiles-groups-and-communities' ), $user_name, $user_email );
 				return $log;
 			endif;

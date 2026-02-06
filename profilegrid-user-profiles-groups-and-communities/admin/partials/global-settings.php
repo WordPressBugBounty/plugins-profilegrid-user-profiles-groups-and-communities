@@ -1200,7 +1200,16 @@ if ( !empty( $available_extensions ) ) :
         <div class="pg-extension-modal-active-extension"><?php echo wp_kses_post( __( '<strong>Congratulations</strong>, you have successfully installed and activated this extension!', 'profilegrid-user-profiles-groups-and-communities' ) ); ?></div>
 
         <div class="pg-extension-modal-des">
-            <?php echo wp_kses_post( __( 'You will find event specific group options on installing our EventPrime plugin. You can download and install it from the official WordPress repository by visiting <a href="https://wordpress.org/plugins/eventprime-event-calendar-management/" target="_blank">page</a> Once it is installed and activated, on creating or editing events, you will see options to tie the event to specific membership groups. You can find more details', 'profilegrid-user-profiles-groups-and-communities' ) ); ?>
+            <?php
+            $eventprime_url = 'https://wordpress.org/plugins/eventprime-event-calendar-management/';
+            echo wp_kses_post(
+                sprintf(
+                    /* translators: %s is the EventPrime plugin page link on WordPress.org. */
+                    __( 'You will find event specific group options on installing our EventPrime plugin. You can download and install it from the official WordPress repository by visiting <a href="%s" target="_blank" rel="noopener noreferrer">page</a> Once it is installed and activated, on creating or editing events, you will see options to tie the event to specific membership groups. You can find more details', 'profilegrid-user-profiles-groups-and-communities' ),
+                    esc_url( $eventprime_url )
+                )
+            );
+            ?>
         
             <a href="https://profilegrid.co/enable-users-to-create-group-events/" target="_blank"><?php esc_html_e( 'here', 'profilegrid-user-profiles-groups-and-communities' ); ?></a>
         </div>
@@ -1255,7 +1264,18 @@ if ( !empty( $available_extensions ) ) :
         <div class="pg-extension-modal-active-extension"><?php echo wp_kses_post( __( '<strong>Congratulations</strong>, you have successfully installed and activated this extension!', 'profilegrid-user-profiles-groups-and-communities' ) ); ?></div>
 
         <div class="pg-extension-modal-des">
-            <?php echo wp_kses_post( __( 'Now add more than one group manager to a single group! To do this, edit a group in your Dashboard &#8594; ProfileGrid &#8594; Groups. You will now see a new option to add additional group managers. You can find more details <a href="https://profilegrid.co/allow-multiple-group-managers-wordpress/" target="_blank">here</a>. If you have <a href="https://profilegrid.co/extensions/frontend-group-manager/" target="_blank">Advanced Group Manager</a> installed, current group managers can also add other members as managers. ', 'profilegrid-user-profiles-groups-and-communities' ) ); ?>
+            <?php
+            $multi_manager_details_url = 'https://profilegrid.co/allow-multiple-group-managers-wordpress/';
+            $agm_url                   = 'https://profilegrid.co/extensions/frontend-group-manager/';
+            echo wp_kses_post(
+                sprintf(
+                    /* translators: 1: documentation link, 2: Advanced Group Manager extension link. */
+                    __( 'Now add more than one group manager to a single group! To do this, edit a group in your Dashboard &#8594; ProfileGrid &#8594; Groups. You will now see a new option to add additional group managers. You can find more details <a href="%1$s" target="_blank" rel="noopener noreferrer">here</a>. If you have <a href="%2$s" target="_blank" rel="noopener noreferrer">Advanced Group Manager</a> installed, current group managers can also add other members as managers. ', 'profilegrid-user-profiles-groups-and-communities' ),
+                    esc_url( $multi_manager_details_url ),
+                    esc_url( $agm_url )
+                )
+            );
+            ?>
         
 
         </div>
@@ -1294,8 +1314,16 @@ if ( !empty( $available_extensions ) ) :
         <div class="pg-extension-modal-active-extension"><?php echo wp_kses_post( __( '<strong>Congratulations</strong>, you have successfully installed and activated this extension!', 'profilegrid-user-profiles-groups-and-communities' ) ); ?></div>
 
         <div class="pg-extension-modal-des">
-            <?php echo wp_kses_post( __( 'You can now add banners on your website which show profile images of your users as attractive grids! Just head on to Dashboard &#8594; Appearance &#8594; Widgets, and find a new widget named Hero Banner. It has a bunch of configurable option to match your site’s look and theme and can fit inside any widget position. <a href="https://profilegrid.co/add-user-hero-banner-wordpress/" target="_blank"> Learn more.</a> ', 'profilegrid-user-profiles-groups-and-communities' ) ); ?>
-        
+            <?php
+            $hero_banner_url = 'https://profilegrid.co/add-user-hero-banner-wordpress/';
+            echo wp_kses_post(
+                sprintf(
+                    /* translators: %s is a link to the Hero Banner documentation. */
+                    __( 'You can now add banners on your website which show profile images of your users as attractive grids! Just head on to Dashboard &#8594; Appearance &#8594; Widgets, and find a new widget named Hero Banner. It has a bunch of configurable option to match your site\'s look and theme and can fit inside any widget position. <a href="%s" target="_blank" rel="noopener noreferrer"> Learn more.</a> ', 'profilegrid-user-profiles-groups-and-communities' ),
+                    esc_url( $hero_banner_url )
+                )
+            );
+            ?>
         </div>
     </div>
     

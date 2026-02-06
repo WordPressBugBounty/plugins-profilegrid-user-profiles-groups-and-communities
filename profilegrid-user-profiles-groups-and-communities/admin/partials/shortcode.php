@@ -726,6 +726,7 @@ wp_enqueue_style( 'pg-google-fonts', 'https://fonts.googleapis.com/icon?family=M
 				<div class="pg-sc-dec">
 					<ul>
 						<li>gid (Group IDs) <i>optional</i></li>
+                                                <li>uid (Only these Users) <i>optional</i></li>
 						<li>Ex_uid (Exclude User IDs) <i>optional</i></li>
 						<li>time (Time Period) <i>optional</i>
 							<ol>

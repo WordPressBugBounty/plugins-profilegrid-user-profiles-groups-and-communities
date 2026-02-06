@@ -67,12 +67,14 @@ if(isset($post['login_form_submit']))
                         $user = get_user_by('login', $username);
                     }
                     $password = $post['user_pass'];
+                    $remeberme = isset($post['rememberme']) ? true : false;
+                    
                     $secure_cookie = is_ssl();
                     if ($user) 
                     {
                             if(wp_check_password( $password, $user->data->user_pass, $user->ID))
                             {
-                                    $creds = array('user_login' => $user->data->user_login, 'user_password' => $password);
+                                    $creds = array('user_login' => $user->data->user_login, 'user_password' => $password, 'remember'=> $remeberme);
                                     $user = wp_signon( $creds, $secure_cookie );
 
                                     $pm_redirect_after_login = $dbhandler->get_global_option_value('pm_redirect_after_login','0');

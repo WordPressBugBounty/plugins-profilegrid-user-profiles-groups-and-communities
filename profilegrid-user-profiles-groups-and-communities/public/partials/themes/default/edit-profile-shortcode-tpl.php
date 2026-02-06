@@ -77,7 +77,7 @@ echo '<div class="pm-accordian-title pm-dbfl pm-border pm-bg pm-pad10">'.esc_htm
           }
 					echo '<div class="pmrow">';
 					$value = $pmrequests->profile_magic_get_user_field_value($edit_uid,$field->field_key);
-					$pm_customfields->pm_get_custom_form_fields($field,$value,$this->profile_magic);
+					$pm_customfields->pm_get_custom_form_fields($field,$value,'');
 					echo '</div>';	 
 				 }
 				 echo '<div class="all_errors" style="display:none;"></div>';
@@ -90,7 +90,10 @@ echo '<div class="pm-accordian-title pm-dbfl pm-border pm-bg pm-pad10">'.esc_htm
 endforeach;
 ?>
       </div>
-        <?php wp_nonce_field('pm_edit_profile'); ?>
+        <?php
+        $basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+        $basic_function->pm_render_nonce_field( 'pm_edit_profile' ); 
+         ?>
     </form>
       
       <?php else:?>

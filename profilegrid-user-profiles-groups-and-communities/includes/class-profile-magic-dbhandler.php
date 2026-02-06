@@ -4,7 +4,7 @@ class PM_DBhandler {
     public function insert_row( $identifier, $data, $format = null ) {
         global $wpdb;
         $pm_activator = new Profile_Magic_Activator();
-        $table        = $pm_activator->get_db_table_name( $identifier );
+        $table        = esc_sql( $pm_activator->get_db_table_name( $identifier ) );
         $result       = $wpdb->insert( $table, $data, $format );
 
         if ( $result !== false ) {
@@ -15,16 +15,17 @@ class PM_DBhandler {
     public function update_row( $identifier, $unique_field, $unique_field_value, $data, $format = null, $where_format = null ) {
         global $wpdb;
         $pm_activator = new Profile_Magic_Activator();
-        $table        = $pm_activator->get_db_table_name( $identifier );
+        $table        = esc_sql( $pm_activator->get_db_table_name( $identifier ) );
         if ( $unique_field === false ) {
             $unique_field = $pm_activator->get_db_table_unique_field_name( $identifier );
         }
+        $unique_field = esc_sql( $unique_field );
 
         if ( is_numeric( $unique_field_value ) ) {
             $unique_field_value = (int) $unique_field_value;
-            $query              = $wpdb->prepare( "SELECT * from $table where $unique_field = %d", $unique_field_value );
+            $query              = $wpdb->prepare( "SELECT * from `{$table}` where `{$unique_field}` = %d", $unique_field_value );
         } else {
-            $query = $wpdb->prepare( "SELECT * from $table where $unique_field = %s", $unique_field_value );
+            $query = $wpdb->prepare( "SELECT * from `{$table}` where `{$unique_field}` = %s", $unique_field_value );
         }
 
         if ( $query != null ) {
@@ -41,16 +42,17 @@ class PM_DBhandler {
     public function remove_row( $identifier, $unique_field, $unique_field_value, $where_format = null ) {
         global $wpdb;
         $pm_activator = new Profile_Magic_Activator();
-        $table        = $pm_activator->get_db_table_name( $identifier );
+        $table        = esc_sql( $pm_activator->get_db_table_name( $identifier ) );
         if ( $unique_field === false ) {
 			$unique_field = $pm_activator->get_db_table_unique_field_name( $identifier );
         }
+        $unique_field = esc_sql( $unique_field );
 
         if ( is_numeric( $unique_field_value ) ) {
             $unique_field_value = (int) $unique_field_value;
-            $query              = $wpdb->prepare( "SELECT * from $table WHERE $unique_field = %d", $unique_field_value );
+            $query              = $wpdb->prepare( "SELECT * from `{$table}` WHERE `{$unique_field}` = %d", $unique_field_value );
         } else {
-            $query = $wpdb->prepare( "SELECT * from $table WHERE $unique_field = %s", $unique_field_value );
+            $query = $wpdb->prepare( "SELECT * from `{$table}` WHERE `{$unique_field}` = %s", $unique_field_value );
         }
 
         if ( $query != null ) {
@@ -67,17 +69,18 @@ class PM_DBhandler {
     public function get_row( $identifier, $unique_field_value, $unique_field = false, $output_type = 'OBJECT' ) {
         global $wpdb;
         $pm_activator = new Profile_Magic_Activator();
-        $table        = $pm_activator->get_db_table_name( $identifier );
+        $table        = esc_sql( $pm_activator->get_db_table_name( $identifier ) );
         $result       = null;
         if ( $unique_field === false ) {
 			$unique_field = $pm_activator->get_db_table_unique_field_name( $identifier );
         }
+        $unique_field = esc_sql( $unique_field );
 
         if ( is_numeric( $unique_field_value ) ) {
             $unique_field_value = (int) $unique_field_value;
-            $query              = $wpdb->prepare( "SELECT * from $table where $unique_field = %d", $unique_field_value );
+            $query              = $wpdb->prepare( "SELECT * from `{$table}` where `{$unique_field}` = %d", $unique_field_value );
         } else {
-            $query = $wpdb->prepare( "SELECT * from $table where $unique_field = %s", $unique_field_value );
+            $query = $wpdb->prepare( "SELECT * from `{$table}` where `{$unique_field}` = %s", $unique_field_value );
         }
 
         if ( $query != null ) {
@@ -91,17 +94,18 @@ class PM_DBhandler {
     public function get_value( $identifier, $field, $unique_field_value, $unique_field = false ) {
          global $wpdb;
         $pm_activator = new Profile_Magic_Activator();
-        $table        = $pm_activator->get_db_table_name( $identifier );
+        $table        = esc_sql( $pm_activator->get_db_table_name( $identifier ) );
 
         if ( $unique_field === false ) {
 			$unique_field = $pm_activator->get_db_table_unique_field_name( $identifier );
         }
+        $unique_field = esc_sql( $unique_field );
 
         if ( is_numeric( $unique_field_value ) ) {
             $unique_field_value = (int) $unique_field_value;
-            $query              = $wpdb->prepare( "SELECT $field from $table where $unique_field = %d", $unique_field_value );
+            $query              = $wpdb->prepare( "SELECT {$field} from `{$table}` where `{$unique_field}` = %d", $unique_field_value );
         } else {
-            $query = $wpdb->prepare( "SELECT $field from $table where $unique_field = %s", $unique_field_value );
+            $query = $wpdb->prepare( "SELECT {$field} from `{$table}` where `{$unique_field}` = %s", $unique_field_value );
         }
 
         if ( $query != null ) {
@@ -115,8 +119,8 @@ class PM_DBhandler {
     public function get_value_with_multicondition( $identifier, $field, $where ) {
          global $wpdb;
         $pm_activator = new Profile_Magic_Activator();
-        $table        = $pm_activator->get_db_table_name( $identifier );
-        $qry          = "SELECT $field from $table where";
+        $table        = esc_sql( $pm_activator->get_db_table_name( $identifier ) );
+        $qry          = "SELECT {$field} from `{$table}` where";
         $i            = 0;
         $args         = array();
         foreach ( $where as $column_name => $column_value ) {
@@ -124,8 +128,9 @@ class PM_DBhandler {
 			if ( $i !== 0 ) {
 				$qry .= ' AND'; }
 
-                $format = $pm_activator->get_db_table_field_type( $identifier, $column_name );
-                $qry   .= " $column_name = $format";
+                $format      = $pm_activator->get_db_table_field_type( $identifier, $column_name );
+                $safe_column = esc_sql( $column_name );
+                $qry        .= " {$safe_column} = {$format}";
 
 			if ( is_numeric( $column_value ) ) {
 				$args[] = (int) $column_value; } else {
@@ -140,8 +145,8 @@ class PM_DBhandler {
     public function get_all_result( $identifier, $column = '*', $where = 1, $result_type = 'results', $offset = 0, $limit = false, $sort_by = null, $descending = false, $additional = '', $output = 'OBJECT', $distinct = false ) {
         global $wpdb;
         $pm_activator   = new Profile_Magic_Activator();
-        $table          = $pm_activator->get_db_table_name( $identifier );
-        $unique_id_name = $pm_activator->get_db_table_unique_field_name( $identifier );
+        $table          = esc_sql( $pm_activator->get_db_table_name( $identifier ) );
+        $unique_id_name = esc_sql( $pm_activator->get_db_table_unique_field_name( $identifier ) );
         $args           = array();
         if ( !$sort_by ) {
             $sort_by = $unique_id_name;
@@ -239,22 +244,32 @@ class PM_DBhandler {
         } else {
 			$unique_id_name = $data_specifiers; }
 
-        $qry = "SELECT COUNT($unique_id_name) FROM $table_name WHERE ";
+        $safe_table     = esc_sql( $table_name );
+        $safe_unique_id = esc_sql( $unique_id_name );
+        $qry            = "SELECT COUNT({$safe_unique_id}) FROM `{$safe_table}` WHERE ";
+        $args           = array();
 
         if ( is_array( $where ) ) {
-            $i =0;
+            $i = 0;
             foreach ( $where as $column_name => $column_value ) {
-                if ( $i!=0 ) {
+                if ( $i !== 0 ) {
 					$qry .= 'AND '; }
+                $safe_column = esc_sql( $column_name );
                 if ( is_numeric( $column_value ) ) {
-                    $column_value = (int) $column_value;
-                    $qry         .= $wpdb->prepare( "$column_name = %d ", $column_value );
+                    $qry   .= "{$safe_column} = %d ";
+                    $args[] = (int) $column_value;
                 } else {
-                    $qry .= $wpdb->prepare( "$column_name = %s ", $column_value );
+                    $qry   .= "{$safe_column} = %s ";
+                    $args[] = $column_value;
                 }
+                $i++;
             }
         } elseif ( $where == 1 ) {
 			$qry .= '1 '; }
+
+        if ( !empty( $args ) ) {
+            $qry = $wpdb->prepare( $qry, $args );
+        }
 
         $count = $wpdb->get_var( $qry );
 

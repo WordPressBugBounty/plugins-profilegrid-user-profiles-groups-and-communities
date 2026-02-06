@@ -1411,11 +1411,12 @@ class Profile_Magic_Notification {
 			else :
 				 $description = $row->group_name;
 			endif;
+			/* translators: %d: Number of group members. */
 			$description .= '<p>' . sprintf( __( '%d Members', 'profilegrid-user-profiles-groups-and-communities' ), $total_users ) . '</p>';
 
 			$return = '  
             <div id="notif_' . $id . '" class="pm-notification  pm-group-blog-post-notice ">
-            <div class="pm-notification-date">' . $notif_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>
+            <div class="pm-notification-date">' . sprintf( esc_html__( '%s ago', 'profilegrid-user-profiles-groups-and-communities' ), $notif_timestamp ) . '</div>
             <div class="pm-notification-card pm-dbfl">
              <div onClick="pm_delete_notification(' . $id . ')" class="pm-notification-close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
   <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>

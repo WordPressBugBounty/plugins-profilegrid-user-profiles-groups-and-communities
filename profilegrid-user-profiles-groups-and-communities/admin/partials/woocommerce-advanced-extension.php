@@ -17,6 +17,7 @@ $url  = 'https://profilegrid.co/extensions/advanced-woocommerce-integration/';
                 
                 <div class="update-nag">
                  <?php
+					// translators: %s: URL to advanced WooCommerce integration page.
 					echo sprintf( esc_html__( 'Combine the power of ProfileGrid User Groups with WooCommerce extensions to provide the ultimate shopping experience to your users. Check out the <a target="_blank" href="%s">ProfileGrid Advanced WooCommerce Integration</a> now!', 'profilegrid-user-profiles-groups-and-communities' ), esc_url( $url ) );
 					?>
                 </div>
@@ -31,6 +32,7 @@ $url  = 'https://profilegrid.co/extensions/advanced-woocommerce-integration/';
 <?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?>
                     </div>
                 </a>
+                <?php wp_nonce_field( 'pg_woocommerce_advanced_settings', 'pg_woocommerce_advanced_settings_nonce' ); ?>
                 
             </div>
         </div>

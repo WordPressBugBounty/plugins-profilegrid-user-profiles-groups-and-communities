@@ -22,6 +22,15 @@ $rd = filter_input(INPUT_GET, 'rd');
     <?php if(isset($is_field) && !empty($is_field)):?>  
       
     <form class="pmagic-form pm-dbfl" method="post" action="" id="pm_edit_form" name="pm_edit_form"  enctype="multipart/form-data">
+        <?php 
+        // Use object method instead of direct function call
+        if ( class_exists( 'Profile_Magic_Basic_Functions' ) ) {
+            $basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+            if ( method_exists( $basic_function, 'pm_render_nonce_field' ) ) {
+                $basic_function->pm_render_nonce_field( 'pm_profile_action', 'pm_profile_nonce' );
+            }
+        }
+        ?>
         <input type="hidden" name="gid" id="gid" value="<?php echo esc_attr($group_id); ?>" />
         <input type="hidden" name="euid" id="euid" value="<?php echo esc_attr($edit_uid); ?>" />
         <?php if(isset($rd) && $rd!=''):?>
@@ -75,13 +84,12 @@ echo '<div class="pm-accordian-title pm-dbfl pm-border pm-bg pm-pad10">'.esc_htm
           $skip_field = apply_filters('pg_group_field_edit_profile_filter', true, $field, $field_options);
 
           if (!$skip_field) {
-            // Your code inside the loop will run here.
             continue;
           }
 
 					echo '<div class="pmrow">';
 					$value = $pmrequests->profile_magic_get_user_field_value($edit_uid,$field->field_key,$field->field_type,true);
-					$pm_customfields->pm_get_custom_form_fields($field,$value,$this->profile_magic);
+					$pm_customfields->pm_get_custom_form_fields($field,$value,'');
 					echo '</div>';	 
 				 }
 				 echo '<div class="all_errors" style="display:none;"></div>';

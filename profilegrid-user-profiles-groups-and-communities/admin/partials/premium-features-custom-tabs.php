@@ -6,7 +6,7 @@ $path =  plugin_dir_url( __FILE__ );
   <div class="pmagic">   
     
 <a href="admin.php?page=pm_extensions" target="_blank"  class="pg-upgrade-banner">         
-    <div class="pg-upgrade-banner-title"><?php esc_html_e( 'Add new tabs with custom data on user profiles by upgrading to ProfileGrid Premium Bundle.', '' ); ?><span class="pg-banner-info-bt">More Info</span></div>
+    <div class="pg-upgrade-banner-title"><?php esc_html_e( 'Add new tabs with custom data on user profiles by upgrading to ProfileGrid Premium Bundle.', 'profilegrid-user-profiles-groups-and-communities' ); ?><span class="pg-banner-info-bt">More Info</span></div>
             <div class="pg-upgrade-banner-box"><img src="<?php echo esc_url( $path . 'images/pg-premium-img.png' ); ?>">
         </div>
     </a> 

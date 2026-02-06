@@ -2220,6 +2220,34 @@ function pg_create_group_page(a,gid)
     );
 }
 
+jQuery( document ).on(
+	'click',
+	'.pg-create-group-page',
+	function ( event ) {
+		event.preventDefault();
+		event.stopPropagation();
+		var $link = jQuery( this );
+		var gid = parseInt( $link.data( 'gid' ), 10 ) || 0;
+		var $label = $link.closest( 'label' );
+		if ( $label.length ) {
+			var for_attr = $label.attr( 'for' ) || '';
+			var gid_match = for_attr.match( /pg-group-id-(\d+)/ );
+			if ( gid_match ) {
+				gid = parseInt( gid_match[1], 10 );
+			}
+			if ( ! gid ) {
+				var input_val = $label.find( 'input.pg-all-groups-selected' ).val();
+				gid = parseInt( input_val, 10 ) || 0;
+			}
+		}
+		if ( ! gid ) {
+			return false;
+		}
+		pg_create_group_page( this, gid );
+		return false;
+	}
+);
+
 function pm_remove_attachment(obj,key,value)
 {
 	  var uid = jQuery( '#pg_user_id' ).val();

@@ -4,18 +4,21 @@ $pmrequests = new PM_request;
 $textdomain = $this->profile_magic;
 $path =  plugin_dir_url(__FILE__);
 $identifier = 'GROUPS';
+$wpdb = null;
+if ( isset( $GLOBALS['wpdb'] ) && $GLOBALS['wpdb'] instanceof wpdb ) {
+    $wpdb = $GLOBALS['wpdb'];
+}
 $pagenum = filter_input(INPUT_GET, 'pagenum');
 $demo_content_popup_default = filter_input(INPUT_GET, 'pg_demo_content_popup');
 $pagenum = isset($pagenum) ? absint($pagenum) : 1;
 $limit = 10; // number of rows in page
 $offset = ( $pagenum - 1 ) * $limit;
 $search = filter_input(INPUT_POST, 'pm_group_search');
-if(!empty($search))
-{
-    $additional = "group_name LIKE '%".$search."%'";
-}
-else
-{
+$search = is_string($search) ? sanitize_text_field($search) : '';
+if ( ! empty( $search ) && $wpdb instanceof wpdb ) {
+    $like       = '%' . $wpdb->esc_like( $search ) . '%';
+    $additional = $wpdb->prepare( 'group_name LIKE %s', $like );
+} else {
     $additional = '';
 }
 $totalgroups = $dbhandler->get_all_result($identifier,'*', 1, 'results', 0, false, null, false, $additional);
@@ -141,7 +144,25 @@ update_option( 'pg_redirect_to_group_page', '0' );
             <?php endif;?>
             <span style="text-transform: capitalize;"><?php echo esc_html($group_type); ?></span> <span class="pg-status-sep"> &#8901; </span> <?php if($group->is_group_limit==1){ echo esc_html($total_users).'/'.esc_html($group->group_limit);} else{  echo esc_html($total_users);}?> </div>
       </div>
-      <div class="pm-card-icon"><?php echo $pmrequests->pg_get_group_card_icon_link($group->id); ?></div>  
+      <div class="pm-card-icon">
+        <?php
+        echo wp_kses(
+            $pmrequests->pg_get_group_card_icon_link( $group->id ),
+            array(
+                'a' => array(
+                    'href'   => true,
+                    'title'  => true,
+                    'class'  => true,
+                    'data-gid' => true,
+                    'target' => true,
+                ),
+                'i' => array(
+                    'class' => true,
+                ),
+            )
+        );
+        ?>
+      </div>  
       
               <div class="pg-submission-wrap"> 
                   <?php if(!empty($users)):?>
@@ -365,7 +386,7 @@ update_option( 'pg_redirect_to_group_page', '0' );
                     <div class="pg-group-field">
                    <label><?php esc_attr_e('Group Name', 'profilegrid-user-profiles-groups-and-communities'); ?></label>
                     </div>
-                     <input type="text" name="group_name" id="group_name" placeholder="<?php esc_attr_e('', 'profilegrid-user-profiles-groups-and-communities'); ?>">
+                     <input type="text" name="group_name" id="group_name" placeholder="<?php esc_attr_e( 'Enter Group Name', 'profilegrid-user-profiles-groups-and-communities' ); ?>">
                   <div class="errortext" id="group_error" style="display:none;"><?php esc_html_e('This is required field', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
                   <input type="hidden" name="group_id" id="group_id" value="0" />
                   <input type="hidden" name="associate_role" id="associate_role" value="subscriber">

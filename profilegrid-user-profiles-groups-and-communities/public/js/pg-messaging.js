@@ -34,6 +34,7 @@ if($('#pg-messages').length)
         // console.log("working");
         //refresh_messenger();
         setTimeout(function(){pm_get_messenger_notification('','nottyping');}, 1000);
+        setTimeout(function(){pm_messenger_notification_extra_data();}, 1200);
         $("#typing_on .pm-typing-inner").hide();
     }
     
@@ -62,7 +63,8 @@ if($('#pg-messages').length)
 
     
 })(jQuery);
-var notification_request = null;  
+var notification_request = null;
+var pg_unread_thread_count_cache = null;
 function pm_get_messenger_notification(timestamp, activity)
 {
     if (activity === undefined)activity = '';
@@ -70,22 +72,23 @@ function pm_get_messenger_notification(timestamp, activity)
     var data = {'action': 'pm_get_messenger_notification',
         'timestamp': timestamp,
         'activity': activity,
-        'tid': tid
+        'tid': tid,
+        'ts': Date.now()
     };
     if(notification_request !== null){
         notification_request.abort();
 
     }
 
+    var nextTimestamp = '';
     notification_request = jQuery.get(pg_msg_object.ajax_url, data, function (response)
     {
         if (response)
         {
-           
-            var obj = jQuery.parseJSON(response);           
+            var obj = jQuery.parseJSON(response);
             if(jQuery.isEmptyObject(obj))
             {
-                setTimeout(function(){pm_get_messenger_notification('')},4000);  
+                nextTimestamp = '';
             }
             else
             {
@@ -106,10 +109,7 @@ function pm_get_messenger_notification(timestamp, activity)
                     pm_messenger_notification_extra_data('');
 
                 }
-                setTimeout(function () {
-                    pm_get_messenger_notification(obj.timestamp)
-                }, 4000);
-
+                nextTimestamp = obj.timestamp;
 
             }
             // call the function again, this time with the timestamp we just got from server.php
@@ -118,6 +118,13 @@ function pm_get_messenger_notification(timestamp, activity)
        //console.log("error in notif");    
        }
     
+    }).always(function (jqXHR) {
+        if (jqXHR && jqXHR.statusText === 'abort') {
+            return;
+        }
+        setTimeout(function () {
+            pm_get_messenger_notification(nextTimestamp)
+        }, 4000);
     });
 
 
@@ -127,7 +134,7 @@ function pm_get_messenger_notification(timestamp, activity)
 function pm_messenger_notification_extra_data(x){
   //console.log(x);
     //console.log("extra data working");
-    var data = {'action': 'pm_messenger_notification_extra_data'};
+    var data = {'action': 'pm_messenger_notification_extra_data', 'ts': Date.now()};
 
     jQuery.get(pg_msg_object.ajax_url, data, function (response)
     {
@@ -135,34 +142,40 @@ function pm_messenger_notification_extra_data(x){
         {
             var obj = jQuery.parseJSON(response);
             //console.log(obj.unread_threads);
-            if (obj.unread_threads !== 0)
-            {
-                console.log(obj.unread_threads);
-                if(x!==undefined || x=='')
-                {
-                    x =  jQuery("#unread_thread_count").html();
+            var unreadCount = parseInt(obj.unread_threads, 10);
+            if (isNaN(unreadCount)) {
+                unreadCount = 0;
+            }
+            var previousCount = pg_unread_thread_count_cache;
+            if (previousCount === null || isNaN(previousCount)) {
+                previousCount = parseInt(jQuery("#unread_thread_count").html(), 10);
+                if (isNaN(previousCount)) {
+                    previousCount = 0;
                 }
-                console.log(x);
+            }
+            if (unreadCount > 0)
+            {
+                console.log(unreadCount);
+                console.log(previousCount);
                 jQuery("#unread_thread_count").addClass("thread-count-show"); 
-                jQuery("#unread_thread_count").html(obj.unread_threads);  
+                jQuery("#unread_thread_count").html(unreadCount);
                
 //                if(jQuery('#thread_pane').length)
 //                {
 //                    pg_activate_new_thread(obj.rid);
 //                }
                 
-                if(x<obj.unread_threads)
+                if(previousCount < unreadCount)
                 {
                     jQuery("#msg_tone")[0].play();
                 }
                 
                    
             }else{
-                    //jQuery("#unread_thread_count").html('');   
-                    //jQuery("#unread_thread_count").removeClass("thread-count-show"); 
-            
-                
+                    jQuery("#unread_thread_count").html('');   
+                    jQuery("#unread_thread_count").removeClass("thread-count-show"); 
             }
+            pg_unread_thread_count_cache = unreadCount;
           
         }
 
@@ -176,6 +189,7 @@ function pg_msg_open_tab()
      jQuery("#unread_thread_count").html('');   
     jQuery("#unread_thread_count").removeClass("thread-count-show");
    jQuery('.pg-message-box-sidebar').addClass('opened');
+   setTimeout(function(){pm_messenger_notification_extra_data();}, 500);
 }
 
 function pg_show_new_thread()
@@ -439,7 +453,8 @@ function pg_show_msg_panel(uid,rid,tid)
         jQuery('#pg-msg-thread-container').html(resp);
         jQuery('#new_thread').val("1");
         pg_msg_loader();
-         pm_messenger_notification_extra_data(1);
+        pm_messenger_notification_extra_data();
+        setTimeout(function(){pm_messenger_notification_extra_data();}, 300);
          
     if(search!=='')
     {
@@ -584,7 +599,7 @@ function pg_msg_delete_thread_confirmbox(tid,uid,mid)
         return false;
     }
     
-    jQuery('#pg_edit_group_html_container').html('<div class="pg-edit-group-popup-loader"><div class="pm-loader"></div></div>');
+    jQuery('#pg_message_html_container').html('<div class="pg-edit-group-popup-loader"><div class="pm-loader"></div></div>');
      var pmDomColor = jQuery(".pmagic").find("a").css('color');
         jQuery(".pm-loader").css('border-top-color', pmDomColor);
        
@@ -594,7 +609,7 @@ function pg_msg_delete_thread_confirmbox(tid,uid,mid)
        if(response)
         {
             bgcolor = pmDomColor.replace(')', ',0.2)');
-            jQuery('#pg_edit_group_html_container').html(response);
+            jQuery('#pg_message_html_container').html(response);
             jQuery("#pm-edit-group-popup .pg-users-send-box .pm-message-username").css('background-color', bgcolor);
             jQuery("#pm-edit-group-popup .pg-users-send-box .pm-message-username").css('border-color', pmDomColor);
             jQuery("#pm-edit-group-popup .pg-users-send-box .pm-message-username").css('color', pmDomColor);
@@ -614,6 +629,7 @@ function pg_msg_read_messages(e,tid)
     jQuery.post(pg_msg_object.ajax_url, data, function () {
        jQuery('#pg-msg-thread-'+tid+' .pg-unread-count' ).remove(); 
         pg_show_all_threads(tid);
+        pm_messenger_notification_extra_data('');
     });
 }
 

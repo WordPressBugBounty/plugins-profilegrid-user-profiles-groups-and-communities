@@ -17,6 +17,7 @@ $url  = 'https://profilegrid.co/extensions/woocommerce-wishlist/';
                 
                 <div class="update-nag">
                  <?php
+					// translators: %s: URL to WooCommerce wishlist integration page.
 					echo sprintf( esc_html__( 'Add WooCommerce products to your Wishlist. Your <a target="_blank" href="%s">WooCommerce Wishlist Integration</a> will be visible on your ProfileGrid User Profile from where you can manage it completely.', 'profilegrid-user-profiles-groups-and-communities' ), esc_url( $url ) );
 					?>
                 </div>
@@ -31,6 +32,7 @@ $url  = 'https://profilegrid.co/extensions/woocommerce-wishlist/';
 <?php esc_html_e( 'Cancel', 'profilegrid-user-profiles-groups-and-communities' ); ?>
                     </div>
                 </a>
+                <?php wp_nonce_field( 'pg_woocommerce_wishlist_settings', 'pg_woocommerce_wishlist_settings_nonce' ); ?>
                 
             </div>
         </div>

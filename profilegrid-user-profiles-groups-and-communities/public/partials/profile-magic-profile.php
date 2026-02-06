@@ -10,8 +10,9 @@ $pm_sanitizer = new PM_sanitizer;
 $post = $pm_sanitizer->sanitize($_POST);
 if(isset($post['upload_image']))
 {
+	
 	$filefield = $_FILES['user_image'];
-	$allowed_ext ='jpg|jpeg|png|gif';
+	$allowed_ext ='jpg|jpeg|png|gif|webp|avif';
 	if($post['user_id']==$current_user->ID)
 	{
 		$attachment_id = $pmrequests->make_upload_and_get_attached_id($filefield,$allowed_ext);
@@ -24,6 +25,7 @@ if(isset($post['upload_image']))
 
 if(isset($post['remove_image']))
 {
+	
 	if($post['user_id']==$current_user->ID)
 	{
 		update_user_meta($post['user_id'],$post['user_meta'],'');	
@@ -44,6 +46,7 @@ if(isset($post['remove_image']))
 
 if(isset($post['edit_profile']))
 {
+    
    //print_r($post);die;
         $allowed_user_id = apply_filters('pg_edit_user_profile_user_id',$current_user->ID,$post);
         
