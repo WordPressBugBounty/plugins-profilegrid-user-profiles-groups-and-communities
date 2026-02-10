@@ -49,10 +49,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<ul class="pg-api-actions">
 			<!-- AUTH / TOKEN -->
 			<li>
-				<strong><?php esc_html_e( 'Get Access Token', 'profilegrid-user-profiles-groups-and-communities' ); ?></strong><br />
-				<code><?php echo esc_html( add_query_arg( array( 'integration' => 1, 'action' => 'get_access_token' ), $endpoint_base ) ); ?></code><br />
-				<?php esc_html_e( 'POST body: username, application_password. Returns a short-lived token to be used in PG-Token or Authorization: Bearer header.', 'profilegrid-user-profiles-groups-and-communities' ); ?>
-			</li>
+    <strong><?php esc_html_e( 'Get Access Token', 'profilegrid-user-profiles-groups-and-communities' ); ?></strong><br />
+
+    <code><?php echo esc_html( home_url( '/wp-json/profilegrid/v1/token' ) ); ?></code><br />
+
+    <?php esc_html_e(
+        'POST body: username, application_password. Returns a short-lived token to be used in PG-Token or Authorization: Bearer header.',
+        'profilegrid-user-profiles-groups-and-communities'
+    ); ?>
+</li>
 
 			<!-- GROUPS: LIST / SINGLE / CREATE / UPDATE / DELETE -->
 			<li>

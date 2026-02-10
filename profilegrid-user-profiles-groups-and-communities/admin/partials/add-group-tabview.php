@@ -59,7 +59,16 @@ if ( filter_input( INPUT_POST, 'submit_group' ) ) {
 	$groupid       = filter_input( INPUT_POST, 'group_id' );
         $group_tab = filter_input( INPUT_POST, 'group_tab' );
         $post      = wp_unslash( $_POST );
-	$exclude       = array( '_wpnonce', '_wp_http_referer', 'submit_group', 'group_id', 'group_tab' );
+	$raw_group_options = array();
+	if ( isset( $post['group_options'] ) && is_array( $post['group_options'] ) ) {
+		$raw_group_options = $post['group_options'];
+	}
+	$add_members_raw = filter_input( INPUT_POST, 'pg_add_members', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );
+	if ( $add_members_raw === null && isset( $_POST['pg_add_members'] ) ) {
+		$add_members_raw = wp_unslash( $_POST['pg_add_members'] );
+	}
+	$add_members     = array_filter( array_map( 'absint', (array) $add_members_raw ) );
+	$exclude       = array( '_wpnonce', '_wp_http_referer', 'submit_group', 'group_id', 'group_tab', 'pg_add_members' );
 	if ( $groupid!=0 ) {
 			if ( $group_tab=='management' ) {
 				if ( !isset( $post['group_options']['show_admin_manager'] ) ) {
@@ -282,8 +291,59 @@ if ( filter_input( INPUT_POST, 'submit_group' ) ) {
 	if ( $group_tab=='management' ) {
                 do_action( 'pg_groupleader_assign_remove', $gid, $is_leader, $group_leaders, $post['is_group_leader'], $post['group_leaders'] );
             }
+	$group_options_saved = array();
+	if ( isset( $data['group_options'] ) ) {
+		$group_options_saved = maybe_unserialize( $data['group_options'] );
+		if ( ! is_array( $group_options_saved ) ) {
+			$group_options_saved = array();
+		}
+	}
+	$needs_limit_check = ! empty( $add_members );
+	$is_group_limit = 0;
+	$available_slots = -1;
+	if ( $needs_limit_check ) {
+		$is_group_limit = (int) $dbhandler->get_value( 'GROUPS', 'is_group_limit', $gid );
+		if ( $is_group_limit === 1 ) {
+			$meta_query_array = $pmrequests->pm_get_user_meta_query( array( 'gid' => $gid ) );
+			$user_query = $dbhandler->pm_get_all_users_ajax( '', $meta_query_array );
+			$total_users_in_group = (int) $user_query->get_total();
+			$group_limit = (int) $dbhandler->get_value( 'GROUPS', 'group_limit', $gid );
+			$available_slots = max( 0, $group_limit - $total_users_in_group );
+		}
+	}
+	if ( ! empty( $add_members ) ) {
+		foreach ( $add_members as $uid ) {
+			$uid = absint( $uid );
+			if ( ! $uid ) {
+				continue;
+			}
+			if ( $is_group_limit === 1 && $available_slots <= 0 ) {
+				break;
+			}
+			$user_groups = $pmrequests->profile_magic_get_user_field_value( $uid, 'pm_group' );
+			$user_groups = $pmrequests->pg_filter_users_group_ids( $user_groups );
+			if ( ! is_array( $user_groups ) ) {
+				$user_groups = $user_groups ? array( $user_groups ) : array();
+			}
+			if ( in_array( $gid, $user_groups, true ) ) {
+				continue;
+			}
+			$pmrequests->profile_magic_join_group_fun( $uid, $gid, 'open' );
+			if ( $is_group_limit === 1 ) {
+				$available_slots--;
+			}
+		}
+	}
         if($groupid == 0){
-            wp_safe_redirect( esc_url_raw( 'admin.php?page=pm_manage_groups' ) );
+            $redirect_url = add_query_arg(
+				array(
+					'page'            => 'pm_manage_groups',
+					'pg_group_created'=> 1,
+					'pg_new_group_id' => $gid,
+				),
+				admin_url( 'admin.php' )
+			);
+            wp_safe_redirect( esc_url_raw( $redirect_url ) );
         }else{
             wp_safe_redirect(esc_url_raw($_SERVER['REQUEST_URI']));  
         }

@@ -126,6 +126,13 @@ if(isset($uid))
 }
 if((!isset($uid) || empty($uid)) && is_user_logged_in()){$uid = $current_user->ID;}
 
+if ( is_user_logged_in() && isset( $uid ) && (int) $uid === (int) $current_user->ID ) {
+    $page_id = get_queried_object_id();
+    $page_id = $page_id ? absint( $page_id ) : 0;
+    $selector = $page_id ? 'body.page-id-' . $page_id . '.sticky-menu' : 'body.sticky-menu';
+    echo '<style id="pg-profile-sticky-fix">' . esc_html( $selector ) . '{position:static !important;overflow:auto !important;width:auto !important;top:auto !important;}</style>';
+}
+
 if($dbhandler->get_global_option_value('pm_enable_private_profile')=='1')
 {
     if($uid != $current_user->ID)

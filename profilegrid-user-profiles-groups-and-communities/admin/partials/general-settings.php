@@ -64,8 +64,10 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
 	exit;
 }
 
-$pm_default_group_sorting  = $dbhandler->get_global_option_value( 'pm_default_group_sorting', 'oldest_first' );
-$pm_default_groups_sorting = $dbhandler->get_global_option_value( 'pm_default_groups_sorting', 'newest' );
+$pm_default_group_sorting       = $dbhandler->get_global_option_value( 'pm_default_group_sorting', 'oldest_first' );
+$pm_default_groups_sorting      = $dbhandler->get_global_option_value( 'pm_default_groups_sorting', 'newest' );
+$pm_default_groups_view         = $dbhandler->get_global_option_value( 'pm_default_groups_view', 'grid' );
+$pm_default_groups_grid_columns = $dbhandler->get_global_option_value( 'pm_default_groups_grid_columns', '3' );
 
 ?>
 
@@ -113,7 +115,37 @@ $pm_default_groups_sorting = $dbhandler->get_global_option_value( 'pm_default_gr
         </div>
         <div class="uimnote"><?php esc_html_e( 'Choose sorting of group cards when users visit All Groups page.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
       </div>
-        
+
+        <div class="uimrow">
+        <div class="uimfield">
+          <?php esc_html_e( 'Default View on All Groups Page', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        </div>
+        <div class="uiminput">
+          <select name="pm_default_groups_view" id="pm_default_groups_view">
+                <option value="grid" <?php selected( 'grid', $pm_default_groups_view ); ?>><?php esc_html_e( 'Grid', 'profilegrid-user-profiles-groups-and-communities' ); ?></option>
+                <option value="list" <?php selected( 'list', $pm_default_groups_view ); ?>><?php esc_html_e( 'List', 'profilegrid-user-profiles-groups-and-communities' ); ?></option>
+           </select>
+          <div class="errortext"></div>
+        </div>
+        <div class="uimnote"><?php esc_html_e( 'Choose the default layout for the All Groups page. Shortcode parameters override block settings, which override these global settings.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+      </div>
+
+        <div class="uimrow">
+        <div class="uimfield">
+          <?php esc_html_e( 'Grid Columns on All Groups Page', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        </div>
+        <div class="uiminput">
+          <select name="pm_default_groups_grid_columns" id="pm_default_groups_grid_columns">
+                <option value="1" <?php selected( '1', $pm_default_groups_grid_columns ); ?>>1</option>
+                <option value="2" <?php selected( '2', $pm_default_groups_grid_columns ); ?>>2</option>
+                <option value="3" <?php selected( '3', $pm_default_groups_grid_columns ); ?>>3</option>
+                <option value="4" <?php selected( '4', $pm_default_groups_grid_columns ); ?>>4</option>
+           </select>
+          <div class="errortext"></div>
+        </div>
+        <div class="uimnote"><?php esc_html_e( 'Sets the maximum number of columns for grid view (1–4). Layout is responsive and may reduce columns on smaller screens.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+      </div>
+
         <div class="uimrow">
         <div class="uimfield">
           <?php esc_html_e( 'Default Sorting on Group Page', 'profilegrid-user-profiles-groups-and-communities' ); ?>

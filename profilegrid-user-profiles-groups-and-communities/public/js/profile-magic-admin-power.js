@@ -1,45 +1,75 @@
 (function( $ ) {
 	'use strict';
     
-function parseDate(dateString) {
-        var dateFormat = pm_fields_object.dateformat; // Assuming pm_fields_object.dateformat contains the desired date format
-        var parts = dateString.split(/[\.\-\/]/);
-        var formatParts = dateFormat.split(/[\.\-\/]/);
-        var dateObject = new Date();
+function parseDate(dateString, isMax) {
+        if (!dateString) {
+            return null;
+        }
 
-        for (var i = 0; i < parts.length; i++) {
-            var partValue = parseInt(parts[i], 10);
-            var formatPart = formatParts[i];
+        if (typeof dateString === 'number') {
+            dateString = String(dateString);
+        }
 
-            if (formatPart.toLowerCase().indexOf('d') !== -1) {
-                dateObject.setDate(partValue);
-            } else if (formatPart.toLowerCase().indexOf('m') !== -1) {
-                dateObject.setMonth(partValue - 1); // Month is zero-based in JavaScript Date object
-            } else if (formatPart.toLowerCase().indexOf('y') !== -1) {
-                dateObject.setFullYear(partValue);
+        dateString = String(dateString).trim();
+        if (!dateString) {
+            return null;
+        }
+
+        var yearOnly = /^\d{4}$/.test(dateString);
+        if (!yearOnly) {
+            var yearMatch = dateString.match(/(\d{4})/);
+            if (yearMatch && yearMatch[1]) {
+                dateString = yearMatch[1];
+                yearOnly = true;
             }
         }
 
-        return dateObject;
+        if (yearOnly) {
+            var year = parseInt(dateString, 10);
+            if (isNaN(year)) {
+                return null;
+            }
+            return isMax ? new Date(year, 11, 31) : new Date(year, 0, 1);
+        }
+
+        try {
+            return $.datepicker.parseDate(pm_fields_object.dateformat, dateString);
+        } catch (e) {
+            try {
+                return $.datepicker.parseDate('yy-mm-dd', dateString);
+            } catch (err) {
+                return null;
+            }
+        }
     }
     
         
     $(".pm_calendar").each(function() {
         var minDateValue = $(this).data('min_date');
         var maxDateValue = $(this).data('max_date');
+        var currentYear = new Date().getFullYear();
 
-        var minDate = minDateValue ? parseDate(minDateValue) : null;
-        var maxDate = maxDateValue ? parseDate(maxDateValue) : null;
+        var minDate = minDateValue ? parseDate(minDateValue, false) : null;
+        var maxDate = maxDateValue ? parseDate(maxDateValue, true) : null;
+        var yearRange = "1900:" + ( currentYear + 20 );
+        if (minDate instanceof Date || maxDate instanceof Date) {
+            var minYear = minDate instanceof Date ? minDate.getFullYear() : 1900;
+            var maxYear = maxDate instanceof Date ? maxDate.getFullYear() : ( currentYear + 20 );
+            yearRange = minYear + ":" + maxYear;
+        }
 
         $(this).datepicker({
             changeMonth: true,
             changeYear: true,
             dateFormat: pm_fields_object.dateformat,
-            yearRange: "1900:2030",
+            yearRange: yearRange,
             minDate: minDate,
             maxDate: maxDate,
             onSelect: function(dateText, inst) {
-                var selectedDate = parseDate(dateText);
+                var selectedDate = parseDate(dateText, false);
+                if (!selectedDate) {
+                    return;
+                }
 
                 if (minDate instanceof Date && selectedDate < minDate) {
                     $(this).datepicker("setDate", minDate);
@@ -48,9 +78,9 @@ function parseDate(dateString) {
                 }
             },
             onClose: function(dateText, inst) {
-                var enteredDate = parseDate(dateText);
+                var enteredDate = parseDate(dateText, false);
 
-                if (isNaN(enteredDate) || (minDate instanceof Date && enteredDate < minDate) || (maxDate instanceof Date && enteredDate > maxDate)) {
+                if (!enteredDate || isNaN(enteredDate.getTime()) || (minDate instanceof Date && enteredDate < minDate) || (maxDate instanceof Date && enteredDate > maxDate)) {
                     // Invalid date, reset to the previous valid date
                     $(this).datepicker("setDate", $(this).datepicker("getDate") || minDate);
                 }

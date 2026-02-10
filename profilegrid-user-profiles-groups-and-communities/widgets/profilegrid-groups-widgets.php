@@ -32,21 +32,35 @@ class Profilegrid_Groups_Menu extends WP_Widget {
         $title = ! empty( $instance['title'] ) ? $instance['title'] : '';
         
         $group_menu = get_option('pg_group_menu');
-        $group_list = maybe_unserialize(get_option('pg_group_list'));
-        $pg_group_icon = get_option('pg_group_icon');
+        $group_menu = is_array( $group_menu ) ? $group_menu : array();
+        $group_list = isset( $instance['group_list'] ) ? (array) $instance['group_list'] : maybe_unserialize( get_option( 'pg_group_list' ) );
+        $group_list = is_array( $group_list ) ? $group_list : array();
+        $group_list = array_filter( array_map( 'strval', $group_list ) );
+        $pg_group_icon = isset( $instance['icon'] ) ? $instance['icon'] : get_option( 'pg_group_icon' );
+        $all_groups = $dbhandler->get_all_result( 'GROUPS', array( 'id', 'group_name' ), 1, $result_type = 'results', $offset = 0, $limit = false, $sort_by = null, $descending = false, $additional = '', $output = 'ARRAY_A', $distinct = false );
+        $groups_by_id = array();
+        if ( ! empty( $all_groups ) ) {
+            foreach ( $all_groups as $group_row ) {
+                $groups_by_id[ (string) $group_row['id'] ] = $group_row;
+            }
+        }
         
         if($group_menu)
         {
             $changed_list = array();
             foreach($group_menu as $key=>$val)
             {               
-                $single_group =  $dbhandler->get_all_result('GROUPS',array('id','group_name'), array('id'=>$val), $result_type = 'results', $offset = 0, $limit = false, $sort_by = null, $descending = false, $additional='', $output='ARRAY_A', $distinct = false);
-                if(!empty($single_group)):
-                $changed_list[$key] = array('id'=> $single_group[0]['id'],'group_name'=>$single_group[0]['group_name']);
-                endif;
-                
+                $val = (string) $val;
+                if ( isset( $groups_by_id[ $val ] ) ) {
+                    $changed_list[ $key ] = array(
+                        'id' => $groups_by_id[ $val ]['id'],
+                        'group_name' => $groups_by_id[ $val ]['group_name'],
+                    );
+                }
             }
             $group_menu = $changed_list;
+        } elseif ( ! empty( $groups_by_id ) ) {
+            $group_menu = array_values( $groups_by_id );
         }
         ?>
         <div class="pg-group-menu-widgets">
@@ -57,7 +71,7 @@ class Profilegrid_Groups_Menu extends WP_Widget {
             </p>
             <p>
                 <label><?php esc_html_e('Display Group Icon/Badge:','profilegrid-user-profiles-groups-and-communities');?></label>
-                <input type="checkbox" <?php checked( $pg_group_icon, 'yes'); ?> id="pg_group_icon" name="pg_group_icon"/>
+                <input type="checkbox" <?php checked( $pg_group_icon, 'yes'); ?> id="<?php echo esc_attr( $this->get_field_id( 'icon' ) ); ?>" class="pg-group-icon-toggle" data-pg-group-icon="1" name="<?php echo esc_attr( $this->get_field_name( 'icon' ) ); ?>" value="yes" />
             </p>
             <ul class="pm_sortable_groups">
             <?php
@@ -67,7 +81,7 @@ class Profilegrid_Groups_Menu extends WP_Widget {
                 <li id="<?php echo esc_attr($group['id']); ?>">
                     <div class="pm-custom-field-page-slab-widget pm-dbfl">
                         <div class="pg-widget-drag-handle"><span class="dashicons dashicons-menu"></span></div>
-                        <div class="pm-group-buttons"><input type="checkbox" <?php checked(in_array($group['id'], $group_list) , 1 ); ?> name="group-lists" value="<?php echo esc_attr($group['id']); ?>"/></div>
+                        <div class="pm-group-buttons"><input type="checkbox" <?php checked( in_array( (string) $group['id'], $group_list, true ), true ); ?> name="<?php echo esc_attr( $this->get_field_name( 'group_list' ) ); ?>[]" value="<?php echo esc_attr($group['id']); ?>"/></div>
                         <div class="pm-group-info"><?php echo esc_html($group['group_name']); ?></div>
                     </div>
                 </li>
@@ -104,19 +118,49 @@ class Profilegrid_Groups_Menu extends WP_Widget {
             $title = '';
         }
         $group_menu = get_option('pg_group_menu');
-        $group_list = maybe_unserialize(get_option('pg_group_list'));
-        $pg_group_icon = get_option('pg_group_icon');
+        $group_menu = is_array( $group_menu ) ? $group_menu : array();
+        $group_list = isset( $instance['group_list'] ) ? (array) $instance['group_list'] : maybe_unserialize( get_option( 'pg_group_list' ) );
+        $group_list = is_array( $group_list ) ? $group_list : array();
+        $group_list = array_filter( array_map( 'strval', $group_list ) );
+        $pg_group_icon = isset( $instance['icon'] ) ? $instance['icon'] : get_option( 'pg_group_icon' );
         $path = plugins_url( '/images/widget-default-group.png', __FILE__ );
         $pg_group_list = array();
-        foreach($group_menu as $key=>$val)
-        {               
-            $single_group =  $dbhandler->get_all_result('GROUPS',array('id','group_name','group_icon'), array('id'=>$val), $result_type = 'results', $offset = 0, $limit = false, $sort_by = null, $descending = false, $additional='', $output='ARRAY_A', $distinct = false);
-            if(!empty($single_group)):
-            $pg_group_list[$key] = (object) array('id'=> $single_group[0]['id'],'group_name'=>$single_group[0]['group_name'],'group_icon'=>$single_group[0]['group_icon']);
-            endif;
+        $all_groups = $dbhandler->get_all_result( 'GROUPS', array( 'id', 'group_name', 'group_icon' ), 1, $result_type = 'results', $offset = 0, $limit = false, $sort_by = null, $descending = false, $additional = '', $output = 'ARRAY_A', $distinct = false );
+        $groups_by_id = array();
+        if ( ! empty( $all_groups ) ) {
+            foreach ( $all_groups as $group_row ) {
+                $groups_by_id[ (string) $group_row['id'] ] = $group_row;
+            }
+        }
+
+        if ( ! empty( $group_menu ) ) {
+            foreach ( $group_menu as $key => $val ) {
+                $val = (string) $val;
+                if ( isset( $groups_by_id[ $val ] ) ) {
+                    $pg_group_list[ $key ] = (object) array(
+                        'id' => $groups_by_id[ $val ]['id'],
+                        'group_name' => $groups_by_id[ $val ]['group_name'],
+                        'group_icon' => $groups_by_id[ $val ]['group_icon'],
+                    );
+                }
+            }
+        } elseif ( ! empty( $groups_by_id ) ) {
+            foreach ( $groups_by_id as $group_row ) {
+                $pg_group_list[] = (object) array(
+                    'id' => $group_row['id'],
+                    'group_name' => $group_row['group_name'],
+                    'group_icon' => $group_row['group_icon'],
+                );
+            }
         }
         $groups = (object)$pg_group_list;
         $group_url  = $pmrequests->profile_magic_get_frontend_url('pm_group_page','');
+        $selected_groups = ! empty( $group_list ) ? array_map( 'strval', (array) $group_list ) : array();
+        if ( empty( $selected_groups ) && ! empty( $pg_group_list ) ) {
+            foreach ( $pg_group_list as $group_row ) {
+                $selected_groups[] = (string) $group_row->id;
+            }
+        }
         
         // before and after widget arguments are defined by themes
         echo wp_kses_post($args['before_widget']);
@@ -127,7 +171,7 @@ class Profilegrid_Groups_Menu extends WP_Widget {
         <?php
         if (!empty($groups)):
             foreach ($groups as $group):
-            if(in_array($group->id, $group_list)):
+            if( in_array( (string) $group->id, $selected_groups, true ) ):
                 $group_url  = $pmrequests->profile_magic_get_frontend_url('pm_group_page','',$group->id);
                 //$group_url = add_query_arg( 'gid',$group->id, $group_url );
             
@@ -162,7 +206,11 @@ class Profilegrid_Groups_Menu extends WP_Widget {
     public function update( $new_instance, $old_instance ) {
         $instance = array();
         $instance['title'] = ( ! empty( $new_instance['title'] ) ) ? wp_strip_all_tags( $new_instance['title'] ) : '';
-        $instance['icon'] = $new_instance['icon'];
+        $instance['icon'] = ( ! empty( $new_instance['icon'] ) ) ? 'yes' : '';
+        $instance['group_list'] = array();
+        if ( isset( $new_instance['group_list'] ) && is_array( $new_instance['group_list'] ) ) {
+            $instance['group_list'] = array_values( array_filter( array_map( 'strval', $new_instance['group_list'] ) ) );
+        }
         
         return $instance;
     }

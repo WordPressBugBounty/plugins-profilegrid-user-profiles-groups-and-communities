@@ -291,6 +291,14 @@ registerBlockType( 'profilegrid-blocks/all-groups', {
 		search_box: {
             type: 'boolean',
 			default: true
+		},
+		include: {
+			default: '',
+			type: 'string'
+		},
+		exclude: {
+			default: '',
+			type: 'string'
 		}
 	},
 	edit(props){
@@ -302,9 +310,17 @@ registerBlockType( 'profilegrid-blocks/all-groups', {
 		function changeView(view){
 			setAttributes({view});
 		}
-                
+
         function changeSortby(sortby){
 			setAttributes({sortby});
+		}
+
+		function changeInclude(include){
+			setAttributes({include});
+		}
+
+		function changeExclude(exclude){
+			setAttributes({exclude});
 		}
                 
         const toggleSortingdropdown = () => {
@@ -359,6 +375,18 @@ registerBlockType( 'profilegrid-blocks/all-groups', {
 							label: __( 'Show Search Box' ),
 							onChange: toggleSearchBox
 							//options:[{value:'1',label:'Yes'},{value:'0',label:'No'}]
+						}),
+						createElement(TextControl, {
+							value: attributes.include,
+							label: __( 'Include Specific Groups (IDs)' ),
+							help: __( 'Comma-separated group IDs to include.' ),
+							onChange: changeInclude
+						}),
+						createElement(TextControl, {
+							value: attributes.exclude,
+							label: __( 'Exclude Groups (IDs)' ),
+							help: __( 'Comma-separated group IDs to exclude.' ),
+							onChange: changeExclude
 						})
                     )
 				]

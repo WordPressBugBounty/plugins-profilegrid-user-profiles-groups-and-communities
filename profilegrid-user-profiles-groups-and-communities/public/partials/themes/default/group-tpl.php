@@ -88,10 +88,10 @@ if($dbhandler->get_global_option_value('pm_enable_private_profile')=='1')
                
                                 ?>
                                 <div class="pm-card-row pm-dbfl">
-                                    <div class="pm-card-label pm-difl"><?php echo wp_kses_post($pmrequests->pm_get_group_admin_label($gid)); ?></div>
+                                    <div class="pm-card-label pm-difl"><?php echo wp_kses_post( (string) $pmrequests->pm_get_group_admin_label($gid) ); ?></div>
                                     <div class="pm-card-value pm-difl pm-group-leader-small pm-difl">
                                          <a href="<?php echo esc_url($profile_url) ;?>"><?php echo wp_kses_post(get_avatar($leaders['primary'],16,'',false,array('class'=>'pm-infl','force_display'=>true)));?>
-                                        <?php echo wp_kses_post($pmrequests->pm_get_display_name($leaders['primary'],true));?>
+                                        <?php echo wp_kses_post( (string) $pmrequests->pm_get_display_name($leaders['primary'],true) );?>
                                          </a>
 
                                         </div>
@@ -117,7 +117,7 @@ if($dbhandler->get_global_option_value('pm_enable_private_profile')=='1')
                  <?php if(!empty($row->group_desc) && $dbhandler->get_global_option_value('pm_show_group_details','1')=='1'):?>
                   <div class="pm-card-row pm-dbfl">
                     <div class="pm-card-label pm-difl"><?php esc_html_e('Details','profilegrid-user-profiles-groups-and-communities');?></div>
-                    <div class="pm-card-value pm-difl"><?php echo wp_kses_post($row->group_desc);?></div>
+                    <div class="pm-card-value pm-difl"><?php echo wp_kses_post( (string) $row->group_desc );?></div>
                  </div>
                  <?php endif;?>
                  <?php do_action('profile_magic_show_group_fields_option',$options);?>

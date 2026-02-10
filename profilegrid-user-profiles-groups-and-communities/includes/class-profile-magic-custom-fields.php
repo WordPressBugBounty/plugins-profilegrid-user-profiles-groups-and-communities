@@ -296,8 +296,8 @@ class PM_Custom_Fields {
                 <label for="<?php echo esc_attr($row->field_key); ?>"><?php echo esc_attr($row->field_name); ?><?php if ($row->is_required == 1): ?><sup class="pm_estric">*</sup><?php endif; ?></label>
             </div>
             <div class="pm-field-input pm_user_url <?php if ($row->is_required == 1) echo 'pm_required'; ?>">
-                <input title="<?php echo esc_attr($row->field_desc); ?>" type="text" class="<?php if (!empty($field_options)) echo esc_attr($field_options['css_class_attribute']); ?>" maxlength="<?php if (!empty($field_options)) echo esc_attr($field_options['maximum_length']); ?>" value="<?php echo esc_attr($value['text']); ?>" id="<?php echo esc_attr($row->field_key); ?>" name="<?php echo esc_attr($row->field_key); ?>[text]" placeholder="<?php esc_attr_e('Link Text','profilegrid-user-profiles-groups-and-communities'); ?>">
-                <input title="<?php echo esc_attr($row->field_desc); ?>" type="url" class="<?php if (!empty($field_options)) echo esc_attr($field_options['css_class_attribute']); ?>" maxlength="<?php if (!empty($field_options)) echo esc_attr($field_options['maximum_length']); ?>" value="<?php echo esc_attr($value['url']); ?>" id="<?php echo esc_attr($row->field_key); ?>" name="<?php echo esc_attr($row->field_key); ?>[url]" placeholder="<?php esc_attr_e('URL','profilegrid-user-profiles-groups-and-communities'); ?>">
+                <input title="<?php echo esc_attr($row->field_desc); ?>" type="text" class="<?php if (!empty($field_options)) echo esc_attr($field_options['css_class_attribute']); ?>" maxlength="<?php if (!empty($field_options)) echo esc_attr($field_options['maximum_length']); ?>" value="<?php echo (is_array($value) && isset($value['text'])) ? esc_attr($value['text']) : ''; ?>" id="<?php echo esc_attr($row->field_key); ?>" name="<?php echo esc_attr($row->field_key); ?>[text]" placeholder="<?php esc_attr_e('Link Text','profilegrid-user-profiles-groups-and-communities'); ?>">
+                <input title="<?php echo esc_attr($row->field_desc); ?>" type="url" class="<?php if (!empty($field_options)) echo esc_attr($field_options['css_class_attribute']); ?>" maxlength="<?php if (!empty($field_options)) echo esc_attr($field_options['maximum_length']); ?>" value="<?php echo (is_array($value) && isset($value['url'])) ? esc_attr($value['url']) : ''; ?>" id="<?php echo esc_attr($row->field_key); ?>" name="<?php echo esc_attr($row->field_key); ?>[url]" placeholder="<?php esc_attr_e('URL','profilegrid-user-profiles-groups-and-communities'); ?>">
                 <div class="errortext" style="display:none;"></div>
             </div>
             
@@ -579,6 +579,18 @@ class PM_Custom_Fields {
             $field_options = maybe_unserialize($row->field_options);
         if($value == '' && !empty($field_options) && isset($field_options['default_value']))
             $value = $field_options['default_value'];
+        $min_dob = '';
+        $max_dob = '';
+        if ( ! empty( $field_options ) && ! empty( $field_options['set_dob_range'] ) ) {
+            if ( ! empty( $field_options['min_dob'] ) ) {
+                $min_dob = $field_options['min_dob'];
+            }
+            if ( ! empty( $field_options['max_dob'] ) ) {
+                $max_dob = $field_options['max_dob'];
+            }
+        }
+        $min_attr = ( $min_dob !== '' ) ? ' data-min_date="' . esc_attr( $min_dob ) . '"' : '';
+        $max_attr = ( $max_dob !== '' ) ? ' data-max_date="' . esc_attr( $max_dob ) . '"' : '';
         ?>        
         <div class="pm-col">
             <div class="pm-field-lable">
@@ -586,7 +598,7 @@ class PM_Custom_Fields {
                 <label for="<?php echo esc_attr($row->field_key); ?>"><?php echo esc_attr($row->field_name); ?><?php if ($row->is_required == 1): ?><sup class="pm_estric">*</sup><?php endif; ?></label>
             </div>
             <div class="pm-field-input pm_datepicker <?php if ($row->is_required == 1) echo 'pm_required'; ?>">              
-                <input type="text" data-min_date="<?php if (!empty($field_options) && isset($field_options['min_dob'])){echo esc_attr($field_options['min_dob']); }?>" data-max_date="<?php if (!empty($field_options) && isset($field_options['max_dob'])){echo esc_attr($field_options['max_dob']); }?>" title="<?php echo esc_attr($row->field_desc); ?>" class="pm_calendar <?php if (!empty($field_options)) echo esc_attr($field_options['css_class_attribute']); ?>" maxlength="<?php if (!empty($field_options)) echo esc_attr($field_options['maximum_length']); ?>" value="<?php echo esc_attr($value); ?>" id="<?php echo esc_attr($row->field_key); ?>" name="<?php echo esc_attr($row->field_key); ?>" placeholder="<?php if (!empty($field_options)) echo esc_attr($field_options['place_holder_text']); ?>">
+                <input type="text"<?php echo $min_attr . $max_attr; ?> title="<?php echo esc_attr($row->field_desc); ?>" class="pm_calendar <?php if (!empty($field_options)) echo esc_attr($field_options['css_class_attribute']); ?>" maxlength="<?php if (!empty($field_options)) echo esc_attr($field_options['maximum_length']); ?>" value="<?php echo esc_attr($value); ?>" id="<?php echo esc_attr($row->field_key); ?>" name="<?php echo esc_attr($row->field_key); ?>" placeholder="<?php if (!empty($field_options)) echo esc_attr($field_options['place_holder_text']); ?>">
                 <div class="errortext" style="display:none;"></div>
             </div>
         </div>

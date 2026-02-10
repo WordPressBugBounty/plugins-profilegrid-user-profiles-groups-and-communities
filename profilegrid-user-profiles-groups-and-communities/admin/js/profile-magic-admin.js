@@ -14,12 +14,13 @@ jQuery( document ).ready(
 
 jQuery( document ).ready(
     function($){
+        var currentYear = new Date().getFullYear();
         $( ".pm_calendar" ).datepicker(
             {
 				changeMonth: true,
 				changeYear: true,
 				dateFormat:pm_fields_object.dateformat,
-				yearRange: "1900:2025"
+				yearRange: "1900:" + ( currentYear + 20 )
             }
         );
     }

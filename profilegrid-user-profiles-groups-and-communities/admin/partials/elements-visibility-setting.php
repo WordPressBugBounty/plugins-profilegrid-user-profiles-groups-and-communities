@@ -76,6 +76,30 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
 		if ( !isset( $post['pm_show_user_group_card_menu'] ) ) {
 			$post['pm_show_user_group_card_menu'] = 0;
 		}
+		if ( !isset( $post['pm_groups_show_type_label'] ) ) {
+			$post['pm_groups_show_type_label'] = 0;
+		}
+		if ( !isset( $post['pm_groups_show_icon'] ) ) {
+			$post['pm_groups_show_icon'] = 0;
+		}
+		if ( !isset( $post['pm_groups_show_member_count'] ) ) {
+			$post['pm_groups_show_member_count'] = 0;
+		}
+		if ( !isset( $post['pm_groups_show_member_limit'] ) ) {
+			$post['pm_groups_show_member_limit'] = 0;
+		}
+		if ( !isset( $post['pm_groups_show_seats_left'] ) ) {
+			$post['pm_groups_show_seats_left'] = 0;
+		}
+		if ( !isset( $post['pm_groups_show_paid_badge'] ) ) {
+			$post['pm_groups_show_paid_badge'] = 0;
+		}
+		if ( !isset( $post['pm_groups_show_group_manager'] ) ) {
+			$post['pm_groups_show_group_manager'] = 0;
+		}
+		if ( !isset( $post['pm_groups_show_action_button'] ) ) {
+			$post['pm_groups_show_action_button'] = 0;
+		}
 		if ( !isset( $post['pm_show_group_card_menu_group_page'] ) ) {
 			$post['pm_show_group_card_menu_group_page'] = 0;
 		}
@@ -643,8 +667,88 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
         <?php endif; ?>
         <div class="uimrow">
             <div class="uimfield"><h2><?php esc_html_e( 'All Groups Page', 'profilegrid-user-profiles-groups-and-communities' ); ?></h2></div>
-      <div class="pg-uim-notice"><?php esc_html_e( ' Choose which User Groups you wish to display on All Groups page.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+      <div class="pg-uim-notice"><?php esc_html_e( 'Choose which elements and groups to display on the All Groups page. Shortcode parameters override block settings, which override these global settings.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
      </div>
+     <div class="uimrow">
+        <div class="uimfield">
+          <?php esc_html_e( 'Show Group Type Label', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        </div>
+        <div class="uiminput">
+          <input name="pm_groups_show_type_label" id="pm_groups_show_type_label" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_groups_show_type_label', '1' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
+          <label for="pm_groups_show_type_label"></label>
+        </div>
+        <div class="uimnote"><?php esc_html_e( 'Show open/closed label on group cards.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+      </div>
+      <div class="uimrow">
+        <div class="uimfield">
+          <?php esc_html_e( 'Show Group Icon', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        </div>
+        <div class="uiminput">
+          <input name="pm_groups_show_icon" id="pm_groups_show_icon" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_groups_show_icon', '0' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
+          <label for="pm_groups_show_icon"></label>
+        </div>
+        <div class="uimnote"><?php esc_html_e( 'Show group image/icon on cards.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+      </div>
+      <div class="uimrow">
+        <div class="uimfield">
+          <?php esc_html_e( 'Show Member Count', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        </div>
+        <div class="uiminput">
+          <input name="pm_groups_show_member_count" id="pm_groups_show_member_count" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_groups_show_member_count', '1' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
+          <label for="pm_groups_show_member_count"></label>
+        </div>
+        <div class="uimnote"><?php esc_html_e( 'Show total number of members in the group.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+      </div>
+      <div class="uimrow">
+        <div class="uimfield">
+          <?php esc_html_e( 'Show Member Limit', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        </div>
+        <div class="uiminput">
+          <input name="pm_groups_show_member_limit" id="pm_groups_show_member_limit" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_groups_show_member_limit', '1' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
+          <label for="pm_groups_show_member_limit"></label>
+        </div>
+        <div class="uimnote"><?php esc_html_e( 'Show member limit when enabled for a group.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+      </div>
+      <div class="uimrow">
+        <div class="uimfield">
+          <?php esc_html_e( 'Show Seats Left', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        </div>
+        <div class="uiminput">
+          <input name="pm_groups_show_seats_left" id="pm_groups_show_seats_left" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_groups_show_seats_left', '1' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
+          <label for="pm_groups_show_seats_left"></label>
+        </div>
+        <div class="uimnote"><?php esc_html_e( 'Show urgency label when seats are limited.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+      </div>
+      <div class="uimrow">
+        <div class="uimfield">
+          <?php esc_html_e( 'Show Paid Badge', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        </div>
+        <div class="uiminput">
+          <input name="pm_groups_show_paid_badge" id="pm_groups_show_paid_badge" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_groups_show_paid_badge', '1' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
+          <label for="pm_groups_show_paid_badge"></label>
+        </div>
+        <div class="uimnote"><?php esc_html_e( 'Display PAID badge for groups with membership fee.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+      </div>
+      <div class="uimrow">
+        <div class="uimfield">
+          <?php esc_html_e( 'Show Group Manager', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        </div>
+        <div class="uiminput">
+          <input name="pm_groups_show_group_manager" id="pm_groups_show_group_manager" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_groups_show_group_manager', '1' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
+          <label for="pm_groups_show_group_manager"></label>
+        </div>
+        <div class="uimnote"><?php esc_html_e( 'Display group manager’s name (if assigned).', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+      </div>
+      <div class="uimrow">
+        <div class="uimfield">
+          <?php esc_html_e( 'Show Join/Details Button', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+        </div>
+        <div class="uiminput">
+          <input name="pm_groups_show_action_button" id="pm_groups_show_action_button" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_groups_show_action_button', '1' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
+          <label for="pm_groups_show_action_button"></label>
+        </div>
+        <div class="uimnote"><?php esc_html_e( 'Show CTA button linking to group page.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+      </div>
 <div class="pg-admin-element-group-wrap">
         <?php
         if ( !empty( $groups ) ) {

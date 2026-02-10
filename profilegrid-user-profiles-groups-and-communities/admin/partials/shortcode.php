@@ -255,23 +255,29 @@ wp_enqueue_style( 'pg-google-fonts', 'https://fonts.googleapis.com/icon?family=M
 			
 			<div class="pg-scblock-hide" style="display: none">  
 			<div class="pg-scblock pg-sc-example-row">
-				<div class="pg-sc-title"><?php esc_html_e( 'Example', 'profilegrid-user-profiles-groups-and-communities' ); ?></div> 
-				<div class="pg-sc-dec">[profilegrid_groups]</div>
-			
+				<div class="pg-sc-title"><?php esc_html_e( 'Example', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+				<div class="pg-sc-dec">[profilegrid_groups view="list" sort="name_asc" limit="6" type="open" include="3,5,9" paid="true"]</div>
+
 			</div>
-			
+
 			 <div class="pg-scblock pg-sc-parameters-row">
-				<div class="pg-sc-title"><?php esc_html_e( 'Parameters', 'profilegrid-user-profiles-groups-and-communities' ); ?></div> 
+				<div class="pg-sc-title"><?php esc_html_e( 'Parameters', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
 				<div class="pg-sc-dec">
-					None
+					view="grid|list"<br>
+					sort="newest|oldest|name_asc|name_desc"<br>
+					limit="number"<br>
+					type="open|closed"<br>
+					include="comma-separated IDs"<br>
+					exclude="comma-separated IDs"<br>
+					paid="true|false"
 				</div>
 			</div>
 				  
 
 			
 			<div class="pg-scblock pg-sc-description-row">
-				<div class="pg-sc-title"><?php esc_html_e( 'Description', 'profilegrid-user-profiles-groups-and-communities' ); ?></div> 
-				<div class="pg-sc-dec pg-morelink"><?php esc_html_e( 'Publishes all groups as grid. There are options so sort groups, view them as list, and perform search. Visitors will also have option to join groups.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+				<div class="pg-sc-title"><?php esc_html_e( 'Description', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+				<div class="pg-sc-dec pg-morelink"><?php esc_html_e( 'Publishes all groups as grid or list. Shortcode parameters override block settings, which override global settings. Visitors can sort, search, and access group details based on configuration.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
 			</div>
 				
 				

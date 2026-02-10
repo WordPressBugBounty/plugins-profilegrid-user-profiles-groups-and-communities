@@ -1024,6 +1024,10 @@ class Profile_Magic_Admin {
 			$gid             = array();
 						$uid = 0;
 		}
+		$prefill_gid = filter_input( INPUT_GET, 'pg_group_id', FILTER_VALIDATE_INT );
+		if ( $prefill_gid && empty( $gid ) ) {
+			$gid = array( $prefill_gid );
+		}
 
 		if ( ! empty( $gid ) ) :
 			if ( current_user_can( 'manage_options' ) ) {

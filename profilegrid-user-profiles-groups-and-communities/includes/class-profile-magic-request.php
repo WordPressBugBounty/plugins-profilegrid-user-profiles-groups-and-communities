@@ -1794,8 +1794,7 @@ class PM_request {
                 }
 
 		return $meta_query_array;
-	}
-        
+	}       
         
         public function pm_get_default_search_field_meta_query($get)
         {
@@ -1850,7 +1849,7 @@ class PM_request {
 
 	public function pm_get_user_advance_search_meta_query( $get ) {
 		 $meta_query_array = array();
-		$search_string     = esc_attr( trim( $get['pm_search'] ) );
+		 $search_string     = esc_attr( trim( $get['pm_search'] ) );
 		// MATCH GID FOR SEARCH
 		if ( isset( $get['gid'] ) && $get['gid'] != '' ) {
 				$meta_query_array['relation'] = 'AND';
@@ -2946,7 +2945,15 @@ class PM_request {
 		$allow_mycred = empty( $allowed_processors ) || in_array( 'mycred', $allowed_processors, true );
 		if ( ( empty( $args['processor'] ) || 'mycred' === $args['processor'] ) && $allow_mycred && class_exists( 'Profilegrid_Mycred_Public' ) && class_exists( 'WC_Order' ) ) {
 			// Try to find orders where payment method mentions mycred or has meta set by myCred
-			$mycred_order_ids = $wpdb->get_col( "SELECT ID FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_payment_method' AND pm.meta_value LIKE '%mycred%' WHERE p.post_type = 'shop_order'" );
+			$mycred_like      = '%' . $wpdb->esc_like( 'mycred' ) . '%';
+			$mycred_order_ids = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT ID FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = %s AND pm.meta_value LIKE %s WHERE p.post_type = %s",
+					'_payment_method',
+					$mycred_like,
+					'shop_order'
+				)
+			);
 			// also include orders where custom meta 'pg_mycred' exists
 			$extra_ids = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s", 'pg_mycred' ) );
 			$mycred_order_ids = array_unique( array_merge( (array) $mycred_order_ids, (array) $extra_ids ) );
@@ -3061,13 +3068,23 @@ class PM_request {
 		$table = $wpdb->prefix . 'promag_paypal_log';
 
 		if ( 'pay_processor' === $column ) {
-			$db_values    = $wpdb->get_col( "SELECT DISTINCT pay_processor FROM {$table} WHERE pay_processor != '' ORDER BY pay_processor ASC" );
+			$db_values    = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT DISTINCT pay_processor FROM {$table} WHERE pay_processor != %s ORDER BY pay_processor ASC",
+					''
+				)
+			);
 			$enabled_list = array_keys( $this->pg_get_enabled_payment_processors() );
 			$results      = array_unique( array_merge( (array) $db_values, (array) $enabled_list ) );
 			return array_filter( array_map( 'sanitize_text_field', (array) $results ) );
 		}
 
-		$results = $wpdb->get_col( "SELECT DISTINCT {$field} FROM {$table} WHERE {$field} != '' ORDER BY {$field} ASC" );
+		$results = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT {$field} FROM {$table} WHERE {$field} != %s ORDER BY {$field} ASC",
+				''
+			)
+		);
 
 		return array_filter( array_map( 'sanitize_text_field', (array) $results ) );
 	}
@@ -4109,6 +4126,9 @@ class PM_request {
 	public function pm_get_all_users_from_group( $gid, $pagenum = 1, $limit = 10, $sort_by = 'first_name_asc', $search_in = 'user_login', $search = '' ) {
 		$dbhandler = new PM_DBhandler();
 		$offset    = ( $pagenum - 1 ) * $limit;
+		if ( empty( $search_in ) ) {
+			$search_in = 'user_login';
+		}
 		$get       = array( 'gid' => $gid );
 		if ( trim( $search ) != '' ) {
 			$get['match_field'] = $search_in;
@@ -4292,6 +4312,9 @@ class PM_request {
 		}
 
 		$offset = ( $pagenum - 1 ) * $limit;
+		if ( empty( $search_in ) ) {
+			$search_in = 'user_login';
+		}
 		$get    = array(
 			'gid'    => $gid,
 			'status' => '0',
@@ -5406,19 +5429,45 @@ class PM_request {
 		}
 	}
 
-	public function pm_get_all_groups_data( $view = 'grid', $pagenum = 1, $limit = 10, $sort_by = 'newest', $search = '' ) {
+	public function pm_get_all_groups_data( $view = 'grid', $pagenum = 1, $limit = 10, $sort_by = 'newest', $search = '', $filters = array(), $plugin = '', $version = '' ) {
 		$dbhandler = new PM_DBhandler();
+		$limit = absint( $limit );
+		if ( empty( $limit ) ) {
+			$limit = 10;
+		}
+		$pagenum = absint( $pagenum );
+		if ( empty( $pagenum ) ) {
+			$pagenum = 1;
+		}
 		$offset    = ( $pagenum - 1 ) * $limit;
 
 		$search_str = trim( $search );
+		$is_search  = false;
+		$additional_parts = array();
 		if ( $search_str != '' ) {
 			$is_search  = true;
-			$additional = "group_name like '%" . $search_str . "%'";
-		} else {
-			$is_search  = false;
-			$additional = '';
+			$additional_parts[] = "group_name like '%" . $search_str . "%'";
 		}
 
+		if ( ! is_array( $filters ) ) {
+			$filters = array();
+		}
+		$include_ids = array();
+		$exclude_ids = array();
+		if ( ! empty( $filters['include'] ) ) {
+			$include_ids = array_filter( array_map( 'absint', (array) $filters['include'] ) );
+		}
+		if ( ! empty( $filters['exclude'] ) ) {
+			$exclude_ids = array_filter( array_map( 'absint', (array) $filters['exclude'] ) );
+		}
+		if ( ! empty( $include_ids ) ) {
+			$additional_parts[] = 'id in(' . implode( ',', $include_ids ) . ')';
+		}
+		if ( ! empty( $exclude_ids ) ) {
+			$additional_parts[] = 'id not in(' . implode( ',', $exclude_ids ) . ')';
+		}
+
+		$additional = implode( ' AND ', array_filter( $additional_parts ) );
 		$additional = apply_filters( 'pm_get_all_groups_data_additional', $additional );
 
 		switch ( $sort_by ) {
@@ -5445,15 +5494,66 @@ class PM_request {
 
 		}
 
-		$groups       = $dbhandler->get_all_result( 'GROUPS', '*', 1, 'results', $offset, $limit, $sortby, $order, $additional );
-    		//$total_groups = count( $dbhandler->get_all_result( 'GROUPS', '*', 1, 'results', 0, false, null, false, $additional ) );
-                $tot_group = $dbhandler->get_all_result( 'GROUPS', '*', 1, 'results', 0, false, null, false, $additional );
-		if(!empty($tot_group)){
-                    $total_groups = count($tot_group);
-                    //$total_groups = count( $dbhandler->get_all_result( 'GROUPS', '*', 1, 'results', 0, false, null, false, $additional ) );
-		}else{
-			$total_groups = 0;
+		$filter_type = ( ! empty( $filters['type'] ) && in_array( $filters['type'], array( 'open', 'closed' ), true ) ) ? $filters['type'] : '';
+		$filter_paid = isset( $filters['paid'] ) ? $filters['paid'] : null;
+		$requires_post_filter = ( $filter_type !== '' || $filter_paid !== null );
+		$groups = array();
+		$total_groups = 0;
+
+		if ( $requires_post_filter ) {
+			$groups_all = $dbhandler->get_all_result( 'GROUPS', '*', 1, 'results', 0, false, $sortby, $order, $additional );
+			$groups_filtered = array();
+			if ( ! empty( $groups_all ) ) {
+				foreach ( $groups_all as $group ) {
+					$group_type = $this->profile_magic_get_group_type( $group->id );
+					if ( $filter_type !== '' && $group_type !== $filter_type ) {
+						continue;
+					}
+					if ( $filter_paid !== null ) {
+						$is_paid = ( $this->profile_magic_check_paid_group( $group->id ) > 0 );
+						if ( $filter_paid === true && ! $is_paid ) {
+							continue;
+						}
+						if ( $filter_paid === false && $is_paid ) {
+							continue;
+						}
+					}
+					$groups_filtered[] = $group;
+				}
+			}
+
+			if ( ! empty( $groups_filtered ) ) {
+				usort(
+					$groups_filtered,
+					function( $a, $b ) use ( $sort_by ) {
+						if ( $sort_by === 'name_asc' || $sort_by === 'name_desc' ) {
+							$first = strtolower( $a->group_name );
+							$second = strtolower( $b->group_name );
+							if ( $first === $second ) {
+								return 0;
+							}
+							$result = ( $first < $second ) ? -1 : 1;
+							return ( $sort_by === 'name_desc' ) ? $result * -1 : $result;
+						}
+						$first_id = (int) $a->id;
+						$second_id = (int) $b->id;
+						if ( $first_id === $second_id ) {
+							return 0;
+						}
+						$result = ( $first_id < $second_id ) ? -1 : 1;
+						return ( $sort_by === 'oldest' ) ? $result : $result * -1;
+					}
+				);
+			}
+
+			$total_groups = count( $groups_filtered );
+			$groups = array_slice( $groups_filtered, $offset, $limit );
+		} else {
+			$groups = $dbhandler->get_all_result( 'GROUPS', '*', 1, 'results', $offset, $limit, $sortby, $order, $additional );
+			$tot_group = $dbhandler->get_all_result( 'GROUPS', '*', 1, 'results', 0, false, null, false, $additional );
+			$total_groups = ! empty( $tot_group ) ? count( $tot_group ) : 0;
 		}
+
 		$num_of_pages = ceil( $total_groups / $limit );
 		$pagination   = $dbhandler->pm_get_pagination( $num_of_pages, $pagenum );
 
@@ -5462,15 +5562,12 @@ class PM_request {
 				$this->pm_get_group_html( $group, $view );
 			endforeach;
 
-		} elseif ( ! empty( $is_search ) ) {
-			?>
-	 
-	 <div class='pg-alert-warning pg-alert-info'><?php esc_html_e( 'No group matches found.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
-			<?php
 		} else {
 			?>
-			 
-	 <div class='pg-alert-warning pg-alert-info'><?php esc_html_e( 'There are not created any groups yet. Once admin have created a new group, it will appear here.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+	 <div class="pg-groups-empty pm-dbfl">
+		 <span class="material-icons">group_off</span>
+		 <div class="pg-groups-empty-text"><?php esc_html_e( 'No groups found. Check back later or create a new group!', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+	 </div>
 			<?php
 		}
 
@@ -5494,150 +5591,277 @@ class PM_request {
                             'class' => true,
                             'onclick' => true,
                         ),
+                        'a' => array(
+                            'class' => true,
+                            'href' => true,
+                            'target' => true,
+                            'rel' => true,
+                        ),
                     );
+                $allowed_html = $this->pg_allowed_html_wp_kses();
                 $is_password_protected = (isset($pmgroupoption['enable_password_protection']))?$pmgroupoption['enable_password_protection']:0;
                 $password_html = ($is_password_protected==1 && $is_global_password_protected==1)?'<i class="fa fa-lock"></i>':'';
+		$show_type_label = $dbhandler->get_global_option_value( 'pm_groups_show_type_label', '1' ) == '1';
+		$show_icon = $dbhandler->get_global_option_value( 'pm_groups_show_icon', '0' ) == '1';
+		$show_member_count = $dbhandler->get_global_option_value( 'pm_groups_show_member_count', '1' ) == '1';
+		$show_member_limit = $dbhandler->get_global_option_value( 'pm_groups_show_member_limit', '1' ) == '1';
+		$show_seats_left = $dbhandler->get_global_option_value( 'pm_groups_show_seats_left', '1' ) == '1';
+		$show_paid_badge = $dbhandler->get_global_option_value( 'pm_groups_show_paid_badge', '1' ) == '1';
+		$show_group_manager = $dbhandler->get_global_option_value( 'pm_groups_show_group_manager', '1' ) == '1';
+		$show_action_button = $dbhandler->get_global_option_value( 'pm_groups_show_action_button', '1' ) == '1';
+
+		$group_type = $this->profile_magic_get_group_type( $group->id );
+		$group_type_icon = ( $group_type == 'open' ) ? 'lock_open' : 'lock';
+		$member_count = (int) $this->pm_count_group_members( $group->id );
+		$has_limit = ( isset( $group->is_group_limit ) && (int) $group->is_group_limit === 1 && ! empty( $group->group_limit ) );
+		$group_limit = $has_limit ? (int) $group->group_limit : 0;
+		$seats_left = $has_limit ? max( 0, $group_limit - $member_count ) : 0;
+		$group_price = $this->profile_magic_check_paid_group( $group->id );
+		$is_paid = ( $group_price > 0 );
+		$price_display = '';
+		if ( $is_paid ) {
+			if ( $dbhandler->get_global_option_value( 'pm_currency_position', 'before' ) == 'before' ) {
+				$price_display = $this->pm_get_currency_symbol() . ' ' . $group_price;
+			} else {
+				$price_display = $group_price . ' ' . $this->pm_get_currency_symbol();
+			}
+		}
+
+		$leader_display = '';
+		$leader_tooltip = '';
+		$leader_more_html = '';
+		$leader_names = array();
+		$leader_names_plain = array();
+		$group_leaders = $this->pg_get_group_leaders( $group->id );
+		if ( ! empty( $group_leaders ) && is_array( $group_leaders ) ) {
+			$leader_ids = array();
+			if ( isset( $group_leaders['primary'] ) ) {
+				$primary_id = absint( $group_leaders['primary'] );
+				if ( $primary_id ) {
+					$leader_ids[] = $primary_id;
+				}
+			}
+			foreach ( $group_leaders as $leader_id ) {
+				$leader_id = absint( $leader_id );
+				if ( ! $leader_id || in_array( $leader_id, $leader_ids, true ) ) {
+					continue;
+				}
+				$leader_ids[] = $leader_id;
+			}
+
+			foreach ( $leader_ids as $leader_id ) {
+				$leader_name = $this->pm_get_display_name( $leader_id, true );
+				if ( empty( $leader_name ) ) {
+					$user = get_userdata( $leader_id );
+					if ( $user ) {
+						$leader_name = $user->display_name;
+					}
+				}
+				if ( ! empty( $leader_name ) ) {
+					$leader_names[] = $leader_name;
+					$leader_plain = wp_strip_all_tags( $leader_name );
+					if ( $leader_plain !== '' ) {
+						$leader_names_plain[] = $leader_plain;
+					}
+				}
+			}
+		}
+		if ( ! empty( $leader_names ) ) {
+			$leader_tooltip = implode( ', ', $leader_names_plain );
+			$leader_display = $leader_names[0];
+			if ( count( $leader_names ) > 1 ) {
+				$leader_more_count = count( $leader_names ) - 1;
+				$leader_more_label = sprintf(
+					esc_html__( '+%d more', 'profilegrid-user-profiles-groups-and-communities' ),
+					$leader_more_count
+				);
+				$leader_more_html = ' <span class="pg-group-leader-more" title="' . esc_attr( $leader_tooltip ) . '">' . esc_html( $leader_more_label ) . '</span>';
+			}
+		}
+
+		$show_image_area = $show_icon || $show_type_label || ( $show_paid_badge && $is_paid );
+		$show_meta = $show_member_count || $show_member_limit || $show_seats_left || $show_group_manager;
 		if ( $dbhandler->get_global_option_value( $option, '1' ) == '1' ) {
 			if ( $view == 'grid' ) {
 
 				$group_url        = $this->profile_magic_get_frontend_url( 'pm_group_page', '', $group->id );
 				//$group_url        = add_query_arg( 'gid', $group->id, $group_url );
-                                
+
 				$registration_url = $this->profile_magic_get_frontend_url( 'pm_registration_page', '' );
 				$registration_url = add_query_arg( 'gid', $group->id, $registration_url );
-                                $img_link = (is_user_logged_in())?$group_url:$registration_url;
-                                $img_link = apply_filters('profilegrid_group_image_link',$img_link,$group->id);
-				?>
-				<div class="pm-group pm-difl pm-border pm-radius5 pm-bg-lt pm50">
-                                    <div class="pm-group-heading pm-dbfl pm-border-bt pm-pad10 pm-clip"><?php echo wp_kses_post($password_html);?><a href="<?php echo esc_url( $group_url ); ?>"><?php echo esc_html( $group->group_name ); ?></a></div>
-				  <div class="pm-group-info pm-dbfl">
-                                      <a href="<?php echo esc_url($img_link); ?>" class="pm-group-image-link">
-					<div class="pm-group-logo pm-dbfl pm-bg pm-border-bt">
-						<div class="pm-group-logo-img">
-						<?php echo wp_kses_post( $this->profile_magic_get_group_icon( $group ) ); ?>
-						</div>
-						<div class="pm-group-bg">
-						<?php echo wp_kses_post( $this->profile_magic_get_group_icon( $group ) ); ?>
-						</div>
-					</div>
-                                      </a>
-					<?php
-									$groupdesc = '';
-					if ( !empty($group->group_desc) && strlen( $group->group_desc ) > 150 ) {
-							$groupdesc  = substr( $group->group_desc, 0, 150 );
-							$groupdesc .= '...';
-					} else {
-							$groupdesc = $group->group_desc;
-					}
-                                        $groupdesc = apply_filters('profilegrid_group_description', $groupdesc, $group);
-					?>
-					<div class="pm-group-desc pm-dbfl pm-pad10"><?php if(!empty($groupdesc)) echo wp_kses_post( $groupdesc ); ?></div>
+				$img_link = ( is_user_logged_in() ) ? $group_url : $registration_url;
+				$img_link = apply_filters( 'profilegrid_group_image_link', $img_link, $group->id );
 
-				  </div>
-				  <?php if ( ! is_user_logged_in() ) : ?> 
-				  <div class="pm-group-button pm-dbfl pm-pad10">
-				   <div class="pm-group-signup">
-                                       <?php 
-                                       $link = '<button onclick="window.location.href=\'' . esc_url( $registration_url ) . '\'" class="pm_button">'.esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ).'</button>';
-                                       $link = apply_filters('profilegrid_all_groups_page_button_link',$link,$group->id,$group_url,$registration_url);
-                                       echo wp_kses($link, $allowed_tags);
-                                       ?>
-                                   </div>
-						<?php if ( $this->profile_magic_check_paid_group( $group->id ) > 0 ) : ?>
-					<div class="pm_group_price">
-							<?php
-							if ( $dbhandler->get_global_option_value( 'pm_currency_position', 'before' ) == 'before' ) :
-								echo wp_kses_post( $this->pm_get_currency_symbol() . ' ' . $this->profile_magic_check_paid_group( $group->id ) );
-						else :
-							echo wp_kses_post( $this->profile_magic_check_paid_group( $group->id ) . ' ' . $this->pm_get_currency_symbol() );
-						endif;
-						?>
+				$groupdesc = '';
+				if ( ! empty( $group->group_desc ) && strlen( $group->group_desc ) > 150 ) {
+					$groupdesc  = substr( $group->group_desc, 0, 150 );
+					$groupdesc .= '...';
+				} else {
+					$groupdesc = $group->group_desc;
+				}
+				$groupdesc = apply_filters( 'profilegrid_group_description', $groupdesc, $group );
+
+				$image_html = '';
+				if ( $show_icon ) {
+					if ( ! empty( $group->group_icon ) && wp_attachment_is_image( $group->group_icon ) ) {
+						$image_html = wp_get_attachment_image( $group->group_icon, 'full', true, array( 'class' => 'pg-group-icon', 'alt' => esc_attr( $group->group_name ) ) );
+					} else {
+						$image_html = '<div class="pg-group-fallback"><svg class="pg-group-fallback-svg" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect width="120" height="120" rx="16" ry="16"></rect></svg><span class="material-icons">groups</span></div>';
+					}
+				}
+
+				$member_label = '';
+				if ( $has_limit && $show_member_limit ) {
+					if ( $show_member_count ) {
+						$member_label = sprintf( esc_html__( '%1$d/%2$d Members', 'profilegrid-user-profiles-groups-and-communities' ), $member_count, $group_limit );
+					} else {
+						$member_label = sprintf( esc_html__( '%d Member Limit', 'profilegrid-user-profiles-groups-and-communities' ), $group_limit );
+					}
+				} elseif ( $show_member_count ) {
+					$member_label = sprintf( _n( '%d Member', '%d Members', $member_count, 'profilegrid-user-profiles-groups-and-communities' ), $member_count );
+				}
+
+				$join_label = ( $group_type === 'closed' ) ? esc_html__( 'Request Access', 'profilegrid-user-profiles-groups-and-communities' ) : esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' );
+				$button_label = is_user_logged_in() ? esc_html__( 'Details', 'profilegrid-user-profiles-groups-and-communities' ) : $join_label;
+				$button_url = is_user_logged_in() ? $group_url : $registration_url;
+				$card_classes = 'pg-group-card pm-group pm-difl pm-border pm-radius5 pm-bg-lt pm50';
+				$card_classes .= ( ! $show_image_area && ! $show_meta && ! $show_action_button ) ? ' pg-group-card-minimal' : '';
+				?>
+				<div class="<?php echo esc_attr( $card_classes ); ?>">
+					<?php if ( $show_image_area ) : ?>
+					<div class="pg-group-image pm-group-logo">
+						<?php if ( ! empty( $image_html ) ) : ?>
+							<a href="<?php echo esc_url( $img_link ); ?>" class="pm-group-image-link"><?php echo wp_kses_post( $image_html ); ?></a>
+						<?php endif; ?>
+						<?php if ( $show_type_label ) : ?>
+							<span class="pg-group-type material-icons"><?php echo esc_html( $group_type_icon ); ?></span>
+						<?php endif; ?>
+						<?php if ( $show_paid_badge && $is_paid ) : ?>
+							<span class="pg-paid-badge"><?php esc_html_e( 'PAID', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
+						<?php endif; ?>
 					</div>
-					<?php else : ?>
-					<div class="pm_free_group"><?php esc_html_e( 'Free', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
 					<?php endif; ?>
+					<div class="pg-group-content pm-group-info">
+						<h3 class="pg-group-title pm-group-heading pm-clip"><?php echo wp_kses_post( $password_html ); ?><a href="<?php echo esc_url( $group_url ); ?>"><?php echo esc_html( $group->group_name ); ?></a></h3>
+						<?php if ( ! empty( $groupdesc ) ) : ?>
+							<p class="pg-group-desc pm-group-desc"><?php echo wp_kses_post( $groupdesc ); ?></p>
+						<?php endif; ?>
+						<?php if ( $show_meta || $is_paid ) : ?>
+						<div class="pg-group-meta">
+							<?php if ( $is_paid ) : ?>
+								<span class="pg-group-meta-item pg-group-meta-price"><?php echo wp_kses_post( $price_display ); ?></span>
+							<?php endif; ?>
+							<?php if ( ! empty( $member_label ) ) : ?>
+								<span class="pg-group-meta-item pg-group-meta-members"><span class="material-icons">group</span> <?php echo esc_html( $member_label ); ?></span>
+							<?php endif; ?>
+                                                        <?php if ( $show_group_manager && ! empty( $leader_display ) ) : ?>
+                                                                <span class="pg-group-meta-item pg-group-meta-manager"><span class="material-icons">person</span> <?php echo wp_kses( $leader_display, $allowed_html ); ?><?php echo wp_kses_post( $leader_more_html ); ?></span>
+                                                        <?php endif; ?>
+							<?php if ( $show_seats_left && $has_limit && $member_count > 0 && $seats_left > 0 ) : ?>
+								<span class="pg-urgency"><?php echo esc_html( sprintf( _n( '%d Seat Left', '%d Seats Left', $seats_left, 'profilegrid-user-profiles-groups-and-communities' ), $seats_left ) ); ?></span>
+							<?php endif; ?>
+						</div>
+						<?php endif; ?>
+						<?php if ( $show_action_button ) : ?>
+							<?php
+							$link = '<a href="' . esc_url( $button_url ) . '" class="pm_button pg-group-button">' . esc_html( $button_label ) . '</a>';
+							$link = apply_filters( 'profilegrid_all_groups_page_button_link', $link, $group->id, $group_url, $registration_url );
+							echo wp_kses( $link, $allowed_tags );
+							?>
+						<?php endif; ?>
 					</div>
-				   <?php else : ?>
-				  <div class="pm-group-button pm-dbfl pm-pad10">
-				   <div class="pm-group-signup">
-                                       <?php 
-                                       $link = '<button onclick="window.location.href=\'' . esc_url( $group_url ) . '\'" class="pm_button">'.esc_html__( 'Details', 'profilegrid-user-profiles-groups-and-communities' ).'</button>';
-                                       $link = apply_filters('profilegrid_all_groups_page_button_link',$link,$group->id,$group_url,$registration_url);
-                                       echo wp_kses($link, $allowed_tags);
-                                       ?>
-				   </div>
-				  </div>
-				  <?php endif; ?>
 				</div>
 				<?php
 			} else {
-				 $group_url       = $this->profile_magic_get_frontend_url( 'pm_group_page', '', $group->id );
-				//$group_url        = add_query_arg( 'gid', $group->id, $group_url );
+				$group_url       = $this->profile_magic_get_frontend_url( 'pm_group_page', '', $group->id );
 				$registration_url = $this->profile_magic_get_frontend_url( 'pm_registration_page', '' );
 				$registration_url = add_query_arg( 'gid', $group->id, $registration_url );
-				$group_type       = ( $this->profile_magic_get_group_type( $group->id ) == 'open' ? esc_html__( 'Public', 'profilegrid-user-profiles-groups-and-communities' ) : esc_html__( 'Private', 'profilegrid-user-profiles-groups-and-communities' ) );
-				$group_leaders    = $this->pg_get_group_leaders( $group->id );
-				?>
-		 <div class="pm-group-list-view pm-dbfl">
-			 <div class="pm-group-logo pm-difl"> <?php echo wp_kses_post( $this->profile_magic_get_group_icon( $group, 'pm-group-badge' ) ); ?></div>
-			 <div class="pm-group-name-desc pm-difl">
-				 <div class="pm-group-heading pm-dbfl pm-pad10 pm-clip"><?php echo wp_kses_post($password_html);?><a href="<?php echo esc_url( $group_url ); ?>"><?php echo esc_html( $group->group_name ); ?></a></div>
-				 <?php
-									$groupdesc = '';
-					if ( !empty( $group->group_desc ) && strlen( $group->group_desc ) > 150 ) {
-							$groupdesc  = substr( $group->group_desc, 0, 150 );
-							$groupdesc .= '...';
+				$img_link = ( is_user_logged_in() ) ? $group_url : $registration_url;
+				$img_link = apply_filters( 'profilegrid_group_image_link', $img_link, $group->id );
+
+				$groupdesc = '';
+				if ( ! empty( $group->group_desc ) && strlen( $group->group_desc ) > 150 ) {
+					$groupdesc  = substr( $group->group_desc, 0, 150 );
+					$groupdesc .= '...';
+				} else {
+					$groupdesc = $group->group_desc;
+				}
+				$groupdesc = apply_filters( 'profilegrid_group_description', $groupdesc, $group );
+
+				$image_html = '';
+				if ( $show_icon ) {
+					if ( ! empty( $group->group_icon ) && wp_attachment_is_image( $group->group_icon ) ) {
+						$image_html = wp_get_attachment_image( $group->group_icon, 'full', true, array( 'class' => 'pg-group-icon', 'alt' => esc_attr( $group->group_name ) ) );
 					} else {
-							$groupdesc = $group->group_desc;
+						$image_html = '<div class="pg-group-fallback"><svg class="pg-group-fallback-svg" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect width="120" height="120" rx="16" ry="16"></rect></svg><span class="material-icons">groups</span></div>';
 					}
+				}
 
-					?>
-					<div class="pm-group-desc pm-dbfl pm-pad10"><?php if(!empty($groupdesc)) echo wp_kses_post( $groupdesc ); ?></div>
+				$member_label = '';
+				if ( $has_limit && $show_member_limit ) {
+					if ( $show_member_count ) {
+						$member_label = sprintf( esc_html__( '%1$d/%2$d Members', 'profilegrid-user-profiles-groups-and-communities' ), $member_count, $group_limit );
+					} else {
+						$member_label = sprintf( esc_html__( '%d Member Limit', 'profilegrid-user-profiles-groups-and-communities' ), $group_limit );
+					}
+				} elseif ( $show_member_count ) {
+					$member_label = sprintf( _n( '%d Member', '%d Members', $member_count, 'profilegrid-user-profiles-groups-and-communities' ), $member_count );
+				}
 
-					<div class="pm-group-list-view-info"><?php echo esc_html( $group_type ); ?> / <a> <span><?php echo esc_html( count( array_values(array_filter($group_leaders)) ) ); ?></span></a> <?php echo esc_html( $this->pm_get_group_admin_label( $group->id ) ); ?> / <a><span><?php echo esc_html( $this->pm_count_group_members( $group->id ) ); ?></span></a> <?php esc_html_e( 'Members', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+				$join_label = ( $group_type === 'closed' ) ? esc_html__( 'Request Access', 'profilegrid-user-profiles-groups-and-communities' ) : esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' );
+				$button_label = is_user_logged_in() ? esc_html__( 'Details', 'profilegrid-user-profiles-groups-and-communities' ) : $join_label;
+				$button_url = is_user_logged_in() ? $group_url : $registration_url;
+				$card_classes = 'pg-group-card pg-group-card-list pm-group pm-group-list-view pm-dbfl';
+				$card_classes .= ( ! $show_image_area && ! $show_meta && ! $show_action_button ) ? ' pg-group-card-minimal' : '';
+				?>
+		 <div class="<?php echo esc_attr( $card_classes ); ?>">
+			 <?php if ( $show_image_area ) : ?>
+			 <div class="pg-group-image pm-group-logo pm-difl">
+				 <?php if ( ! empty( $image_html ) ) : ?>
+					 <a href="<?php echo esc_url( $img_link ); ?>" class="pm-group-image-link"><?php echo wp_kses_post( $image_html ); ?></a>
+				 <?php endif; ?>
+				 <?php if ( $show_type_label ) : ?>
+					 <span class="pg-group-type material-icons"><?php echo esc_html( $group_type_icon ); ?></span>
+				 <?php endif; ?>
+				 <?php if ( $show_paid_badge && $is_paid ) : ?>
+					 <span class="pg-paid-badge"><?php esc_html_e( 'PAID', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
+				 <?php endif; ?>
 			 </div>
+			 <?php endif; ?>
+			 <div class="pg-group-content pm-group-name-desc pm-difl">
+				 <h3 class="pg-group-title pm-group-heading pm-pad10 pm-clip"><?php echo wp_kses_post( $password_html ); ?><a href="<?php echo esc_url( $group_url ); ?>"><?php echo esc_html( $group->group_name ); ?></a></h3>
+				 <?php if ( ! empty( $groupdesc ) ) : ?>
+					 <p class="pg-group-desc pm-group-desc pm-pad10"><?php echo wp_kses_post( $groupdesc ); ?></p>
+				 <?php endif; ?>
+				 <?php if ( $show_meta || $is_paid ) : ?>
+				 <div class="pg-group-meta">
+					 <?php if ( $is_paid ) : ?>
+						 <span class="pg-group-meta-item pg-group-meta-price"><?php echo wp_kses_post( $price_display ); ?></span>
+					 <?php endif; ?>
+					 <?php if ( ! empty( $member_label ) ) : ?>
+						 <span class="pg-group-meta-item pg-group-meta-members"><span class="material-icons">group</span> <?php echo esc_html( $member_label ); ?></span>
+					 <?php endif; ?>
+                                         <?php if ( $show_group_manager && ! empty( $leader_display ) ) : ?>
+                                                 <span class="pg-group-meta-item pg-group-meta-manager"><span class="material-icons">person</span> <?php echo wp_kses( $leader_display, $allowed_html ); ?><?php echo wp_kses_post( $leader_more_html ); ?></span>
+                                         <?php endif; ?>
+					 <?php if ( $show_seats_left && $has_limit && $member_count > 0 && $seats_left > 0 ) : ?>
+						 <span class="pg-urgency"><?php echo esc_html( sprintf( _n( '%d Seat Left', '%d Seats Left', $seats_left, 'profilegrid-user-profiles-groups-and-communities' ), $seats_left ) ); ?></span>
+					 <?php endif; ?>
+				 </div>
+				 <?php endif; ?>
+			 </div>
+			 <?php if ( $show_action_button ) : ?>
 			 <div class="pm-group-button pm-difr">
-
-				  <?php if ( ! is_user_logged_in() ) : ?> 
-				  <div class="pm-group-button pm-dbfl pm-pad10">
-				   <div class="pm-group-signup">
-                                    <?php 
-                                         $link = '<button onclick="window.location.href=\'' . esc_url( $registration_url ) . '\'"  class="pm_button">'.esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ).'</button>';
-                                         $link = apply_filters('profilegrid_all_groups_page_button_link',$link,$group->id,$group_url,$registration_url);
-                                         echo wp_kses($link, $allowed_tags);
-                                    ?>
-                                       
-                                   </div>
-						<?php if ( $this->profile_magic_check_paid_group( $group->id ) > 0 ) : ?>
-					<div class="pm_group_price">
-							<?php
-							if ( $dbhandler->get_global_option_value( 'pm_currency_position', 'before' ) == 'before' ) :
-								echo wp_kses_post( $this->pm_get_currency_symbol() . ' ' . $this->profile_magic_check_paid_group( $group->id ) );
-						else :
-							echo wp_kses_post( $this->profile_magic_check_paid_group( $group->id ) . ' ' . $this->pm_get_currency_symbol() );
-						endif;
-						?>
-					</div>
-					<?php else : ?>
-					<div class="pm_free_group"><?php esc_html_e( 'Free', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
-					<?php endif; ?>
-					</div>
-				   <?php else : ?>
-				  <div class="pm-group-button pm-dbfl pm-pad10">
-				   <div class="pm-group-signup">
-                                        <?php 
-                                       $link = '<button onclick="window.location.href=\'' . esc_url( $group_url ) . '\'" class="pm_button">'.esc_html__( 'Details', 'profilegrid-user-profiles-groups-and-communities' ).'</button>';
-                                       $link = apply_filters('profilegrid_all_groups_page_button_link',$link,$group->id,$group_url,$registration_url);
-                                       echo wp_kses($link, $allowed_tags);
-                                       ?>
-				   </div>
-				  </div>
-				  <?php endif; ?>
+				 <?php
+				 $link = '<a href="' . esc_url( $button_url ) . '" class="pm_button pg-group-button">' . esc_html( $button_label ) . '</a>';
+				 $link = apply_filters( 'profilegrid_all_groups_page_button_link', $link, $group->id, $group_url, $registration_url );
+				 echo wp_kses( $link, $allowed_tags );
+				 ?>
 			 </div>
+			 <?php endif; ?>
 
 		 </div>
 				<?php
-
 			}
 		}
 	}

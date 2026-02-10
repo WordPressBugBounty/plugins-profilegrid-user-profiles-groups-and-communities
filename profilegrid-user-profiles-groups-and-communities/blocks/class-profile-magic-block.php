@@ -261,6 +261,14 @@ class Profile_Magic_Block {
 							'default' => true,
 							'type'    => 'boolean',
 						),
+						'include'          => array(
+							'default' => '',
+							'type'    => 'string',
+						),
+						'exclude'          => array(
+							'default' => '',
+							'type'    => 'string',
+						),
 
 					),
 				)
@@ -784,6 +792,12 @@ class Profile_Magic_Block {
 
 	public function profilegrid_blocks_all_groups_block_handler( $atts ) {
 		$public = new Profile_Magic_Public( $this->profile_magic, $this->version );
+		wp_enqueue_style( 'pm_material_icon', 'https://fonts.googleapis.com/icon?family=Material+Icons', array(), $this->version, 'all' );
+		if ( is_array( $atts ) ) {
+			$atts['pg_source'] = 'block';
+		} else {
+			$atts = array( 'pg_source' => 'block' );
+		}
 		return $public->profile_magic_get_template_html( 'profile-magic-groups', $atts );
 
 	}

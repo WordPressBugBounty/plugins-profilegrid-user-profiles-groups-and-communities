@@ -323,7 +323,7 @@ jQuery(document).ready(function(e){
    
         let blockLoaded = false;
         let blockLoadedInterval = setInterval(function(){
-            if(document.getElementById('pg_group_icon')){
+            if(jQuery('.pg-group-menu-widgets .pg-group-icon-toggle').length){
                 blockLoaded = true;
                 jQuery('.pg-group-menu-widgets .pm_sortable_groups').sortable({
                         axis: 'y',
@@ -339,7 +339,7 @@ jQuery(document).ready(function(e){
                         }
                 });
                 var list = new Array();
-    jQuery(".pg-group-menu-widgets input:checkbox[id='pg_group_icon']").change(function(){
+    jQuery(".pg-group-menu-widgets .pg-group-icon-toggle").change(function(){
         if(this.checked)
         {
             var icon = 'yes';

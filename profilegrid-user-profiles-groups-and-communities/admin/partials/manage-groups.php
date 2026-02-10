@@ -34,6 +34,14 @@ else
 $groups =  $dbhandler->get_all_result($identifier,'*',1,'results',$offset,$limit,'id','desc',$additional);
 $num_of_pages = ceil( $totalgroups/$limit);
 $pagination = $dbhandler->pm_get_pagination($num_of_pages,$pagenum);
+$quick_add_users = get_users(
+    array(
+        'fields'  => array( 'ID', 'display_name', 'user_login' ),
+        'orderby' => 'display_name',
+        'order'   => 'ASC',
+        'number'  => 200,
+    )
+);
 update_option( 'pg_redirect_to_group_page', '0' );
 ?>
 <div class="pm_notification"></div>
@@ -108,6 +116,34 @@ update_option( 'pg_redirect_to_group_page', '0' );
   
       
   <!-------Contentarea Starts----->
+  <?php
+  $group_created = filter_input( INPUT_GET, 'pg_group_created', FILTER_VALIDATE_INT );
+  $new_group_id  = filter_input( INPUT_GET, 'pg_new_group_id', FILTER_VALIDATE_INT );
+  if ( $group_created && $totalgroups === 2 && $new_group_id ) :
+	  $add_members_url = add_query_arg(
+		  array(
+			  'page'            => 'pm_user_manager',
+			  'pagenum'         => 1,
+			  'pg_assign_group' => $new_group_id,
+			  'pg_add_members'  => 1,
+		  ),
+		  admin_url( 'admin.php' )
+	  );
+	  $new_user_url = add_query_arg( 'pg_group_id', $new_group_id, admin_url( 'user-new.php' ) );
+  ?>
+  <div class="pg-uim-notice-row pg-box-row pg-card-mb-16">
+      <div class="pg-box-col-12">
+          <div class="pg-uim-notice pg-box-w-100 pg-white-bg">
+              <strong><?php esc_html_e( 'Next:', 'profilegrid-user-profiles-groups-and-communities' ); ?></strong>
+              <?php esc_html_e( 'add members to your new group.', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+              <a href="<?php echo esc_url( $add_members_url ); ?>"><?php esc_html_e( 'Add existing users', 'profilegrid-user-profiles-groups-and-communities' ); ?></a>
+              <?php esc_html_e( 'or', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+              <a href="<?php echo esc_url( $new_user_url ); ?>"><?php esc_html_e( 'create a new user', 'profilegrid-user-profiles-groups-and-communities' ); ?></a>.
+              <?php esc_html_e( 'Tip: hold Ctrl (Windows) or Cmd (Mac) to select multiple users in multi-selects.', 'profilegrid-user-profiles-groups-and-communities' ); ?>
+          </div>
+      </div>
+  </div>
+  <?php endif; ?>
  
   <div class="pmagic-cards pg-box-row">
      
@@ -189,11 +225,12 @@ update_option( 'pg_redirect_to_group_page', '0' );
                   </div>
                   <?php endif;?>
               </div>
-      <?php if(isset( $group_options['group_type'] ) && $group_options['group_type'] == 'form'): ?>    
-        <div class="pm-form-shortcode-row">[profilegrid_registration_form <?php echo esc_html('id="'.$group->id.'');?>"]</div>                 
-      <?php else: ?>
-        <div class="pm-form-shortcode-row">[profilegrid_register <?php echo esc_html('gid="'.$group->id.'');?>"]</div>
-      <?php endif;?>
+        <?php $group_page_url = $pmrequests->profile_magic_get_frontend_url( 'pm_group_page', '', $group->id ); ?>
+        <div class="pm-form-shortcode-row">
+            <a href="<?php echo esc_url( $group_page_url ); ?>" target="_blank" rel="noopener">
+                [profilegrid_group <?php echo esc_html('gid="'.$group->id.'');?>"]
+            </a>
+        </div>
       <div class="pg-box-card-setting-wrap">
            <?php if($group_type=='closed'):?>
           <div class="pg-box-card-setting-item">
@@ -204,6 +241,10 @@ update_option( 'pg_redirect_to_group_page', '0' );
           <div class="pg-box-card-setting-item">
               <span class="pg-box-card-setting-info"><?php esc_attr_e('Members List', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
               <a href="admin.php?page=pm_user_manager&pagenum=1&gid=<?php echo esc_attr($group->id);?>"><span class="material-icons">group</span></a>
+          </div>
+          <div class="pg-box-card-setting-item">
+              <span class="pg-box-card-setting-info"><?php esc_attr_e('Add Members', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
+              <a href="admin.php?page=pm_user_manager&pagenum=1&pg_assign_group=<?php echo esc_attr($group->id);?>&pg_add_members=1"><span class="material-icons">person_add_alt_1</span></a>
           </div>
           <div class="pg-box-card-setting-item">
             <span class="pg-box-card-setting-info"><?php esc_attr_e('Group Options', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
@@ -395,6 +436,27 @@ update_option( 'pg_redirect_to_group_page', '0' );
                  </div>
                 
               </div>
+             <div class="pm-new-form-row pg-box-row pg-card-mb-16">
+                 <div class="pg-box-col-12 pg-group-search-user">
+                    <div class="pg-group-field">
+                   <label><?php esc_attr_e('Add Members Now (Optional)', 'profilegrid-user-profiles-groups-and-communities'); ?></label>
+                    </div>
+                    <?php if ( ! empty( $quick_add_users ) ) : ?>
+                    <input type="text" id="pg-add-members-search" class="pg-add-members-search" placeholder="<?php esc_attr_e( 'Search users', 'profilegrid-user-profiles-groups-and-communities' ); ?>" />
+                    <select multiple name="pg_add_members[]" id="pg_add_members">
+                        <?php foreach ( $quick_add_users as $quick_user ) : ?>
+                            <option value="<?php echo esc_attr( $quick_user->ID ); ?>">
+                                <?php echo esc_html( $quick_user->display_name . ' (' . $quick_user->user_login . ')' ); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div class="pg-new-group-form-note"><?php esc_attr_e('Hold Ctrl (Windows) or Cmd (Mac) to select multiple users.', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
+                    <div class="pg-new-group-form-note"><?php esc_attr_e('For large member lists, use the Members screen after creating the group.', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
+                    <?php else : ?>
+                    <div class="pg-new-group-form-note"><?php esc_attr_e('No existing users found to add.', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
+                    <?php endif; ?>
+                 </div>
+              </div>
              <div class="pg-box-row pg-box-modal-footer">
                      <div class="pg-box-col-12 pg-box-text-right">
                   <?php wp_nonce_field('save_pm_add_group'); ?>
@@ -520,6 +582,23 @@ jQuery('.pmagic .pmagic-cards .pm-card input[type=checkbox]').change(function(){
 });
 
 pgCardUserImages();
+
+var pgAddMembersSearch = jQuery('#pg-add-members-search');
+var pgAddMembersSelect = jQuery('#pg_add_members');
+if (pgAddMembersSearch.length && pgAddMembersSelect.length) {
+    pgAddMembersSearch.on('input', function () {
+        var query = jQuery(this).val().toLowerCase();
+        pgAddMembersSelect.find('option').each(function () {
+            var option = jQuery(this);
+            if (option.is(':selected')) {
+                option.prop('hidden', false);
+                return;
+            }
+            var text = option.text().toLowerCase();
+            option.prop('hidden', query && text.indexOf(query) === -1);
+        });
+    });
+}
 
 
 });

@@ -554,6 +554,12 @@ class Profile_Magic_Public {
 	}
 
 	public function profile_magic_groups_view( $content ) {
+			wp_enqueue_style( 'pm_material_icon', 'https://fonts.googleapis.com/icon?family=Material+Icons', array(), $this->version, 'all' );
+			if ( is_array( $content ) ) {
+				$content['pg_source'] = 'shortcode';
+			} else {
+				$content = array( 'pg_source' => 'shortcode' );
+			}
 			return $this->profile_magic_get_template_html( 'profile-magic-groups', $content );
 	}
 
@@ -4267,12 +4273,33 @@ if ( isset( $_POST['tid'] ) ) {
 		$search       = sanitize_text_field(filter_input( INPUT_POST, 'search' ,FILTER_SANITIZE_SPECIAL_CHARS ));
                 //echo $search;die;
 		$pagenum      = filter_input( INPUT_POST, 'pagenum', FILTER_SANITIZE_SPECIAL_CHARS );
-		$limit        = $dbhandler->get_global_option_value( 'pm_default_no_of_groups', '10' );
+		$limit_raw    = filter_input( INPUT_POST, 'limit', FILTER_SANITIZE_SPECIAL_CHARS );
+		$limit        = absint( $limit_raw );
+		if ( empty( $limit ) ) {
+			$limit = $dbhandler->get_global_option_value( 'pm_default_no_of_groups', '10' );
+		}
 		$current_user = wp_get_current_user();
 		$view         = filter_input( INPUT_POST, 'view' );
+		$type         = filter_input( INPUT_POST, 'type', FILTER_SANITIZE_SPECIAL_CHARS );
+		$include_raw  = filter_input( INPUT_POST, 'include', FILTER_SANITIZE_SPECIAL_CHARS );
+		$exclude_raw  = filter_input( INPUT_POST, 'exclude', FILTER_SANITIZE_SPECIAL_CHARS );
+		$paid_raw     = filter_input( INPUT_POST, 'paid', FILTER_SANITIZE_SPECIAL_CHARS );
 		update_user_meta( $current_user->ID, 'pg_member_sort_limit', $limit );
 
-		$pmrequest->pm_get_all_groups_data( $view, $pagenum, $limit, $sort_by, $search, $this->profile_magic, $this->version );
+		$include_ids = array_filter( array_map( 'absint', preg_split( '/\s*,\s*/', (string) $include_raw, -1, PREG_SPLIT_NO_EMPTY ) ) );
+		$exclude_ids = array_filter( array_map( 'absint', preg_split( '/\s*,\s*/', (string) $exclude_raw, -1, PREG_SPLIT_NO_EMPTY ) ) );
+		$paid = null;
+		if ( $paid_raw !== null && $paid_raw !== '' ) {
+			$paid = filter_var( $paid_raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE );
+		}
+		$filters = array(
+			'include' => $include_ids,
+			'exclude' => $exclude_ids,
+			'type'    => in_array( $type, array( 'open', 'closed' ), true ) ? $type : '',
+			'paid'    => $paid,
+		);
+
+		$pmrequest->pm_get_all_groups_data( $view, $pagenum, $limit, $sort_by, $search, $filters, $this->profile_magic, $this->version );
 
 		die;
 	}
@@ -6017,7 +6044,7 @@ if ( isset( $_POST['tid'] ) ) {
 	}
         
         
-        public function profile_magic_shortcode_field( $content ) {
+	public function profile_magic_shortcode_field( $content ) {
             
                 $pmrequests    = new PM_request();
 		ob_start();
@@ -6034,7 +6061,7 @@ if ( isset( $_POST['tid'] ) ) {
                 echo '</div>';
                 $html = ob_get_contents();
 		ob_end_clean();
-		return $html;
+                return $html;
 	}
         
         public function pg_filter_hide_groups_on_group_card($additional)

@@ -28,7 +28,7 @@ if(!isset($gid) || empty($gid))
     }
     else
     {
-        $gid = $content['gid'];
+        $gid = isset($content['gid']) ? $content['gid'] : '';
     }
     
 }
@@ -244,10 +244,21 @@ if(!empty($row))
             
         }
         
-	$limit = $dbhandler->get_global_option_value('pm_number_of_users_on_group_page','10'); // number of rows in page
-	$offset = ( $pagenum - 1 ) * $limit;
-        $hide_users = $pmrequests->pm_get_hide_users_array();
-	$query_args = array(
+	$limit = (int) $dbhandler->get_global_option_value('pm_number_of_users_on_group_page','10'); // number of rows in page
+	if ( $limit < 0 ) {
+		$limit = 0;
+	}
+
+	$offset = 0;
+	$users = array();
+	$total_users = 0;
+	$num_of_pages = 0;
+	$pagination = '';
+
+	if ( $limit > 0 ) {
+		$offset = ( $pagenum - 1 ) * $limit;
+		$hide_users = $pmrequests->pm_get_hide_users_array();
+		$query_args = array(
 						'relation' => 'AND',
 						array(
 							'key'     => 'pm_group',
@@ -277,6 +288,7 @@ if(!empty($row))
         $users = $user_query->get_results();
         $num_of_pages = ceil( $total_users/$limit);
 	$pagination = $dbhandler->pm_get_pagination($num_of_pages,$pagenum);
+	}
         $is_global_password_protected = $dbhandler->get_global_option_value('pm_enable_group_password_option',0);
         $is_group_password_protected = (isset($pmgroupoption['enable_password_protection']))?$pmgroupoption['enable_password_protection']:0;
         

@@ -5,7 +5,7 @@ Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.9.7.3
+Stable tag: 5.9.8.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -664,6 +664,18 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 5.9.8.0: February 10, 2026 =
+* Major update: Redesigned All Groups page with refreshed grid and list layouts.
+* Added: Admin visibility toggles to control display of group metadata such as type, member count, manager, paid badge, and action button.
+* Added: New shortcode parameters for layout, sorting, filtering, and group selection.
+* Updated: Gutenberg All Groups block with an enhanced settings sidebar.
+* Improved: Responsive layout with mobile-friendly and narrow-screen fallbacks.
+* Updated: All Groups page HTML markup with improved structure and Material icons.
+* Fixed: Group menu widget issues.
+* Improved: Menu Restriction extension compatibility with block themes (WordPress 6.9+).
+* Fixed: Date picker year dropdown issue in date field.
+* Fixed: Date field calendar dropdown not showing issue.
 
 = 5.9.7.3: January 28, 2026 =
 * Security: Addressed and resolved several security vulnerabilities for safer usage.
@@ -1534,6 +1546,18 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 5.9.8.0: February 10, 2026 =
+* Major update: Redesigned All Groups page with refreshed grid and list layouts.
+* Added: Admin visibility toggles to control display of group metadata such as type, member count, manager, paid badge, and action button.
+* Added: New shortcode parameters for layout, sorting, filtering, and group selection.
+* Updated: Gutenberg All Groups block with an enhanced settings sidebar.
+* Improved: Responsive layout with mobile-friendly and narrow-screen fallbacks.
+* Updated: All Groups page HTML markup with improved structure and Material icons.
+* Fixed: Group menu widget issues.
+* Improved: Menu Restriction extension compatibility with block themes (WordPress 6.9+).
+* Fixed: Date picker year dropdown issue in date field.
+* Fixed: Date field calendar dropdown not showing issue.
 
 = 5.9.7.3: January 28, 2026 =
 * Security: Addressed and resolved several security vulnerabilities for safer usage.

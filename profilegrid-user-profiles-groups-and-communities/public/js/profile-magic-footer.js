@@ -561,16 +561,31 @@ function pm_get_all_groups(pagenum)
     var view = jQuery("input[name='pg_groups_view']:checked").val();
     var sortby = jQuery('#group_sort_by').find(":selected").val();
     var search = jQuery('#group_search').val();
-    //var limit = jQuery('#pg_member_sort_limit').val();
-    var limit = '10';
-    
+    var $container = jQuery('.pm-all-group-container');
+    var limit = $container.data('pg-groups-limit');
+    var include_groups = $container.data('pg-groups-include');
+    var exclude_groups = $container.data('pg-groups-exclude');
+    var group_type = $container.data('pg-groups-type');
+    var paid = $container.data('pg-groups-paid');
+    var default_view = $container.data('pg-groups-view');
+    var default_sort = $container.data('pg-groups-sort');
+    if(limit === undefined || limit === null || limit === '') {
+        limit = '10';
+    }
+    if(view === undefined || view === null || view === '') {
+        view = default_view ? default_view : 'grid';
+    }
+    if(sortby === undefined || sortby === null || sortby === '') {
+        sortby = default_sort ? default_sort : 'newest';
+    }
+
     jQuery(".pm-all-group-container").html('<div class="pm-loader"></div>');
     var pmDomColor = jQuery(".pmagic").find("a").css('color');
     jQuery(".pm-loader").css('border-top-color', pmDomColor);
     jQuery( ".pg-select-list-view svg" ).css('fill','');
-    jQuery( ".pmagic .pg-group-filters-head .pg-sort-view input:checked+label svg" ).css('fill', pmDomColor); 
-    
-    var data = {action: 'pm_get_all_groups',sortby:sortby,view:view,search:search,pagenum:pagenum,limit:limit};
+    jQuery( ".pmagic .pg-group-filters-head .pg-sort-view input:checked+label svg" ).css('fill', pmDomColor);
+
+    var data = {action: 'pm_get_all_groups',sortby:sortby,view:view,search:search,pagenum:pagenum,limit:limit,include:include_groups,exclude:exclude_groups,type:group_type,paid:paid};
     jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         jQuery('.pm-all-group-container').html(response);
         pg_primary_ajustment_during_ajax();

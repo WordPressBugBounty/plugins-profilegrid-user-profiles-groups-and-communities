@@ -10,6 +10,9 @@ wp_enqueue_style('profilegrid-daterangepicker');
 
 $pagenum = filter_input(INPUT_GET, 'pagenum',FILTER_SANITIZE_NUMBER_INT);
 $gid = filter_input(INPUT_GET, 'gid',FILTER_SANITIZE_NUMBER_INT);
+$assign_gid = filter_input(INPUT_GET, 'pg_assign_group', FILTER_VALIDATE_INT);
+$gid = $gid ? $gid : $assign_gid;
+$pg_add_members = filter_input(INPUT_GET, 'pg_add_members', FILTER_VALIDATE_INT);
 $field_identifier = 'FIELDS';
 $group_identifier = 'GROUPS';
 $current_user = wp_get_current_user();
@@ -102,6 +105,22 @@ if (filter_input(INPUT_GET, 'move')) {
         die(esc_html__('Failed security check', 'profilegrid-user-profiles-groups-and-communities'));
     }
     $pmrequests->profile_magic_join_group_fun($move_user_id, $pm_move_group, 'open');
+    if ( ! empty( $pg_add_members ) || ! empty( $assign_gid ) ) {
+        $pm_move_group = absint( $pm_move_group );
+        $redirect_args = array(
+            'page' => 'pm_user_manager',
+        );
+        if ( $pm_move_group ) {
+            $redirect_args['gid']             = $pm_move_group;
+            $redirect_args['pg_assign_group'] = $pm_move_group;
+        }
+        if ( ! empty( $pg_add_members ) ) {
+            $redirect_args['pg_add_members'] = 1;
+        }
+        $redirect_args['pagenum'] = 1;
+        wp_safe_redirect( add_query_arg( $redirect_args, admin_url( 'admin.php' ) ) );
+        exit;
+    }
 }
 
 if (filter_input(INPUT_GET, 'delete')) {
@@ -173,6 +192,19 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
 <h1 class="wp-heading-inline"><?php esc_html_e('Members','profilegrid-user-profiles-groups-and-communities');?></h1>
 <a href="user-new.php" class="page-title-action"><?php esc_html_e('New User','profilegrid-user-profiles-groups-and-communities');?></a>
 <hr class="wp-header-end">
+<?php if ( ! empty( $pg_add_members ) && ! empty( $gid ) ) : ?>
+    <?php
+    $new_user_url = add_query_arg( 'pg_group_id', $gid, admin_url( 'user-new.php' ) );
+    $notice_text = sprintf(
+        /* translators: %s: New User admin link. */
+        __( 'Tip: Select users and use "Assign to group" to add them here. To create a new user already assigned to this group, use <a href="%s">New User</a>.', 'profilegrid-user-profiles-groups-and-communities' ),
+        esc_url( $new_user_url )
+    );
+    ?>
+    <div class="notice notice-info is-dismissible">
+        <p><?php echo wp_kses( $notice_text, array( 'a' => array( 'href' => array() ) ) ); ?></p>
+    </div>
+<?php endif; ?>
 
 
     <!-----Operationsbar Starts----->
@@ -182,6 +214,12 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
         <input type="hidden" name="orderby" id="orderby" value="ID" />
         <input type="hidden" name="sort" id="sort" value="ASC" />
         <input type="hidden" id="pagenum" name="pagenum" value="<?php echo esc_attr( $pagenum ); ?>" />
+        <?php if ( ! empty( $assign_gid ) ) : ?>
+            <input type="hidden" name="pg_assign_group" value="<?php echo esc_attr( $assign_gid ); ?>" />
+        <?php endif; ?>
+        <?php if ( ! empty( $pg_add_members ) ) : ?>
+            <input type="hidden" name="pg_add_members" value="1" />
+        <?php endif; ?>
  
         <!--------Operationsbar Ends-----> 
 
