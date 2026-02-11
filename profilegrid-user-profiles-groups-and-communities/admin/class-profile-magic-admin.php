@@ -73,6 +73,25 @@ class Profile_Magic_Admin {
         }
     }
 
+	public function pg_init_all_groups_page_visibility_defaults() {
+		$toggle_keys = array(
+			'pm_groups_show_type_label',
+			'pm_groups_show_icon',
+			'pm_groups_show_member_count',
+			'pm_groups_show_member_limit',
+			'pm_groups_show_seats_left',
+			'pm_groups_show_paid_badge',
+			'pm_groups_show_group_manager',
+			'pm_groups_show_action_button',
+		);
+
+		foreach ( $toggle_keys as $key ) {
+			if ( get_option( $key, null ) === null ) {
+				add_option( $key, '1' );
+			}
+		}
+	}
+
     public function activate_sitewide_plugins( $blog_id ) {
 		 // Switch to new website
 		$dbhandler = new PM_DBhandler();

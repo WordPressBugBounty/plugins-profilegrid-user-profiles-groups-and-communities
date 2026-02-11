@@ -203,6 +203,7 @@ class Profile_Magic {
 
 		$plugin_admin = new Profile_Magic_Admin( $this->get_profile_magic(), $this->get_version() );
 				$this->loader->add_action( 'admin_init', $plugin_admin, 'pg_activation_redirect' );
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'pg_init_all_groups_page_visibility_defaults' );
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );

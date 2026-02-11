@@ -684,7 +684,7 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
           <?php esc_html_e( 'Show Group Icon', 'profilegrid-user-profiles-groups-and-communities' ); ?>
         </div>
         <div class="uiminput">
-          <input name="pm_groups_show_icon" id="pm_groups_show_icon" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_groups_show_icon', '0' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
+          <input name="pm_groups_show_icon" id="pm_groups_show_icon" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_groups_show_icon', '1' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
           <label for="pm_groups_show_icon"></label>
         </div>
         <div class="uimnote"><?php esc_html_e( 'Show group image/icon on cards.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>

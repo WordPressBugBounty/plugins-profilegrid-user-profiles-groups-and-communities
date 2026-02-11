@@ -5602,7 +5602,7 @@ class PM_request {
                 $is_password_protected = (isset($pmgroupoption['enable_password_protection']))?$pmgroupoption['enable_password_protection']:0;
                 $password_html = ($is_password_protected==1 && $is_global_password_protected==1)?'<i class="fa fa-lock"></i>':'';
 		$show_type_label = $dbhandler->get_global_option_value( 'pm_groups_show_type_label', '1' ) == '1';
-		$show_icon = $dbhandler->get_global_option_value( 'pm_groups_show_icon', '0' ) == '1';
+		$show_icon = $dbhandler->get_global_option_value( 'pm_groups_show_icon', '1' ) == '1';
 		$show_member_count = $dbhandler->get_global_option_value( 'pm_groups_show_member_count', '1' ) == '1';
 		$show_member_limit = $dbhandler->get_global_option_value( 'pm_groups_show_member_limit', '1' ) == '1';
 		$show_seats_left = $dbhandler->get_global_option_value( 'pm_groups_show_seats_left', '1' ) == '1';
