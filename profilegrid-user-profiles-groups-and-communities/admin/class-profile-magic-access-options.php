@@ -92,7 +92,7 @@ class Profile_Magic_access_options {
 
                 $admin_note = get_post_meta( $id, 'pm_admin_note_content', true );
 		if ( trim( $admin_note )!='' ) {
-			$note          = '<div class="pg-admin-note">' . $admin_note . '</div>';
+			$note          = '<div class="pg-admin-note">' . wp_kses_post( $admin_note ) . '</div>';
 			$note_position = get_post_meta( $id, 'pm_admin_note_position', true );
 			if ( $note_position=='top' ) {
 				$content = $note . $content;

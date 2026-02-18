@@ -861,7 +861,13 @@ class PM_HTML_Creator {
 				$html ='';
                 break;
 		}
-		echo wp_kses_post( $html );
+        if(!empty($html)){  
+            echo wp_kses_post( $html );
+        }
+        else{
+            echo '';
+        }
+		
 	}
 
 	public function select_all_blog_popup( $total, $single ) {
@@ -1254,7 +1260,7 @@ class PM_HTML_Creator {
                         <div class="pm-field-input pm-difl">
                             <textarea name="pm_admin_note_content" id="pm_admin_note_content" maxlength="5000" size="5000" onkeyup="pg_count_left_charactors('pm_admin_note_content','pg_text_counter','{CHAR} <?php esc_html_e( 'characters left', 'profilegrid-user-profiles-groups-and-communities' ); ?>','5000')">
                                                                                                                                                                                                                                  <?php
-																																																									if ( isset( $pm_admin_note_content ) ) {
+																																																									if ( isset( $pm_admin_note_content ) && !empty( trim( $pm_admin_note_content ) ) ) {
 																																																										echo wp_kses_post( $pm_admin_note_content );}
 																																																									?>
                             </textarea>          
@@ -1592,7 +1598,12 @@ class PM_HTML_Creator {
 				$html ='';
                 break;
 		}
-		echo wp_kses_post( $html );
+		if(!empty($html)){  
+            echo wp_kses_post( $html );
+        }
+        else{
+            echo '';
+        }
 	}
 
 	public function pg_admin_popup_html_generator( $type, $id, $gid ) {
@@ -1620,7 +1631,12 @@ class PM_HTML_Creator {
 				$html ='';
                 break;
 		}
-		echo wp_kses_post( $html );
+        if(!empty($html)){  
+            echo wp_kses_post( $html );
+        }
+        else{
+            echo '';
+        }
 	}
 
 	public function add_user_in_group_popup( $gid ) {
@@ -1706,7 +1722,7 @@ class PM_HTML_Creator {
 
 	public function remove_user_in_group_popup( $id, $gid ) {
 		$path                        =  plugins_url( '../public/partials/images/popup-close.png', __FILE__ );
-		( $postid=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Confirm', 'profilegrid-user-profiles-groups-and-communities' );
+		( $id=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Confirm', 'profilegrid-user-profiles-groups-and-communities' );
 		?>
             <div class="pm-popup-title pm-dbfl pm-bg-lt pm-pad10 pm-border-bt">
 			<?php echo esc_html( $title ); ?>
@@ -1741,7 +1757,7 @@ class PM_HTML_Creator {
 
 	public function remove_admin_in_group_popup( $id, $gid ) {
 		$path                        =  plugins_url( '../public/partials/images/popup-close.png', __FILE__ );
-		( $postid=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Confirm', 'profilegrid-user-profiles-groups-and-communities' );
+		( $id=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Confirm', 'profilegrid-user-profiles-groups-and-communities' );
 		?>
             <div class="pm-popup-title pm-dbfl pm-bg-lt pm-pad10 pm-border-bt">
 			<?php echo esc_html( $title ); ?>
@@ -1911,7 +1927,7 @@ class PM_HTML_Creator {
 
 	public function reset_password_user_popup( $id, $gid ) {
         $path                        =  plugins_url( '../public/partials/images/popup-close.png', __FILE__ );
-		( $postid=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Reset Password', 'profilegrid-user-profiles-groups-and-communities' );
+		( $id=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Reset Password', 'profilegrid-user-profiles-groups-and-communities' );
 		?>
             <div class="pm-popup-title pm-dbfl pm-bg-lt pm-pad10 pm-border-bt">
 			<?php echo esc_html( $title ); ?>
@@ -2470,7 +2486,12 @@ class PM_HTML_Creator {
 				$html ='';
                 break;
 		}
-		echo wp_kses_post( $html );
+		if(!empty($html)){  
+            echo wp_kses_post( $html );
+        }
+        else{
+            echo '';
+        }
 	}
 
 	public function pg_remove_group_in_user_profile_popup( $id, $gid ) {

@@ -301,6 +301,7 @@ if ( filter_input( INPUT_POST, 'submit_group' ) ) {
 	$needs_limit_check = ! empty( $add_members );
 	$is_group_limit = 0;
 	$available_slots = -1;
+	$gid_for_membership = (string) $gid;
 	if ( $needs_limit_check ) {
 		$is_group_limit = (int) $dbhandler->get_value( 'GROUPS', 'is_group_limit', $gid );
 		if ( $is_group_limit === 1 ) {
@@ -325,10 +326,11 @@ if ( filter_input( INPUT_POST, 'submit_group' ) ) {
 			if ( ! is_array( $user_groups ) ) {
 				$user_groups = $user_groups ? array( $user_groups ) : array();
 			}
-			if ( in_array( $gid, $user_groups, true ) ) {
+			$user_groups = array_map( 'strval', $user_groups );
+			if ( in_array( $gid_for_membership, $user_groups, true ) ) {
 				continue;
 			}
-			$pmrequests->profile_magic_join_group_fun( $uid, $gid, 'open' );
+			$pmrequests->profile_magic_join_group_fun( $uid, $gid_for_membership, 'open' );
 			if ( $is_group_limit === 1 ) {
 				$available_slots--;
 			}

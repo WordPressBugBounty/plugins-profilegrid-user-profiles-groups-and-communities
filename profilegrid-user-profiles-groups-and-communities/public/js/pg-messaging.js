@@ -656,7 +656,8 @@ function pg_msg_edit(mid)
 function pg_msg_delete(mid)
 {
     var tid = jQuery('#thread_hidden_field').val();
-    var data = {action: 'pg_delete_msg', mid: mid,tid:tid};
+    var nonce = (pg_msg_object && pg_msg_object.pg_delete_msg_nonce) ? pg_msg_object.pg_delete_msg_nonce : (pg_msg_object ? pg_msg_object.nonce : '');
+    var data = {action: 'pg_delete_msg', mid: mid, tid: tid, nonce: nonce};
     jQuery.post(pg_msg_object.ajax_url, data, function (result) {
         jQuery('#pg-msg_id_'+mid+' .pg-message-box').html(pg_msg_object.remove_msg);
     });

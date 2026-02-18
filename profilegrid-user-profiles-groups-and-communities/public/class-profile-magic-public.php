@@ -185,11 +185,12 @@ class Profile_Magic_Public {
 			$object                       = array();
 			$object['ajax_url']           = admin_url( 'admin-ajax.php' );
 			$object['empty_chat_message'] = esc_html__( "I am sorry, I can't send an empty message. Please write something and try sending it again.", 'profilegrid-user-profiles-groups-and-communities' );
-			$object['plugin_emoji_url']   = plugin_dir_url( __FILE__ ) . 'partials/images/img';
-			$object['seding_text']        = esc_html__( 'Sending', 'profilegrid-user-profiles-groups-and-communities' );
-			$object['remove_msg']         = esc_html__( 'This message has been deleted.', 'profilegrid-user-profiles-groups-and-communities' );
-                        $object['nonce']            = wp_create_nonce( 'ajax-nonce' );
-			wp_localize_script( 'pg-messaging', 'pg_msg_object', $object );
+		$object['plugin_emoji_url']   = plugin_dir_url( __FILE__ ) . 'partials/images/img';
+		$object['seding_text']        = esc_html__( 'Sending', 'profilegrid-user-profiles-groups-and-communities' );
+		$object['remove_msg']         = esc_html__( 'This message has been deleted.', 'profilegrid-user-profiles-groups-and-communities' );
+		$object['nonce']            = wp_create_nonce( 'ajax-nonce' );
+		$object['pg_delete_msg_nonce'] = wp_create_nonce( 'pg_delete_msg_nonce' );
+		wp_localize_script( 'pg-messaging', 'pg_msg_object', $object );
 
 	}
 
@@ -2764,6 +2765,32 @@ if ( isset( $_POST['tid'] ) ) {
 		}
 
 		$gid = filter_input( INPUT_POST, 'gid' );
+		if ( $tab == 'blog' && in_array( $type, array( 'add_admin_note', 'edit_admin_note', 'delete_admin_note', 'add_admin_note_bulk' ), true ) ) {
+			if ( ! is_user_logged_in() ) {
+				wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+			}
+
+			$current_user_id = get_current_user_id();
+			$pmrequests      = new PM_request();
+			$gid             = (string) absint( $gid );
+			$is_group_leader = ( '0' !== $gid ) ? $pmrequests->pg_check_in_single_group_is_user_group_leader( $current_user_id, $gid ) : false;
+
+			$ids_to_check = is_array( $id ) ? $id : array( $id );
+
+			if ( empty( $ids_to_check ) ) {
+				wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+			}
+
+			foreach ( $ids_to_check as $post_id ) {
+				$post_author_id   = (int) get_post_field( 'post_author', $post_id );
+				$post_belongs_gid = ( $post_author_id > 0 && '0' !== $gid ) ? $pmrequests->profile_magic_check_is_group_member( $gid, $post_author_id ) : false;
+				$allowed          = current_user_can( 'manage_options' ) || is_super_admin( $current_user_id )
+					|| ( $is_group_leader && $post_belongs_gid );
+				if ( ! $allowed ) {
+					wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+				}
+			}
+		}
 		if ( $tab == 'blog' ) {
 			$html_generator->pg_blog_popup_html_generator( $type, $id, $gid );
 		}
@@ -2906,14 +2933,44 @@ if ( isset( $_POST['tid'] ) ) {
 		$pm_request          = new PM_request();
 		$postid              = filter_input( INPUT_POST, 'post_id' );
 		$is_delete_request   = filter_input( INPUT_POST, 'delete_note' );
-		$admin_note_content  = filter_input( INPUT_POST, 'pm_admin_note_content' );
+		$admin_note_content  = filter_input( INPUT_POST, 'pm_admin_note_content', FILTER_UNSAFE_RAW );
 		$admin_note_position = filter_input( INPUT_POST, 'pm_admin_note_position' );
 		$retrieved_nonce     = filter_input( INPUT_POST, '_wpnonce' );
-		$admin_note_content  = substr( $admin_note_content, 0, 5000 );
 		if ( ! wp_verify_nonce( $retrieved_nonce, 'save_pm_admin_note_content' ) ) {
 			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
 		}
+
+		if ( ! is_user_logged_in() ) {
+			wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+		}
+
+		$admin_note_content  = wp_unslash( $admin_note_content );
+		$admin_note_content  = substr( $admin_note_content, 0, 5000 );
+		$admin_note_content  = wp_kses_post( $admin_note_content );
+		$admin_note_position = sanitize_text_field( wp_unslash( $admin_note_position ) );
+		if ( $admin_note_position !== 'top' && $admin_note_position !== 'bottom' ) {
+			$admin_note_position = 'top';
+		}
+
+		$current_user_id = get_current_user_id();
+
 		if ( is_numeric( $postid ) ) {
+			$post_author_id   = (int) get_post_field( 'post_author', $postid );
+			$post_groups      = $pm_request->profile_magic_get_user_field_value( $post_author_id, 'pm_group' );
+			$post_groups      = $pm_request->pg_filter_users_group_ids( $post_groups );
+			$post_groups      = is_array( $post_groups ) ? $post_groups : array( $post_groups );
+			$is_group_leader  = false;
+			foreach ( $post_groups as $post_group_id ) {
+				if ( ! empty( $post_group_id ) && $pm_request->pg_check_in_single_group_is_user_group_leader( $current_user_id, (string) $post_group_id ) ) {
+					$is_group_leader = true;
+					break;
+				}
+			}
+			$allowed          = current_user_can( 'manage_options' ) || is_super_admin( $current_user_id )
+				|| $is_group_leader;
+			if ( ! $allowed ) {
+				wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+			}
 			if ( $is_delete_request == 1 ) {
 				 $html_generator->delete_admin_note_popup( $postid );
 			} else {
@@ -2923,6 +2980,24 @@ if ( isset( $_POST['tid'] ) ) {
 			}
 		} else {
 			$ids = maybe_unserialize( $pm_request->pm_encrypt_decrypt_pass( 'decrypt', $postid ) );
+			foreach ( $ids as $id ) {
+				$post_author_id   = (int) get_post_field( 'post_author', $id );
+				$post_groups      = $pm_request->profile_magic_get_user_field_value( $post_author_id, 'pm_group' );
+				$post_groups      = $pm_request->pg_filter_users_group_ids( $post_groups );
+				$post_groups      = is_array( $post_groups ) ? $post_groups : array( $post_groups );
+				$is_group_leader  = false;
+				foreach ( $post_groups as $post_group_id ) {
+					if ( ! empty( $post_group_id ) && $pm_request->pg_check_in_single_group_is_user_group_leader( $current_user_id, (string) $post_group_id ) ) {
+						$is_group_leader = true;
+						break;
+					}
+				}
+				$allowed          = current_user_can( 'manage_options' ) || is_super_admin( $current_user_id )
+					|| $is_group_leader;
+				if ( ! $allowed ) {
+					wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+				}
+			}
 			foreach ( $ids as $id ) {
 				update_post_meta( $id, 'pm_admin_note_content', $admin_note_content );
 				update_post_meta( $id, 'pm_admin_note_position', $admin_note_position );
@@ -2938,10 +3013,31 @@ if ( isset( $_POST['tid'] ) ) {
 
 	public function pm_delete_admin_note() {
 		$html_generator  = new PM_HTML_Creator( $this->profile_magic, $this->version );
+		$pm_request      = new PM_request();
 		$postid          = filter_input( INPUT_POST, 'post_id' );
 		$retrieved_nonce = filter_input( INPUT_POST, '_wpnonce' );
 		if ( ! wp_verify_nonce( $retrieved_nonce, 'delete_pm_admin_note' ) ) {
 			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
+		}
+		if ( ! is_user_logged_in() ) {
+			wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+		}
+		$current_user_id = get_current_user_id();
+		$post_author_id   = (int) get_post_field( 'post_author', $postid );
+		$post_groups      = $pm_request->profile_magic_get_user_field_value( $post_author_id, 'pm_group' );
+		$post_groups      = $pm_request->pg_filter_users_group_ids( $post_groups );
+		$post_groups      = is_array( $post_groups ) ? $post_groups : array( $post_groups );
+		$is_group_leader  = false;
+		foreach ( $post_groups as $post_group_id ) {
+			if ( ! empty( $post_group_id ) && $pm_request->pg_check_in_single_group_is_user_group_leader( $current_user_id, (string) $post_group_id ) ) {
+				$is_group_leader = true;
+				break;
+			}
+		}
+		$allowed          = current_user_can( 'manage_options' ) || is_super_admin( $current_user_id )
+			|| $is_group_leader;
+		if ( ! $allowed ) {
+			wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
 		}
 		$is_delete = delete_post_meta( $postid, 'pm_admin_note_content' );
 		$is_delete = delete_post_meta( $postid, 'pm_admin_note_position' );
@@ -4490,7 +4586,6 @@ if ( isset( $_POST['tid'] ) ) {
 		$object['remove_msg']         = esc_html__( 'This message has been deleted.', 'profilegrid-user-profiles-groups-and-communities' );
                 $object['nonce']            = wp_create_nonce( 'ajax-nonce' );
 		wp_localize_script( 'pg-messaging', 'pg_msg_object', $object );
-
 		$rid          = filter_input( INPUT_GET, 'rid' );
 		$current_user = wp_get_current_user();
 		$profilechat  = new ProfileMagic_Chat();
@@ -5938,13 +6033,54 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pg_delete_msg() {
-		$dbhandler  = new PM_DBhandler();
-		$pmrequests = new PM_request();
-		$mid        = filter_input( INPUT_POST, 'mid' );
-		$tid        = filter_input( INPUT_POST, 'tid' );
-		$dbhandler->remove_row( 'MSG_CONVERSATION', 'm_id', $mid );
-		$pmrequests->pm_update_thread_time( $tid, 2 );
-		die;
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		$nonce_ok = check_ajax_referer( 'pg_delete_msg_nonce', 'nonce', false );
+		if ( ! $nonce_ok ) {
+			// Backward compatibility with older clients that send the generic ajax nonce.
+			$nonce_ok = check_ajax_referer( 'ajax-nonce', 'nonce', false );
+		}
+		if ( ! $nonce_ok ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+		
+		$mid = filter_input( INPUT_POST, 'mid' );
+		$tid = filter_input( INPUT_POST, 'tid' );
+		$mid = absint( $mid );
+		$tid = absint( $tid );
+		if ( 0 === $mid ) {
+			wp_send_json_error( 'Invalid message ID', 400 );
+		}
+
+		$dbhandler = new PM_DBhandler();
+		$message   = $dbhandler->get_row( 'MSG_CONVERSATION', $mid, 'm_id' );
+		if ( empty( $message ) ) {
+			wp_send_json_error( 'Message not found', 404 );
+		}
+
+		$sender_id       = isset( $message->s_id ) ? (int) $message->s_id : 0;
+		$current_user_id = (int) get_current_user_id();
+		if ( $sender_id !== $current_user_id ) {
+			wp_send_json_error( 'Unauthorized', 403 );
+		}
+
+		$deleted = $dbhandler->remove_row( 'MSG_CONVERSATION', 'm_id', $mid );
+		if ( ! $deleted ) {
+			wp_send_json_error( 'Message not found', 404 );
+		}
+
+		if ( 0 !== $tid ) {
+			$pmrequests = new PM_request();
+			$pmrequests->pm_update_thread_time( $tid, 2 );
+		}
+
+		wp_send_json_success(
+			array(
+				'deleted' => $mid,
+			)
+		);
 	}
 
 	public function pg_msg_delete_thread_popup_html() {
