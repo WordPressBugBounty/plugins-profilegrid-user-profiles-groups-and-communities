@@ -242,10 +242,13 @@ update_option( 'pg_redirect_to_group_page', '0' );
               <span class="pg-box-card-setting-info"><?php esc_attr_e('Members List', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
               <a href="admin.php?page=pm_user_manager&pagenum=1&gid=<?php echo esc_attr($group->id);?>"><span class="material-icons">group</span></a>
           </div>
+          <!--
           <div class="pg-box-card-setting-item">
               <span class="pg-box-card-setting-info"><?php esc_attr_e('Add Members', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
               <a href="admin.php?page=pm_user_manager&pagenum=1&pg_assign_group=<?php echo esc_attr($group->id);?>&pg_add_members=1"><span class="material-icons">person_add_alt_1</span></a>
           </div>
+          
+          -->
           <div class="pg-box-card-setting-item">
             <span class="pg-box-card-setting-info"><?php esc_attr_e('Group Options', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
             <?php if(isset( $group_options['group_type'] ) && $group_options['group_type'] == 'form'):?>
@@ -437,7 +440,7 @@ update_option( 'pg_redirect_to_group_page', '0' );
                 
               </div>
              <div class="pm-new-form-row pg-box-row pg-card-mb-16">
-                 <div class="pg-box-col-12 pg-group-search-user">
+                 <div class="pg-box-col-12 pg-group-search-user" style="display:none">
                     <div class="pg-group-field">
                    <label><?php esc_attr_e('Add Members Now (Optional)', 'profilegrid-user-profiles-groups-and-communities'); ?></label>
                     </div>

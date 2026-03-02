@@ -61,25 +61,54 @@ class Profile_Magic_access_options {
 	}
 
 	public function profile_magic_save_access_meta( $post_id ) {
-            $post = wp_unslash( $_POST );
-        if ( isset( $post['pg_meta_box_nonce'] ) ) {
-			if ( sanitize_text_field( $post['pg_meta_box_nonce'] ) || wp_verify_nonce( sanitize_text_field( $post['pg_meta_box_nonce'] ), 'save_post_access_meta' ) ) {
-				if ( isset( $post_id ) ) {
-					if ( isset( $post['pm_enable_custom_access'] ) ) {
-						update_post_meta( $post_id, 'pm_enable_custom_access', sanitize_text_field( $post['pm_enable_custom_access'] ) );
-					} else {
-						update_post_meta( $post_id, 'pm_enable_custom_access', 0 );
-					}
+		if ( ! isset( $post_id ) ) {
+			return;
+		}
 
-					if ( isset( $post['pm_content_access'] ) ) {
-						update_post_meta( $post_id, 'pm_content_access', sanitize_text_field( $post['pm_content_access'] ) );
-					}
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
 
-					if ( isset( $post['pm_content_access_group'] ) ) {
-						update_post_meta( $post_id, 'pm_content_access_group', sanitize_text_field( $post['pm_content_access_group'] ) );
-					}
-				}
-            }
+		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+			return;
+		}
+
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return;
+		}
+
+		$current_user_id = get_current_user_id();
+		$is_author       = ( $current_user_id > 0 && (int) $post->post_author === (int) $current_user_id );
+		$can_edit_post   = current_user_can( 'edit_post', $post_id );
+		$is_admin        = current_user_can( 'manage_options' );
+
+		if ( ! $can_edit_post && ! $is_author && ! $is_admin ) {
+			return;
+		}
+
+		if ( ! isset( $_POST['pg_meta_box_nonce'] ) ) {
+			return;
+		}
+
+		$nonce = sanitize_text_field( wp_unslash( $_POST['pg_meta_box_nonce'] ) );
+		if ( ! wp_verify_nonce( $nonce, 'save_post_access_meta' ) ) {
+			return;
+		}
+
+		$post = wp_unslash( $_POST );
+		if ( isset( $post['pm_enable_custom_access'] ) ) {
+			update_post_meta( $post_id, 'pm_enable_custom_access', sanitize_text_field( $post['pm_enable_custom_access'] ) );
+		} else {
+			update_post_meta( $post_id, 'pm_enable_custom_access', 0 );
+		}
+
+		if ( isset( $post['pm_content_access'] ) ) {
+			update_post_meta( $post_id, 'pm_content_access', sanitize_text_field( $post['pm_content_access'] ) );
+		}
+
+		if ( isset( $post['pm_content_access_group'] ) ) {
+			update_post_meta( $post_id, 'pm_content_access_group', sanitize_text_field( $post['pm_content_access_group'] ) );
 		}
 	}
 

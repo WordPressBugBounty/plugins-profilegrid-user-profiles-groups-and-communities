@@ -5,7 +5,7 @@ Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.9.8.2
+Stable tag: 5.9.8.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,10 +17,10 @@ Custom user profiles plugin ❤ with paid memberships, groups, communities, cont
 
 Create WordPress user profiles, groups, communities, paid memberships, directories, WooCommerce profiles, bbPress profiles, content restriction, sign-up pages, blog submissions, notifications, social activity and private messaging, beautiful threaded interface and a lot more!
 
->The #1 custom user profile plugin that brings together user data from all your plugins, which use custom posts or shortcodes.
->The #1 Free WordPress Community Plugin with inbuilt private messaging & friends system
->The #1 Free WooCommerce User Profile Plugin
->The #1 Free bbPress User Profile plugin
+>The #1 Custom User Profile Plugin that brings together user data from all your plugins, which use custom posts or shortcodes.
+>The #1 Free WordPress Community Plugin with inbuilt private messaging & friends system.
+>The #1 Free WooCommerce User Profile Plugin.
+>The #1 Free bbPress User Profile Plugin.
 
 >For any issues, bugs, feature requests and general help, contact our awesome support team!
 
@@ -664,6 +664,11 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 5.9.8.3: March 2, 2026 =
+* Security: Added nonce and authorization hardening for membership request AJAX actions.
+* Security: Strengthened validation and sanitization for protected save/update workflows.
+* Improved: Moved REST API settings entry under Global Settings and updated Payments navigation with a direct log access flow.
 
 = 5.9.8.2: February 18, 2026 =
 * Security: Enhanced permission checks to prevent unauthorized message deletion.
@@ -1553,6 +1558,11 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 5.9.8.3: March 2, 2026 =
+* Security: Added nonce and authorization hardening for membership request AJAX actions.
+* Security: Strengthened validation and sanitization for protected save/update workflows.
+* Improved: Moved REST API settings entry under Global Settings and updated Payments navigation with a direct log access flow.
 
 = 5.9.8.2: February 18, 2026 =
 * Security: Enhanced permission checks to prevent unauthorized message deletion.

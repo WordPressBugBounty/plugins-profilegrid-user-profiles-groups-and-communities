@@ -1686,7 +1686,7 @@ class PM_HTML_Creator {
             <?php
 	}
 
-	public function invitation_send_result_success_popup( $result ) {
+	public function invitation_send_result_success_popup( $result, $post_status = 'results' ) {
 		$path                             =  plugins_url( '../public/partials/images/popup-close.png', __FILE__ );
 		$pm_request                       = new PM_request();
 		( $post_status=='failed' )?$title = __( 'Failed!', 'profilegrid-user-profiles-groups-and-communities' ):$title = __( 'Results', 'profilegrid-user-profiles-groups-and-communities' );

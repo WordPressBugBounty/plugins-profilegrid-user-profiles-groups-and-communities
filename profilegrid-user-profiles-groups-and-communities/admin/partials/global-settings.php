@@ -175,7 +175,6 @@ $pmrequests = new PM_request();
             </div>
          </a> 
     </div>
- 
     <div class="uimrow"> 
         <a href="admin.php?page=pm_profile_notification_settings">
             <div class="pm_setting_image"> 
@@ -244,6 +243,17 @@ $pmrequests = new PM_request();
     <?php esc_html_e( 'Currency, Symbol Position, Checkout Page etc.', 'profilegrid-user-profiles-groups-and-communities' ); ?>
     </span> </div>
   </a> </div>
+    <div class="uimrow"> 
+        <a href="admin.php?page=pm_api_settings">
+            <div class="pm_setting_image"> 
+                <img src="<?php echo esc_url( $path . 'images/pg-web-api-icon.png' ); ?>" class="options" alt="options"> 
+            </div>
+            <div class="pm-setting-heading"> 
+                <span class="pm-setting-icon-title"><?php esc_html_e( 'APIs / Webhooks', 'profilegrid-user-profiles-groups-and-communities' ); ?></span> 
+                <span class="pm-setting-description"><?php esc_html_e( 'Manage REST API and webhook access.', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
+            </div>
+        </a> 
+    </div>
           
         
 

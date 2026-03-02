@@ -11,13 +11,30 @@ $limit        = 10; // number of rows in page
 $offset       = ( $pagenum - 1 ) * $limit;
 $bulk_action = filter_input(INPUT_GET, 'bulk_action', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
+if ( ! empty( $bulk_action ) && in_array( $bulk_action, array( 'approve', 'decline' ), true ) ) {
+	$retrieved_nonce = filter_input( INPUT_GET, '_wpnonce' );
+	if ( ! wp_verify_nonce( $retrieved_nonce, 'pg_request_manager' ) ) {
+		die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
+	}
+	if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user->ID ) ) {
+		wp_die( esc_html__( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+	}
+}
+
 if ( !empty($bulk_action) && $bulk_action == 'approve') {
 	$selected = filter_input( INPUT_GET, 'selected', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );
 	if ( isset( $selected ) ) :
             $message = '';
 		foreach ( $selected as $id ) 
                 {
+                    $id      = absint( $id );
+                    if ( empty( $id ) ) {
+                        continue;
+                    }
                     $request = $dbhandler->get_row( 'REQUESTS', $id, 'id' );
+                    if ( empty( $request ) ) {
+                        continue;
+                    }
                     if($pmrequests->pg_check_group_limit_available($request->gid))
                     {
                         $update  = $pmrequests->profile_magic_join_group_fun( $request->uid, $request->gid, 'open' );
@@ -45,7 +62,14 @@ if ( !empty($bulk_action) && $bulk_action == 'decline') {
 	$selected = filter_input( INPUT_GET, 'selected', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );
 	if ( isset( $selected ) ) :
 		foreach ( $selected as $id ) {
+                $id      = absint( $id );
+                if ( empty( $id ) ) {
+                    continue;
+                }
                 $request = $dbhandler->get_row( 'REQUESTS', $id, 'id' );
+                if ( empty( $request ) ) {
+                    continue;
+                }
 			$dbhandler->remove_row( 'REQUESTS', 'id', $id );
                 $pmemails->pm_send_group_based_notification( $request->gid, $request->uid, 'on_request_denied' );
                 do_action( 'pm_user_membership_request_denied', $request->gid, $request->uid );

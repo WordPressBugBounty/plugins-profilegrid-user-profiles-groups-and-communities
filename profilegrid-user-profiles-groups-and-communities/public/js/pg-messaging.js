@@ -65,6 +65,25 @@ if($('#pg-messages').length)
 })(jQuery);
 var notification_request = null;
 var pg_unread_thread_count_cache = null;
+function pg_parse_json_if_possible(response) {
+    if (typeof response === 'object' && response !== null) {
+        return response;
+    }
+    if (typeof response !== 'string' || response === '') {
+        return null;
+    }
+    try {
+        return jQuery.parseJSON(response);
+    } catch (e) {
+        return null;
+    }
+}
+
+function pg_is_json_error_response(response) {
+    var parsed = pg_parse_json_if_possible(response);
+    return !!(parsed && parsed.success === false);
+}
+
 function pm_get_messenger_notification(timestamp, activity)
 {
     if (activity === undefined)activity = '';
@@ -73,6 +92,7 @@ function pm_get_messenger_notification(timestamp, activity)
         'timestamp': timestamp,
         'activity': activity,
         'tid': tid,
+        'nonce': pg_msg_object.nonce,
         'ts': Date.now()
     };
     if(notification_request !== null){
@@ -83,6 +103,9 @@ function pm_get_messenger_notification(timestamp, activity)
     var nextTimestamp = '';
     notification_request = jQuery.get(pg_msg_object.ajax_url, data, function (response)
     {
+        if (pg_is_json_error_response(response)) {
+            return;
+        }
         if (response)
         {
             var obj = jQuery.parseJSON(response);
@@ -440,7 +463,7 @@ function pg_show_msg_panel(uid,rid,tid)
      jQuery("#unread_thread_count").html('');   
     jQuery("#unread_thread_count").removeClass("thread-count-show");
     var search = jQuery('#pg-msg-search-box').val();
-    var data = {'action': 'pg_show_msg_panel', 'uid': uid,'rid': rid,'tid':tid,search:search};
+    var data = {'action': 'pg_show_msg_panel', 'uid': uid,'rid': rid,'tid':tid,search:search,'nonce':pg_msg_object.nonce};
    //console.log(data);
     jQuery("#pg-msg-thread-container").html('<div><div class="pm-loader"></div></div>');
     var pmDomColor = jQuery(".pmagic").find("a").css('color');
@@ -449,6 +472,9 @@ function pg_show_msg_panel(uid,rid,tid)
     jQuery(".pg-message-box-sidebar").removeClass('opened');
     jQuery('#pg-msg-thread-'+tid).addClass('active');
     jQuery.post(pg_msg_object.ajax_url, data, function (resp) {
+        if (pg_is_json_error_response(resp)) {
+            return;
+        }
         jQuery('#pg-msg-thread-'+tid+' .pg-unread-count' ).remove();
         jQuery('#pg-msg-thread-container').html(resp);
         jQuery('#new_thread').val("1");

@@ -5144,8 +5144,8 @@ button.pg_pr_action:focus{
     background: #fff;
 }
 .pm-setting-wrapper .pm_settings_option .uimrow {
-    width: 270px;
-    flex-basis: 270px;
+    width: 250px;
+    flex-basis: 250px;
     flex-grow: 1;
     max-width: 300px;
 }
@@ -6591,6 +6591,7 @@ span.pg-submission-user-name {
 .pg-group-search-user select#pg_add_members {
     width: 100%;
     max-width: 100%;
+    padding: 6px 6px;
 }
 
 pg-new-group-form-note {
@@ -6754,6 +6755,7 @@ pg-new-group-form-note {
 
 .pg-options-nav ul li a:hover {
     color: #0DB14B;
+    box-shadow: none;
 }
 
 .pg-group-requests {
@@ -7697,4 +7699,35 @@ span.pg-tooltips::after {
     .pg-brand-notice .pg-cta {
         margin-left: 0;
     }
+}
+/* Adding Css for the View Payments Tab */
+
+
+/* Payments header action button */
+.uimagic .uimheader .pg-view-payments-log-button .page-title-action.pg-view-payments-log-button,
+.uimagic .uimheader .pg-view-payments-log-button.page-title-action.pg-view-payments-log-button {
+    display: inline-block;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    background: #f6f7f7;
+    color: #0DB14B;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+    box-shadow: none;
+}
+
+.uimagic .uimheader .pg-view-payments-log-button .page-title-action.pg-view-payments-log-button:hover,
+.uimagic .uimheader .pg-view-payments-log-button.page-title-action.pg-view-payments-log-button:hover {
+    background: #f0f0f1;
+    border-color: #c3c4c7;
+    color: #0DB14B;
+}
+
+.uimagic .uimheader .pg-view-payments-log-button .page-title-action.pg-view-payments-log-button:focus,
+.uimagic .uimheader .pg-view-payments-log-button.page-title-action.pg-view-payments-log-button:focus {
+    outline: none;
+    box-shadow:none;
 }

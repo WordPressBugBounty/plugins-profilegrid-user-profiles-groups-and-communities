@@ -51,6 +51,7 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
     <!-----Dialogue Box Starts----->
     <div class="content">
       <div class="uimheader">
+        <span class="alignright pg-view-payments-log-button"><a href="<?php echo esc_url( admin_url( 'admin.php?page=pm_group_membership_payments' ) ); ?>" class="page-title-action pg-view-payments-log-button"><?php esc_html_e( 'View Payments Log', 'profilegrid-user-profiles-groups-and-communities' ); ?></a></span>
         <?php esc_html_e( 'Payments', 'profilegrid-user-profiles-groups-and-communities' ); ?>
       </div>
      

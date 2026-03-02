@@ -281,7 +281,7 @@ class Profile_Magic_Admin {
 		add_submenu_page( 'pm_manage_groups_hide', __( 'Email Preview', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Email Preview', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_email_preview', array( $this, 'pm_email_preview' ) );
 		add_submenu_page( 'pm_manage_groups_hide', __( 'Analytics', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Analytics', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_analytics', array( $this, 'pm_analytics' ) );
 		add_submenu_page( 'pm_manage_groups_hide', __( 'Membership', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Membership', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_membership', array( $this, 'pm_membership' ) );
-		add_submenu_page( 'pm_manage_groups', __( 'Membership Payments', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Payments', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_group_membership_payments', array( $this, 'pm_group_membership_payments' ) );
+		add_submenu_page( 'pm_manage_groups_hide', __( 'Membership Payments', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Payments', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_group_membership_payments', array( $this, 'pm_group_membership_payments' ) );
 		add_submenu_page( 'pm_manage_groups', __( 'Shortcodes', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Shortcodes', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_shortcodes', array( $this, 'pm_shortcodes' ) );
                 add_submenu_page( 'pm_manage_groups', __( 'Global Settings', 'profilegrid-user-profiles-groups-and-communities' ), __( 'Global Settings', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_settings', array( $this, 'pm_settings' ) );
 		add_submenu_page( 'pm_manage_groups_hide', __( 'General Settings', 'profilegrid-user-profiles-groups-and-communities' ), __( 'General Settings', 'profilegrid-user-profiles-groups-and-communities' ), 'manage_options', 'pm_general_settings', array( $this, 'pm_general_settings' ) );
@@ -405,7 +405,9 @@ class Profile_Magic_Admin {
 		};
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Membership Payments', 'profilegrid-user-profiles-groups-and-communities' ); ?></h1>
+			<h1 class="wp-heading-inline"><?php esc_html_e( 'Membership Payments', 'profilegrid-user-profiles-groups-and-communities' ); ?></h1>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=pm_payment_settings' ) ); ?>" class="page-title-action"><?php esc_html_e( 'Back', 'profilegrid-user-profiles-groups-and-communities' ); ?></a>
+			<hr class="wp-header-end">
 			<form method="get" class="pg-filter-form">
 				<input type="hidden" name="page" value="pm_group_membership_payments" />
 				<div class="tablenav top">
@@ -2228,7 +2230,7 @@ class Profile_Magic_Admin {
 
                 $current_user_id = get_current_user_id();
                 
-                if($current_user_id===$userid || current_user_can('manage_option'))
+                if($current_user_id===$userid || current_user_can('manage_options'))
                 {
                     $user_attachments = get_user_meta( $userid, $key, true );
                     if ( $user_attachments != '' ) {

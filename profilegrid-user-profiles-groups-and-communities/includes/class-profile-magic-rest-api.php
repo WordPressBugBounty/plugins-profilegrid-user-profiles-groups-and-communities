@@ -33,7 +33,7 @@ class Profile_Magic_Rest_API {
 	 *
 	 * @var string
 	 */
-	protected $parent_slug = 'pm_manage_groups';
+	protected $parent_slug = 'pm_manage_groups_hide';
 
 	/**
 	 * Roles allowed to interact with API.
@@ -329,6 +329,10 @@ class Profile_Magic_Rest_API {
 		// Use WordPress core function for application password verification
 		$password_valid = $this->verify_application_password( $user, $application_pass );
 
+		if ( is_wp_error( $password_valid ) ) {
+			return $password_valid;
+		}
+
 		if ( ! $password_valid ) {
 			return new WP_Error(
 				'pg_rest_invalid_application_password',
@@ -354,7 +358,7 @@ class Profile_Magic_Rest_API {
 	 * @param WP_User $user             WordPress user object.
 	 * @param string  $application_pass Application password to verify.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	protected function verify_application_password( $user, $application_pass ) {
 		// Method 1: Use wp_authenticate_application_password (WordPress 5.6+)
@@ -377,7 +381,8 @@ class Profile_Magic_Rest_API {
 			return false;
 		}
 
-		// Method 3: Fallback for older WordPress versions or if Application Passwords not available
+		// Method 3: Fallback for older WordPress versions or if Application Passwords not available.
+		// This path must remain application-password-only (never validate regular account password).
 		return $this->fallback_password_verification( $user, $application_pass );
 	}
 
@@ -387,25 +392,24 @@ class Profile_Magic_Rest_API {
 	 * @param WP_User $user     WordPress user object.
 	 * @param string  $password Password to verify.
 	 *
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	protected function fallback_password_verification( $user, $password ) {
-		// Check if it's a regular WordPress password
-		if ( wp_check_password( $password, $user->user_pass, $user->ID ) ) {
-			return true;
-		}
-
-		// Check if it matches any stored application passwords in user meta
+		// Legacy fallback: check ProfileGrid-scoped stored application passwords only.
 		$stored_passwords = get_user_meta( $user->ID, 'profilegrid_application_passwords', true );
 		if ( is_array( $stored_passwords ) ) {
 			foreach ( $stored_passwords as $stored_password ) {
-				if ( wp_check_password( $password, $stored_password['password_hash'] ) ) {
+				if ( is_array( $stored_password ) && ! empty( $stored_password['password_hash'] ) && wp_check_password( $password, $stored_password['password_hash'] ) ) {
 					return true;
 				}
 			}
 		}
 
-		return false;
+		return new WP_Error(
+			'pg_rest_app_password_unsupported',
+			__( 'Application password authentication is not available on this site.', 'profilegrid-user-profiles-groups-and-communities' ),
+			array( 'status' => rest_authorization_required_code() )
+		);
 	}
 
 	/**
@@ -2805,7 +2809,10 @@ class Profile_Magic_Rest_API {
 		}
 
 		if ( empty( $token ) ) {
-			$token = $request->get_param( 'token' );
+			$allow_query_token = apply_filters( 'pg_rest_api_allow_query_token', false, $request );
+			if ( $allow_query_token ) {
+				$token = $request->get_param( 'token' );
+			}
 		}
 
 		return $token;

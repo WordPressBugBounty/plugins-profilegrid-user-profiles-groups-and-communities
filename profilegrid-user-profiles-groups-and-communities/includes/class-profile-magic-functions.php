@@ -785,8 +785,8 @@ class Profile_Magic_Basic_Functions {
      */
     public function pm_user_is_group_manager( $user_id, $gid ) {
         $user_id = absint( $user_id );
-        $gid     = absint( $gid );
-        if ( 0 === $user_id || 0 === $gid ) {
+        $gid     = is_scalar( $gid ) ? trim( (string) $gid ) : '';
+        if ( 0 === $user_id || '' === $gid ) {
             return false;
         }
 
