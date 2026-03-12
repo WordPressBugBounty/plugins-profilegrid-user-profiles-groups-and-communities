@@ -42,7 +42,7 @@ if ( class_exists( 'Profile_Magic_Basic_Functions' ) ) {
                                onkeyup="pm_advance_user_search('')"
                                value="<?php
                                    if ( isset( $_GET['pm_search'] ) ) {
-                                       echo esc_attr( filter_input( INPUT_GET, 'pm_search', FILTER_SANITIZE_STRING ) );
+                                       echo esc_attr( sanitize_text_field( wp_unslash( (string) filter_input( INPUT_GET, 'pm_search', FILTER_UNSAFE_RAW ) ) ) );
                                    }
                                ?>">
                         <?php if ( $pm_show_search_sortby == 1 ) : ?>   

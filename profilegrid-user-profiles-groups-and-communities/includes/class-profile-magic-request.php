@@ -270,7 +270,7 @@ class PM_request {
 				'associate_group' => $gid,
 				'field_type'      => $type,
 			);
-			if ( $signup = true ) {
+			if ( $signup == true ) {
 				$where['show_in_signup_form'] = 1;
 			}
 			$result = $dbhandler->get_all_result( 'FIELDS', '*', $where, 'results', 0, false, 'ordering' );
@@ -2256,7 +2256,8 @@ class PM_request {
 			if ( $active ) {
 				 $additional = "AND title IS NULL AND (s_id = $uid OR r_id = $uid)";
 			} else {
-				 $additional = 'AND s_id = ' . $uid . ' OR r_id = ' . $uid;
+				// Group OR participant checks so status and other filters apply to both sender and receiver sides.
+				 $additional = 'AND (s_id = ' . $uid . ' OR r_id = ' . $uid . ')';
 			}
 			$additional = apply_filters('pm_get_user_all_threads_additional',$additional,$uid,$active);
                         $threads = $dbhandler->get_all_result( $identifier, $column = '*', $where, 'results', 0, $limit, 'timestamp', true, $additional );

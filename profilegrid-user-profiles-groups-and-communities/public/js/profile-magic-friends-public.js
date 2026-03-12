@@ -15,7 +15,8 @@ function pm_load_more_friends(uid,page,total_page)
 						'action': 'pm_fetch_my_friends',
 						'uid' : uid,
 						'pagenum' :page,
-						'pm_f_search':pm_f_search
+						'pm_f_search':pm_f_search,
+						'nonce': pm_ajax_object.nonce
 					};
 	jQuery('#pm_load_more_result').hide();
 	jQuery('.pm-loader-img').show();
@@ -48,7 +49,7 @@ function pm_load_more_friends(uid,page,total_page)
 function pm_add_friend_request(user1,user2,button)
 {
    
-	var data = {'action': 'pm_add_friend_request','user1' : user1,'user2' :user2};
+	var data = {'action': 'pm_add_friend_request','user1' : user1,'user2' :user2,'nonce': pm_ajax_object.nonce};
 	jQuery(button).parent('.pm-request-button').children('button').hide();
 	jQuery(button).parent('.pm-request-button').children('img').show();
 	
@@ -63,7 +64,7 @@ function pm_add_friend_request(user1,user2,button)
 
 function pm_get_notification(timestamp)
 { 
-	var data = {'action': 'pm_get_friends_notification','timestamp' :timestamp};	
+	var data = {'action': 'pm_get_friends_notification','timestamp' :timestamp,'nonce': pm_ajax_object.nonce};	
 	jQuery.get(pm_ajax_object.ajax_url, data, function(response) 
 	{
 		if(response)
@@ -85,7 +86,7 @@ function pm_confirm_request_from_notification(user1,user2,button,id){
 }
 function pm_confirm_request(user1,user2,button)
 {
-	var data = {'action': 'pm_confirm_friend_request','user1' : user1,'user2' :user2};
+	var data = {'action': 'pm_confirm_friend_request','user1' : user1,'user2' :user2,'nonce': pm_ajax_object.nonce};
 	jQuery("#pg-friend-requests").html('<div><div class="pm-loader"></div></div>');
         var pmDomColor = jQuery(".pmagic").children("a").css('color');
         jQuery(".pm-loader").css('border-top-color', pmDomColor);
@@ -104,7 +105,7 @@ function pm_confirm_request(user1,user2,button)
 
 function pm_confirm_request_right_side(user1,user2,button)
 {
-	var data = {'action': 'pm_confirm_friend_request','user1' : user1,'user2' :user2};
+	var data = {'action': 'pm_confirm_friend_request','user1' : user1,'user2' :user2,'nonce': pm_ajax_object.nonce};
         var selector = jQuery(button).parent('div');
 	jQuery(selector).html('<div><div class="pm-loader"></div></div>');
         var pmDomColor = jQuery(".pmagic").children("a").css('color');
@@ -122,7 +123,7 @@ function pm_confirm_request_right_side(user1,user2,button)
 function pm_update_counter(uid)
 {
     
-    var data = {'action': 'pm_fetch_friend_list_counter','uid' : uid,'pm_friend_view' :1};	
+    var data = {'action': 'pm_fetch_friend_list_counter','uid' : uid,'pm_friend_view' :1,'nonce': pm_ajax_object.nonce};	
 	jQuery.post(pm_ajax_object.ajax_url, data, function(response) {
 		if(response)
 		{
@@ -130,7 +131,7 @@ function pm_update_counter(uid)
                 }
 	});	
         
-        var data2 = {'action': 'pm_fetch_friend_list_counter','uid' : uid,'pm_friend_view' :2};	
+        var data2 = {'action': 'pm_fetch_friend_list_counter','uid' : uid,'pm_friend_view' :2,'nonce': pm_ajax_object.nonce};	
 	jQuery.post(pm_ajax_object.ajax_url, data2, function(response2) {
 		if(response2)
 		{
@@ -138,7 +139,7 @@ function pm_update_counter(uid)
                 }
 	});	
         
-        var data3 = {'action': 'pm_fetch_friend_list_counter','uid' : uid,'pm_friend_view' :3};	
+        var data3 = {'action': 'pm_fetch_friend_list_counter','uid' : uid,'pm_friend_view' :3,'nonce': pm_ajax_object.nonce};	
 	jQuery.post(pm_ajax_object.ajax_url, data3, function(response3) {
 		if(response3)
 		{
@@ -152,7 +153,7 @@ function pm_update_counter(uid)
 function pm_remove_suggestions(user1,user2,button)
 {
 	
-	var data = {'action': 'pm_remove_friend_suggestion','user1' : user1,'user2' :user2};
+	var data = {'action': 'pm_remove_friend_suggestion','user1' : user1,'user2' :user2,'nonce': pm_ajax_object.nonce};
 	jQuery(button).parent('.pm-request-button').children('button').hide();
 	jQuery(button).parent('.pm-request-button').children('img').show();
 	
@@ -181,7 +182,7 @@ function pm_reject_friend_request(user1,user2,button)
     }
     if(result)
     {
-	var data = {'action': 'pm_reject_friend_request','user1' : user1,'user2' :user2};
+	var data = {'action': 'pm_reject_friend_request','user1' : user1,'user2' :user2,'nonce': pm_ajax_object.nonce};
 	jQuery("#pg-friend-requests").html('<div><div class="pm-loader"></div></div>');
         var pmDomColor = jQuery(".pmagic").children("a").css('color');
         jQuery(".pm-loader").css('border-top-color', pmDomColor);
@@ -204,7 +205,7 @@ function pm_reject_friend_request_right_side(user1,user2,button)
      var result = confirm(pm_error_object.delete_friend_request);
     if(result)
     {
-	var data = {'action': 'pm_reject_friend_request','user1' : user1,'user2' :user2};
+	var data = {'action': 'pm_reject_friend_request','user1' : user1,'user2' :user2,'nonce': pm_ajax_object.nonce};
 	var selector = jQuery(button).parent('div');
 	jQuery(selector).html('<div><div class="pm-loader"></div></div>');
         var pmDomColor = jQuery(".pmagic").children("a").css('color');
@@ -221,7 +222,7 @@ function pm_reject_friend_request_right_side(user1,user2,button)
 
 function pm_unfriend_request(user1,user2,button)
 {
-    var data = {'action': 'pm_unfriend_friend','user1' : user1,'user2' :user2};
+    var data = {'action': 'pm_unfriend_friend','user1' : user1,'user2' :user2,'nonce': pm_ajax_object.nonce};
     jQuery("#pg-myfriends").html('<div><div class="pm-loader"></div></div>');
     var pmDomColor = jQuery(".pmagic").children("a").css('color');
     jQuery(".pm-loader").css('border-top-color', pmDomColor);
@@ -242,7 +243,7 @@ function pm_unfriend_request_rightside(user1,user2,button)
 	  var result = confirm(pm_error_object.remove_friend);
     if(result)
     {
-        var data = {'action': 'pm_unfriend_friend','user1' : user1,'user2' :user2};
+        var data = {'action': 'pm_unfriend_friend','user1' : user1,'user2' :user2,'nonce': pm_ajax_object.nonce};
 	jQuery(button).html('<div><div class="pm-loader"></div></div>');
         var pmDomColor = jQuery(".pmagic").children("a").css('color');
         jQuery(".pm-loader").css('border-top-color', pmDomColor);
@@ -258,7 +259,7 @@ function pm_unfriend_request_rightside(user1,user2,button)
 }
 function pm_cancel_request_rightside(user1,user2,button)
 {
-	var data = {'action': 'pm_unfriend_friend','user1' : user1,'user2' :user2,'cancel_request':'1'};
+	var data = {'action': 'pm_unfriend_friend','user1' : user1,'user2' :user2,'cancel_request':'1','nonce': pm_ajax_object.nonce};
         jQuery(button).html('<div><div class="pm-loader"></div></div>');
         var pmDomColor = jQuery(".pmagic").children("a").css('color');
         jQuery(".pm-loader").css('border-top-color', pmDomColor);
@@ -275,7 +276,7 @@ function pm_cancel_request_rightside(user1,user2,button)
 
 function pm_cancel_request(user1,user2,button)
 {
-	var data = {'action': 'pm_unfriend_friend','user1' : user1,'user2' :user2,'cancel_request':'1'};
+	var data = {'action': 'pm_unfriend_friend','user1' : user1,'user2' :user2,'cancel_request':'1','nonce': pm_ajax_object.nonce};
 	jQuery("#pg-requests-sent").html('<div><div class="pm-loader"></div></div>');
         var pmDomColor = jQuery(".pmagic").children("a").css('color');
         jQuery(".pm-loader").css('border-top-color', pmDomColor);
@@ -456,7 +457,7 @@ function pm_get_my_friends(pagenum,uid)
 {
   //  console.log('hi you are entring in my friends section.');
     var page = parseInt(pagenum);
-    var data = {action: 'pm_fetch_my_friends', 'uid': uid,'pagenum':page,'pm_friend_view':1};
+    var data = {action: 'pm_fetch_my_friends', 'uid': uid,'pagenum':page,'pm_friend_view':1,'nonce': pm_ajax_object.nonce};
     jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         if(response)
         {
@@ -473,7 +474,7 @@ function pm_get_my_friends(pagenum,uid)
 function pm_get_friend_requests_sent(pagenum,uid)
 {
     var page = parseInt(pagenum);
-    var data = {action: 'pm_fetch_my_friends', 'uid': uid,'pagenum':page,'pm_friend_view':3};
+    var data = {action: 'pm_fetch_my_friends', 'uid': uid,'pagenum':page,'pm_friend_view':3,'nonce': pm_ajax_object.nonce};
     jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         if(response)
         {
@@ -489,7 +490,7 @@ function pm_get_friend_requests_sent(pagenum,uid)
 function pm_get_friend_requests(pagenum,uid)
 {
     var page = parseInt(pagenum);
-    var data = {action: 'pm_fetch_my_friends', 'uid': uid,'pagenum':page,'pm_friend_view':2};
+    var data = {action: 'pm_fetch_my_friends', 'uid': uid,'pagenum':page,'pm_friend_view':2,'nonce': pm_ajax_object.nonce};
     jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         if(response)
         {

@@ -7389,6 +7389,7 @@ table.pg-setting-table-wide thead td, table.pg-setting-table-wide thead th {
 .pg-user-joined-groups .pg-user-joined-group img{
     width: 32px;
     height: auto;
+    transition: 0.3s;
 }
 
 .pg-user-joined-groups .pg-user-joined-group img {

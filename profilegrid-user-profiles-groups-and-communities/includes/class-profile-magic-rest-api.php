@@ -50,6 +50,13 @@ class Profile_Magic_Rest_API {
 	protected $option_name = 'pg_enable_rest_api';
 
 	/**
+	 * Option name for endpoint permissions map.
+	 *
+	 * @var string
+	 */
+	protected $endpoint_permissions_option_name = 'pg_rest_endpoint_permissions';
+
+	/**
 	 * Stores the authenticated user during a REST request.
 	 *
 	 * @var WP_User|null
@@ -269,14 +276,36 @@ class Profile_Magic_Rest_API {
 		if ( isset( $_POST['pg_api_settings_nonce'] ) ) {
 			$nonce = sanitize_text_field( wp_unslash( $_POST['pg_api_settings_nonce'] ) );
 			if ( wp_verify_nonce( $nonce, 'pg_api_settings_action' ) ) {
-				$enabled = isset( $_POST['pg_enable_rest_api'] ) ? 1 : 0;
-				update_option( $this->option_name, $enabled );
-				add_settings_error( 'pg_api_settings', 'pg_api_settings', __( 'Settings saved.', 'profilegrid-user-profiles-groups-and-communities' ), 'updated' );
+				if ( isset( $_POST['pg_api_reset'] ) ) {
+					update_option( $this->option_name, 0 );
+					update_option( $this->endpoint_permissions_option_name, $this->get_default_endpoint_permissions() );
+					add_settings_error( 'pg_api_settings', 'pg_api_settings', esc_html__( 'Settings reset.', 'profilegrid-user-profiles-groups-and-communities' ), 'updated' );
+				} else {
+					$enabled = isset( $_POST['pg_enable_rest_api'] ) ? 1 : 0;
+					update_option( $this->option_name, $enabled );
+
+					$available_roles      = $this->get_settings_available_roles();
+					$raw_permissions      = isset( $_POST['pg_endpoint_permissions'] ) ? wp_unslash( $_POST['pg_endpoint_permissions'] ) : array();
+					$sanitized_permissions = $this->sanitize_endpoint_permissions_input( $raw_permissions, $available_roles );
+					update_option( $this->endpoint_permissions_option_name, $sanitized_permissions );
+
+					add_settings_error( 'pg_api_settings', 'pg_api_settings', esc_html__( 'Settings saved.', 'profilegrid-user-profiles-groups-and-communities' ), 'updated' );
+				}
 			}
 		}
 
-		$api_enabled   = (int) get_option( $this->option_name, 0 );
-		$endpoint_base = rest_url( $this->namespace );
+		$api_enabled          = (int) get_option( $this->option_name, 0 );
+		$endpoint_base        = rest_url( $this->namespace );
+		$permission_actions   = $this->get_permission_actions();
+		$endpoint_risks       = $this->get_permission_risk_map();
+		$available_roles      = $this->get_settings_available_roles();
+		$endpoint_permissions = $this->get_endpoint_permissions();
+		$api_reference_rows   = $this->get_api_reference_rows();
+		$active_tab           = isset( $_POST['pg_active_tab'] ) ? sanitize_key( wp_unslash( $_POST['pg_active_tab'] ) ) : ( isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'general' );
+		$allowed_tabs         = array( 'general', 'permissions', 'reference' );
+		if ( ! in_array( $active_tab, $allowed_tabs, true ) ) {
+			$active_tab = 'general';
+		}
 
 		settings_errors( 'pg_api_settings' );
 
@@ -2543,178 +2572,78 @@ class Profile_Magic_Rest_API {
 
 		$action = $request->get_param( 'action' );
 
+		if ( 'get_access_token' !== $action ) {
+			$auth = $this->authenticate_request( $request );
+			if ( is_wp_error( $auth ) ) {
+				return $auth;
+			}
+
+			$authorization = $this->authorize_integration_action( $action, $request );
+			if ( is_wp_error( $authorization ) ) {
+				return $authorization;
+			}
+		}
+
 		switch ( $action ) {
 			case 'get_access_token':
 				return $this->generate_access_token( $request );
 
 			case 'get_all_groups':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->get_groups( $request );
 
 			case 'get_single_group':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->get_single_group( $request );
 			case 'get_group_members':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->get_group_members_endpoint( $request );
 			case 'add_group_members':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->add_group_members_endpoint( $request );
 			case 'remove_group_member':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->remove_group_member_endpoint( $request );
 			case 'update_group':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->update_group_endpoint( $request );
 			case 'delete_group':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->delete_group_endpoint( $request );
 			case 'get_membership_requests':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->get_membership_requests_endpoint( $request );
 			case 'create_membership_request':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->create_membership_request_endpoint( $request );
 			case 'approve_membership_request':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->approve_membership_request_endpoint( $request );
 			case 'deny_membership_request':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->deny_membership_request_endpoint( $request );
 			case 'assign_group':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->assign_group_endpoint( $request );
 			case 'remove_from_group':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->remove_from_group_endpoint( $request );
 			case 'activate_user_account':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->activate_user_account_endpoint( $request );
 			case 'deactivate_user_account':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->deactivate_user_account_endpoint( $request );
 			case 'activate_all_user':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->activate_all_user_endpoint( $request );
 			case 'deactivate_all_user':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->deactivate_all_user_endpoint( $request );
 			case 'update_user_profile':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->update_user_profile_endpoint( $request );
 			case 'bulk_approve_all_membership_requests':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->bulk_approve_all_membership_requests_endpoint( $request );
 			case 'bulk_deny_all_membership_requests':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->bulk_deny_all_membership_requests_endpoint( $request );
 			case 'create_group':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->create_group( $request );
 			case 'get_users':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->get_users_endpoint( $request );
 			case 'get_user_details':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->get_user_details_endpoint( $request );
 			case 'get_group_section':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->get_group_section_endpoint( $request );
 			case 'update_group_section':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->update_group_section_endpoint( $request );
 			case 'delete_section':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->delete_group_section_endpoint( $request );
 			case 'create_group_section':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->create_group_section_endpoint( $request );
 			case 'create_group_field':
-				$auth = $this->authenticate_request( $request );
-				if ( is_wp_error( $auth ) ) {
-					return $auth;
-				}
 				return $this->create_group_field_endpoint( $request );
 
 			default:
@@ -2762,6 +2691,19 @@ class Profile_Magic_Rest_API {
 				__( 'You are not allowed to use ProfileGrid APIs.', 'profilegrid-user-profiles-groups-and-communities' ),
 				array( 'status' => rest_authorization_required_code() )
 			);
+		}
+
+		/*
+		 * Enforce endpoint-level saved role permissions for both:
+		 * - integration action requests (?integration=1&action=...)
+		 * - direct REST routes (e.g. /groups, /groups/{id})
+		 */
+		$scoped_action = $this->resolve_permission_action_from_request( $request );
+		if ( ! empty( $scoped_action ) ) {
+			$authorization = $this->authorize_integration_action( $scoped_action, $request );
+			if ( is_wp_error( $authorization ) ) {
+				return $authorization;
+			}
 		}
 
 		return true;
@@ -3855,6 +3797,490 @@ class Profile_Magic_Rest_API {
 		return $this->section_desc_column_present;
 	}
 
+	/**
+	 * Returns scoped endpoint permission actions.
+	 *
+	 * @return array
+	 */
+	protected function get_permission_actions() {
+		return array(
+			'get_all_groups',
+			'get_single_group',
+			'get_users',
+			'get_user_details',
+			'get_group_members',
+			'get_group_section',
+			'get_membership_requests',
+			'create_group',
+			'update_user_profile',
+			'activate_user_account',
+			'deactivate_user_account',
+			'activate_all_user',
+			'deactivate_all_user',
+			'assign_group',
+			'remove_from_group',
+			'add_group_members',
+			'remove_group_member',
+			'update_group',
+			'delete_group',
+			'create_group_section',
+			'update_group_section',
+			'delete_section',
+			'create_group_field',
+			'create_membership_request',
+			'approve_membership_request',
+			'deny_membership_request',
+			'bulk_approve_all_membership_requests',
+			'bulk_deny_all_membership_requests',
+		);
+	}
+
+	/**
+	 * Returns risk labels for permission actions.
+	 *
+	 * @return array
+	 */
+	protected function get_permission_risk_map() {
+		return array(
+			'get_all_groups'                      => 'Low',
+			'get_single_group'                   => 'Low',
+			'get_group_section'                    => 'Low',
+			'create_membership_request'            => 'Medium',
+			'get_users'                            => 'Medium',
+			'get_user_details'                     => 'Medium',
+			'get_group_members'                    => 'Medium',
+			'get_membership_requests'              => 'Medium',
+			'create_group'                         => 'High',
+			'update_user_profile'                  => 'High',
+			'activate_user_account'                => 'High',
+			'deactivate_user_account'              => 'High',
+			'activate_all_user'                    => 'High',
+			'deactivate_all_user'                  => 'High',
+			'assign_group'                         => 'High',
+			'remove_from_group'                    => 'High',
+			'add_group_members'                    => 'High',
+			'remove_group_member'                  => 'High',
+			'update_group'                         => 'High',
+			'delete_group'                         => 'High',
+			'create_group_section'                 => 'High',
+			'update_group_section'                 => 'High',
+			'delete_section'                       => 'High',
+			'create_group_field'                   => 'High',
+			'approve_membership_request'           => 'High',
+			'deny_membership_request'              => 'High',
+			'bulk_approve_all_membership_requests' => 'High',
+			'bulk_deny_all_membership_requests'    => 'High',
+		);
+	}
+
+	/**
+	 * Default endpoint permission map.
+	 *
+	 * @return array
+	 */
+	protected function get_default_endpoint_permissions() {
+		$defaults = array();
+		foreach ( $this->get_permission_actions() as $action ) {
+			$defaults[ $action ] = array( 'administrator', 'editor', 'author' );
+		}
+
+		return $defaults;
+	}
+
+	/**
+	 * Collect available roles for endpoint permission settings.
+	 *
+	 * @return array
+	 */
+	protected function get_settings_available_roles() {
+		$available_roles = array();
+		$wp_roles        = wp_roles();
+
+		if ( ! empty( $wp_roles->roles ) && is_array( $wp_roles->roles ) ) {
+			foreach ( $wp_roles->roles as $role_slug => $role_data ) {
+				$available_roles[ $role_slug ] = isset( $role_data['name'] ) ? $role_data['name'] : ucfirst( str_replace( '_', ' ', $role_slug ) );
+			}
+		}
+
+		$uid = get_current_user_id();
+		if ( $uid > 0 && $this->is_profilegrid_group_leader_user( $uid ) ) {
+				$available_roles['pm_group_leader']  = esc_html__( 'ProfileGrid Group Leader', 'profilegrid-user-profiles-groups-and-communities' );
+				$available_roles['pm_group_manager'] = esc_html__( 'ProfileGrid Group Manager', 'profilegrid-user-profiles-groups-and-communities' );
+		}
+
+		return (array) apply_filters( 'profilegrid_api_settings_available_roles', $available_roles );
+	}
+
+	/**
+	 * Sanitizes endpoint permissions input.
+	 *
+	 * @param mixed $raw_permissions Raw permissions.
+	 * @param array $available_roles Available roles list.
+	 *
+	 * @return array
+	 */
+	protected function sanitize_endpoint_permissions_input( $raw_permissions, $available_roles ) {
+		$raw_permissions = is_array( $raw_permissions ) ? $raw_permissions : array();
+		$allowed_actions = $this->get_permission_actions();
+		$role_slugs      = array_keys( (array) $available_roles );
+		$sanitized       = array();
+
+		foreach ( $allowed_actions as $action ) {
+			$roles = isset( $raw_permissions[ $action ] ) ? (array) $raw_permissions[ $action ] : array();
+			$roles = array_map( 'sanitize_key', $roles );
+			$roles = array_values( array_intersect( array_unique( $roles ), $role_slugs ) );
+			$sanitized[ $action ] = $roles;
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Returns saved endpoint permissions map with legacy default upgrade.
+	 *
+	 * @return array
+	 */
+	protected function get_saved_endpoint_permissions_map() {
+		$defaults = $this->get_default_endpoint_permissions();
+		$saved    = get_option( $this->endpoint_permissions_option_name, null );
+
+		if ( ! is_array( $saved ) ) {
+			return $defaults;
+		}
+
+		/*
+		 * Legacy builds used editor+author defaults.
+		 * Upgrade that exact legacy map to include administrator by default.
+		 */
+		if ( $this->is_legacy_endpoint_permissions_default_map( $saved ) ) {
+			update_option( $this->endpoint_permissions_option_name, $defaults );
+			return $defaults;
+		}
+
+		return $saved;
+	}
+
+	/**
+	 * Checks if saved permissions still match the legacy default map.
+	 *
+	 * @param array $permissions Saved endpoint permissions map.
+	 *
+	 * @return bool
+	 */
+	protected function is_legacy_endpoint_permissions_default_map( $permissions ) {
+		if ( ! is_array( $permissions ) ) {
+			return false;
+		}
+
+		$legacy_roles = array( 'author', 'editor' );
+		$actions      = $this->get_permission_actions();
+		$has_match    = false;
+
+		foreach ( $actions as $action ) {
+			if ( ! array_key_exists( $action, $permissions ) ) {
+				continue;
+			}
+
+			$action_roles = array_map( 'sanitize_key', (array) $permissions[ $action ] );
+			$action_roles = array_values( array_unique( $action_roles ) );
+			sort( $action_roles );
+
+			if ( $action_roles !== $legacy_roles ) {
+				return false;
+			}
+
+			$has_match = true;
+		}
+
+		return $has_match;
+	}
+
+	/**
+	 * Returns saved endpoint permission map.
+	 *
+	 * @return array
+	 */
+	protected function get_endpoint_permissions() {
+		$defaults        = $this->get_default_endpoint_permissions();
+		$available_roles = $this->get_settings_available_roles();
+		$saved_raw       = $this->get_saved_endpoint_permissions_map();
+		$saved_keys      = array_keys( $saved_raw );
+		$saved           = $this->sanitize_endpoint_permissions_input( $saved_raw, $available_roles );
+		$role_slugs      = array_keys( (array) $available_roles );
+
+		// Keep defaults only for truly missing actions.
+		foreach ( $defaults as $action => $roles ) {
+			$default_roles = array_values( array_intersect( array_map( 'sanitize_key', (array) $roles ), $role_slugs ) );
+			if ( ! in_array( $action, $saved_keys, true ) ) {
+				$saved[ $action ] = $default_roles;
+			}
+		}
+
+		return $saved;
+	}
+
+	/**
+	 * Returns API reference rows shown in settings.
+	 *
+	 * @return array
+	 */
+	protected function get_api_reference_rows() {
+		$base = rest_url( $this->namespace );
+
+		return array(
+			array( 'group' => 'Auth', 'method' => 'POST', 'action' => 'token', 'url' => $base . '/token' ),
+			array( 'group' => 'Users', 'method' => 'GET', 'action' => 'get_users', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'get_users' ), $base ) ),
+			array( 'group' => 'Users', 'method' => 'GET', 'action' => 'get_user_details', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'get_user_details', 'user_id' => 123 ), $base ) ),
+			array( 'group' => 'Users', 'method' => 'POST', 'action' => 'update_user_profile', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'update_user_profile' ), $base ) ),
+			array( 'group' => 'Users', 'method' => 'POST', 'action' => 'activate_user_account', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'activate_user_account' ), $base ) ),
+			array( 'group' => 'Users', 'method' => 'POST', 'action' => 'deactivate_user_account', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'deactivate_user_account' ), $base ) ),
+			array( 'group' => 'Users', 'method' => 'POST', 'action' => 'activate_all_user', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'activate_all_user' ), $base ) ),
+			array( 'group' => 'Users', 'method' => 'POST', 'action' => 'deactivate_all_user', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'deactivate_all_user' ), $base ) ),
+			array( 'group' => 'Groups', 'method' => 'GET', 'action' => 'get_all_groups', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'get_all_groups' ), $base ) ),
+			array( 'group' => 'Groups', 'method' => 'GET', 'action' => 'get_single_group', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'get_single_group', 'group_id' => 123 ), $base ) ),
+			array( 'group' => 'Groups', 'method' => 'POST', 'action' => 'create_group', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'create_group' ), $base ) ),
+			array( 'group' => 'Groups', 'method' => 'POST', 'action' => 'update_group', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'update_group', 'group_id' => 123 ), $base ) ),
+			array( 'group' => 'Groups', 'method' => 'POST', 'action' => 'delete_group', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'delete_group', 'group_id' => 123 ), $base ) ),
+			array( 'group' => 'Group Members', 'method' => 'GET', 'action' => 'get_group_members', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'get_group_members', 'group_id' => 123 ), $base ) ),
+			array( 'group' => 'Group Members', 'method' => 'POST', 'action' => 'add_group_members', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'add_group_members' ), $base ) ),
+			array( 'group' => 'Group Members', 'method' => 'POST', 'action' => 'remove_group_member', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'remove_group_member' ), $base ) ),
+			array( 'group' => 'Group Members', 'method' => 'POST', 'action' => 'assign_group', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'assign_group' ), $base ) ),
+			array( 'group' => 'Group Members', 'method' => 'POST', 'action' => 'remove_from_group', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'remove_from_group' ), $base ) ),
+			array( 'group' => 'Group Sections', 'method' => 'GET', 'action' => 'get_group_section', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'get_group_section', 'group_id' => 123 ), $base ) ),
+			array( 'group' => 'Group Sections', 'method' => 'POST', 'action' => 'create_group_section', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'create_group_section' ), $base ) ),
+			array( 'group' => 'Group Sections', 'method' => 'POST', 'action' => 'update_group_section', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'update_group_section' ), $base ) ),
+			array( 'group' => 'Group Sections', 'method' => 'POST', 'action' => 'delete_section', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'delete_section' ), $base ) ),
+			array( 'group' => 'Group Fields', 'method' => 'POST', 'action' => 'create_group_field', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'create_group_field' ), $base ) ),
+			array( 'group' => 'Membership', 'method' => 'GET', 'action' => 'get_membership_requests', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'get_membership_requests' ), $base ) ),
+			array( 'group' => 'Membership', 'method' => 'POST', 'action' => 'create_membership_request', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'create_membership_request' ), $base ) ),
+			array( 'group' => 'Membership', 'method' => 'POST', 'action' => 'approve_membership_request', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'approve_membership_request', 'request_id' => 456 ), $base ) ),
+			array( 'group' => 'Membership', 'method' => 'POST', 'action' => 'deny_membership_request', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'deny_membership_request', 'request_id' => 456 ), $base ) ),
+			array( 'group' => 'Membership', 'method' => 'POST', 'action' => 'bulk_approve_all_membership_requests', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'bulk_approve_all_membership_requests' ), $base ) ),
+			array( 'group' => 'Membership', 'method' => 'POST', 'action' => 'bulk_deny_all_membership_requests', 'url' => add_query_arg( array( 'integration' => 1, 'action' => 'bulk_deny_all_membership_requests' ), $base ) ),
+		);
+	}
+
+	/**
+	 * Returns permissions map sanitized for runtime checks.
+	 *
+	 * @return array
+	 */
+	protected function get_endpoint_permissions_for_runtime() {
+		$defaults = $this->get_default_endpoint_permissions();
+		$saved    = $this->get_saved_endpoint_permissions_map();
+		$keys     = array_keys( $saved );
+		$pool     = $this->get_runtime_role_pool();
+		$map      = array();
+
+		foreach ( $this->get_permission_actions() as $action ) {
+			$raw_roles = isset( $saved[ $action ] ) ? (array) $saved[ $action ] : array();
+			$raw_roles = array_map( 'sanitize_key', $raw_roles );
+			$roles     = array_values( array_intersect( array_unique( $raw_roles ), $pool ) );
+
+			if ( ! in_array( $action, $keys, true ) && isset( $defaults[ $action ] ) ) {
+				$fallback = array_map( 'sanitize_key', (array) $defaults[ $action ] );
+				$roles    = array_values( array_intersect( array_unique( $fallback ), $pool ) );
+			}
+
+			$map[ $action ] = $roles;
+		}
+
+		return $map;
+	}
+
+	/**
+	 * Returns normalized role pool used by runtime authorization.
+	 *
+	 * @return array
+	 */
+	protected function get_runtime_role_pool() {
+		$pool     = array( 'administrator', 'pm_group_leader', 'pm_group_manager' );
+		$wp_roles = wp_roles();
+
+		if ( ! empty( $wp_roles->roles ) && is_array( $wp_roles->roles ) ) {
+			$pool = array_merge( $pool, array_keys( $wp_roles->roles ) );
+		}
+
+		return array_values( array_unique( array_map( 'sanitize_key', $pool ) ) );
+	}
+
+	/**
+	 * Returns authorization role context for a user.
+	 *
+	 * @param WP_User $user User object.
+	 *
+	 * @return array
+	 */
+	protected function get_user_authorization_roles( $user ) {
+		if ( ! $user instanceof WP_User ) {
+			return array();
+		}
+
+		$roles = array_map( 'sanitize_key', (array) $user->roles );
+
+		// Multisite: network super admins may not have per-site administrator role assigned.
+		if ( is_multisite() && is_super_admin( $user->ID ) ) {
+			$roles[] = 'administrator';
+		}
+
+		if ( $this->is_profilegrid_group_leader_user( (int) $user->ID ) ) {
+			$roles[] = 'pm_group_leader';
+			$roles[] = 'pm_group_manager';
+		}
+
+		return array_values( array_unique( $roles ) );
+	}
+
+	/**
+	 * Checks whether a user is a ProfileGrid group leader.
+	 *
+	 * @param int $uid User ID.
+	 *
+	 * @return bool
+	 */
+	protected function is_profilegrid_group_leader_user( $uid ) {
+		$uid = (int) $uid;
+		if ( $uid <= 0 || ! class_exists( 'PM_request' ) ) {
+			return false;
+		}
+
+		$pm_request = new PM_request();
+		if ( method_exists( $pm_request, 'profile_magic_check_is_group_leader' ) && $pm_request->profile_magic_check_is_group_leader( $uid ) ) {
+			return true;
+		}
+
+		$gids = get_user_meta( $uid, 'pm_group', true );
+		$gids = is_array( $gids ) ? $gids : ( empty( $gids ) ? array() : array( $gids ) );
+
+		if ( method_exists( $pm_request, 'pg_check_in_single_group_is_user_group_leader' ) ) {
+			foreach ( $gids as $gid ) {
+				if ( $pm_request->pg_check_in_single_group_is_user_group_leader( $uid, (int) $gid ) ) {
+					return true;
+				}
+			}
+		}
+
+		if ( method_exists( $pm_request, 'pg_get_group_leaders' ) ) {
+			foreach ( $gids as $gid ) {
+				$leaders = (array) $pm_request->pg_get_group_leaders( (int) $gid );
+				if ( in_array( $uid, array_map( 'intval', $leaders ), true ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Centralized endpoint authorization based on saved permissions map.
+	 *
+	 * @param string          $action  Integration action.
+	 * @param WP_REST_Request $request Request instance.
+	 *
+	 * @return true|WP_Error
+	 */
+	protected function authorize_integration_action( $action, WP_REST_Request $request ) {
+		$action = sanitize_key( $action );
+		if ( empty( $action ) ) {
+			return new WP_Error(
+				'pg_rest_unknown_action',
+				esc_html__( 'Unknown or missing action parameter.', 'profilegrid-user-profiles-groups-and-communities' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$scope = $this->get_permission_actions();
+		if ( ! in_array( $action, $scope, true ) ) {
+			return true;
+		}
+
+		if ( ! $this->current_user instanceof WP_User ) {
+			return $this->forbidden_action_error( $action );
+		}
+
+		$user_roles = $this->get_user_authorization_roles( $this->current_user );
+
+		$map           = $this->get_endpoint_permissions_for_runtime();
+		$allowed_roles = isset( $map[ $action ] ) ? (array) $map[ $action ] : array();
+		if ( empty( $allowed_roles ) ) {
+			return $this->forbidden_action_error( $action );
+		}
+
+		if ( empty( array_intersect( $allowed_roles, $user_roles ) ) ) {
+			return $this->forbidden_action_error( $action );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Resolves permission-scoped action from integration and direct REST requests.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 *
+	 * @return string
+	 */
+	protected function resolve_permission_action_from_request( WP_REST_Request $request ) {
+		$action = sanitize_key( (string) $request->get_param( 'action' ) );
+		if ( ! empty( $action ) ) {
+			return $action;
+		}
+
+		$route            = (string) $request->get_route();
+		$method           = strtoupper( (string) $request->get_method() );
+		$namespace_prefix = '/' . trim( $this->namespace, '/' );
+
+		if ( strpos( $route, $namespace_prefix ) === 0 ) {
+			$route = substr( $route, strlen( $namespace_prefix ) );
+		}
+
+		if ( '' === $route ) {
+			$route = '/';
+		}
+
+		if ( '/groups' === $route ) {
+			if ( 'GET' === $method ) {
+				return 'get_all_groups';
+			}
+
+			if ( 'POST' === $method ) {
+				return 'create_group';
+			}
+		}
+
+		if ( preg_match( '#^/groups/\d+$#', $route ) && 'GET' === $method ) {
+			return 'get_single_group';
+		}
+
+		return '';
+	}
+
+	/**
+	 * Builds a structured forbidden error for action-level authorization failures.
+	 *
+	 * @param string $action Integration action.
+	 *
+	 * @return WP_Error
+	 */
+	protected function forbidden_action_error( $action ) {
+		$action = sanitize_key( $action );
+
+		return new WP_Error(
+			'pg_rest_forbidden_action',
+			sprintf(
+				/* translators: %s: integration action name. */
+				esc_html__( 'Action "%s" is not permitted for your role.', 'profilegrid-user-profiles-groups-and-communities' ),
+				$action
+			),
+			array(
+				'status' => rest_authorization_required_code(),
+				'action' => $action,
+				'hint'   => esc_html__( 'Configure Endpoint Permissions in ProfileGrid > APIs / Webhooks.', 'profilegrid-user-profiles-groups-and-communities' ),
+			)
+		);
+	}
+
 
 	/**
 	 * Checks whether APIs are enabled and returns error when disabled.
@@ -3894,7 +4320,19 @@ class Profile_Magic_Rest_API {
 			return false;
 		}
 
-		$allowed_roles = apply_filters( 'profilegrid_api_allowed_roles', $this->allowed_roles, $user );
+		if ( is_multisite() && is_super_admin( $user->ID ) ) {
+			return true;
+		}
+
+		$endpoint_permissions = $this->get_endpoint_permissions_for_runtime();
+		$dynamic_roles        = array();
+		foreach ( $endpoint_permissions as $action_roles ) {
+			$dynamic_roles = array_merge( $dynamic_roles, (array) $action_roles );
+		}
+		$dynamic_roles = array_values( array_unique( array_map( 'sanitize_key', $dynamic_roles ) ) );
+
+		$allowed_roles = array_values( array_unique( array_merge( array( 'administrator' ), (array) $this->allowed_roles, $dynamic_roles ) ) );
+		$allowed_roles = apply_filters( 'profilegrid_api_allowed_roles', $allowed_roles, $user );
 		$user_roles    = (array) $user->roles;
 
 		return ! empty( array_intersect( $allowed_roles, $user_roles ) );

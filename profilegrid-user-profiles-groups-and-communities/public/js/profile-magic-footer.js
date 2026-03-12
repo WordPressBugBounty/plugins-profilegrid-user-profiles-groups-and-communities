@@ -29,7 +29,7 @@ function checkCoverCoords()
 };
 
  function pm_delete_notification(id){
-    var data = {action: 'pm_delete_notification', 'id': id};
+    var data = {action: 'pm_delete_notification', 'id': id, 'nonce': pm_ajax_object.nonce};
     jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         if(response)
         {
@@ -41,7 +41,7 @@ function checkCoverCoords()
 
 function pm_load_more_notification(loadnum){
       jQuery("#pm_load_more_notif").remove();
-      var data = {action: 'pm_load_more_notification','loadnum':loadnum};
+      var data = {action: 'pm_load_more_notification','loadnum':loadnum,'nonce': pm_ajax_object.nonce};
        jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         if(response)
         {
@@ -52,7 +52,7 @@ function pm_load_more_notification(loadnum){
 }
 
 function pm_read_all_notification(){
-      var data = {action: 'pm_read_all_notification'};
+      var data = {action: 'pm_read_all_notification','nonce': pm_ajax_object.nonce};
        jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         if(response)
         {
@@ -71,7 +71,7 @@ function read_notification(){
 
 function refresh_notification(){
   //  console.log("refreshing notification");
-     var data = {action: 'pm_refresh_notification'};
+     var data = {action: 'pm_refresh_notification','nonce': pm_ajax_object.nonce};
        jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         if(response)
         {

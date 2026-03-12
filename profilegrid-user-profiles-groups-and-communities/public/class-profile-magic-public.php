@@ -913,7 +913,7 @@ class Profile_Magic_Public {
 				$message = '<div id="login_error">' . esc_html__( 'Account disabled', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>';
 		}
 		if ( isset( $get['errors'] ) ) {
-				$message = '<div id="login_error">' . $pmrequests->profile_magic_get_error_message( filter_input( INPUT_GET, 'errors', FILTER_SANITIZE_STRING ), 'profilegrid-user-profiles-groups-and-communities' ) . '</div>';
+				$message = '<div id="login_error">' . $pmrequests->profile_magic_get_error_message( sanitize_text_field( wp_unslash( (string) filter_input( INPUT_GET, 'errors', FILTER_UNSAFE_RAW ) ) ), 'profilegrid-user-profiles-groups-and-communities' ) . '</div>';
 		}
 		if ( isset( $get['activated'] ) && $get['activated'] == 'success' ) {
 				$message = '<div class="message">' . esc_html__( 'Your account has been successfully activated.', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>';
@@ -1876,7 +1876,21 @@ if ( isset( $_POST['tid'] ) ) {
 
 
 
+	private function pm_validate_ajax_nonce_or_403( $context_action ) {
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error(
+				array(
+					'code'    => 'invalid_nonce',
+					'message' => esc_html__( 'Security check failed.', 'profilegrid-user-profiles-groups-and-communities' ),
+					'action'  => sanitize_key( (string) $context_action ),
+				),
+				403
+			);
+		}
+	}
+
 	public function pm_fetch_my_friends() {
+		$this->pm_validate_ajax_nonce_or_403( 'pm_fetch_my_friends' );
 		 $pmrequests       = new PM_request();
 		$dbhandler         = new PM_DBhandler();
 			$pmfriends     = new PM_Friends_Functions();
@@ -1896,6 +1910,7 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_fetch_friend_list_counter() {
+		$this->pm_validate_ajax_nonce_or_403( 'pm_fetch_friend_list_counter' );
 		$pmfriends = new PM_Friends_Functions();
 		$uid       = filter_input( INPUT_POST, 'uid', FILTER_VALIDATE_INT );
 		$view      = filter_input( INPUT_POST, 'pm_friend_view' );
@@ -1927,8 +1942,8 @@ if ( isset( $_POST['tid'] ) ) {
 			$limit            = 10; // number of rows in page
 			$pagenum          = isset( $pagenum ) ? absint( $pagenum ) : 1;
 			$offset           = ( $pagenum - 1 ) * $limit;
-			$meta_query_array = $pmrequests->pm_get_user_meta_query( filter_input_array( INPUT_GET, FILTER_SANITIZE_STRING ) );
-			$date_query       = $pmrequests->pm_get_user_date_query( filter_input_array( INPUT_GET, FILTER_SANITIZE_STRING ) );
+			$meta_query_array = $pmrequests->pm_get_user_meta_query( is_array( filter_input_array( INPUT_GET, FILTER_UNSAFE_RAW ) ) ? map_deep( wp_unslash( filter_input_array( INPUT_GET, FILTER_UNSAFE_RAW ) ), 'sanitize_text_field' ) : array() );
+			$date_query       = $pmrequests->pm_get_user_date_query( is_array( filter_input_array( INPUT_GET, FILTER_UNSAFE_RAW ) ) ? map_deep( wp_unslash( filter_input_array( INPUT_GET, FILTER_UNSAFE_RAW ) ), 'sanitize_text_field' ) : array() );
 			$suggestions      = $pmfriends->profile_magic_friends_suggestion( $uid );
 
 			$users = $dbhandler->pm_get_all_users( $pm_u_search, $meta_query_array, '', $offset, $limit, 'ASC', 'include', array(), $date_query, $suggestions );
@@ -1939,6 +1954,7 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_add_friend_request() {
+		$this->pm_validate_ajax_nonce_or_403( 'pm_add_friend_request' );
 		$pmrequests           = new PM_request();
 		$dbhandler            = new PM_DBhandler();
 			$pmnotification   = new Profile_Magic_Notification();
@@ -1975,6 +1991,7 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_remove_friend_suggestion() {
+		$this->pm_validate_ajax_nonce_or_403( 'pm_remove_friend_suggestion' );
 		 $pmrequests          = new PM_request();
 		$dbhandler            = new PM_DBhandler();
 		$identifier           = 'FRIENDS';
@@ -1999,6 +2016,7 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_confirm_friend_request() {
+		$this->pm_validate_ajax_nonce_or_403( 'pm_confirm_friend_request' );
 		$pmrequests         = new PM_request();
 		$dbhandler          = new PM_DBhandler();
 			$pmfriends      = new PM_Friends_Functions();
@@ -2028,6 +2046,7 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_reject_friend_request() {
+		$this->pm_validate_ajax_nonce_or_403( 'pm_reject_friend_request' );
 		$pmrequests    = new PM_request();
 		$dbhandler     = new PM_DBhandler();
 			$pmfriends = new PM_Friends_Functions();
@@ -2057,6 +2076,7 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_block_friend() {
+		$this->pm_validate_ajax_nonce_or_403( 'pm_block_friend' );
 		 $pmrequests   = new PM_request();
 		$dbhandler     = new PM_DBhandler();
 			$pmfriends = new PM_Friends_Functions();
@@ -2083,6 +2103,7 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_unfriend_friend() {
+		$this->pm_validate_ajax_nonce_or_403( 'pm_unfriend_friend' );
 		$pmrequests         = new PM_request();
 		$dbhandler          = new PM_DBhandler();
 			$pmfriends      = new PM_Friends_Functions();
@@ -2118,7 +2139,8 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_get_friends_notification() {
-		 $dbhandler   = new PM_DBhandler();
+		$this->pm_validate_ajax_nonce_or_403( 'pm_get_friends_notification' );
+		$dbhandler   = new PM_DBhandler();
 		$identifier   = 'FRIENDS';
 		$timestamp    = filter_input( INPUT_GET, 'timestamp' );
 		$current_user = wp_get_current_user();
@@ -2200,6 +2222,7 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_delete_notification() {
+		$this->pm_validate_ajax_nonce_or_403( 'pm_delete_notification' );
 		$notif_id        = filter_input( INPUT_POST, 'id' );
 		$pm_notification = new Profile_Magic_Notification();
 		$return          = $pm_notification->pm_delete_notification( $notif_id );
@@ -2208,6 +2231,7 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_load_more_notification() {
+		$this->pm_validate_ajax_nonce_or_403( 'pm_load_more_notification' );
 		$loadnum         = filter_input( INPUT_POST, 'loadnum' );
 		$pm_notification = new Profile_Magic_Notification();
 		$pm_notification->pm_generate_notification_without_heartbeat( $loadnum );
@@ -2216,6 +2240,7 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_read_all_notification() {
+		$this->pm_validate_ajax_nonce_or_403( 'pm_read_all_notification' );
 		$uid             = get_current_user_id();
 		$pm_notification = new Profile_Magic_Notification();
 		$pm_notification->pm_mark_all_notification_as_read( $uid );
@@ -2224,7 +2249,8 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_refresh_notification() {
-		 $pm_notification = new Profile_Magic_Notification();
+		$this->pm_validate_ajax_nonce_or_403( 'pm_refresh_notification' );
+		$pm_notification = new Profile_Magic_Notification();
 		$pm_notification->pm_generate_notification_without_heartbeat();
 		die;
 	}
@@ -2742,8 +2768,8 @@ if ( isset( $_POST['tid'] ) ) {
                     die;
                 }
 		
-                $key    = sanitize_text_field( filter_input( INPUT_POST, 'key', FILTER_SANITIZE_STRING ) );
-                $value  = sanitize_text_field( filter_input( INPUT_POST, 'value', FILTER_SANITIZE_STRING ) );
+                $key    = sanitize_key( wp_unslash( (string) filter_input( INPUT_POST, 'key', FILTER_UNSAFE_RAW ) ) );
+                $value  = sanitize_text_field( wp_unslash( (string) filter_input( INPUT_POST, 'value', FILTER_UNSAFE_RAW ) ) );
                 
 		$current_user     = wp_get_current_user();
 		$user_attachments = get_user_meta( $current_user->ID, $key, true );

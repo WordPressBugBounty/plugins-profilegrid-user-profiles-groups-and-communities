@@ -2224,8 +2224,8 @@ class Profile_Magic_Admin {
                     die;
                 }
                 // Get the inputs securely
-                $key    = sanitize_text_field( filter_input( INPUT_POST, 'key', FILTER_SANITIZE_STRING ) );
-                $value  = sanitize_text_field( filter_input( INPUT_POST, 'value', FILTER_SANITIZE_STRING ) );
+                $key    = sanitize_key( wp_unslash( (string) filter_input( INPUT_POST, 'key', FILTER_UNSAFE_RAW ) ) );
+                $value  = sanitize_text_field( wp_unslash( (string) filter_input( INPUT_POST, 'value', FILTER_UNSAFE_RAW ) ) );
                 $userid = absint( filter_input( INPUT_POST, 'uid', FILTER_SANITIZE_NUMBER_INT ) );
 
                 $current_user_id = get_current_user_id();

@@ -204,7 +204,6 @@ class Profile_Magic {
 		$plugin_admin = new Profile_Magic_Admin( $this->get_profile_magic(), $this->get_version() );
 				$this->loader->add_action( 'admin_init', $plugin_admin, 'pg_activation_redirect' );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'pg_init_all_groups_page_visibility_defaults' );
-
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'profile_magic_admin_menu' );
@@ -311,7 +310,7 @@ class Profile_Magic {
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 		$this->loader->add_action( 'init', $plugin_public, 'register_shortcodes' );
-		$this->loader->add_action( 'wp_ajax_nopriv_pm_captcha_verification', $plugin_public, 'profile_magic_captcha_verification' );
+		// $this->loader->add_action( 'wp_ajax_nopriv_pm_captcha_verification', $plugin_public, 'profile_magic_captcha_verification' );
 		$this->loader->add_action( 'wp_login', $plugin_public, 'profile_magic_check_login_status', 10, 2 );
 		$this->loader->add_action( 'wp_logout', $plugin_public, 'profile_magic_update_logout_status', 999999999999999 );
 		$this->loader->add_action( 'login_form_lostpassword', $plugin_public, 'profile_magic_do_password_lost' );
@@ -332,7 +331,7 @@ class Profile_Magic {
                 $this->loader->add_filter( 'bp_core_fetch_avatar_url', $plugin_public, 'profile_magic_bp_core_fetch_avatar_url', 9999, 2 );
 
 		$this->loader->add_filter( 'retrieve_password_message', $plugin_public, 'profile_magice_retrieve_password_message', 10, 4 );
-		$this->loader->add_action( 'wp_ajax_pm_update_profile_image', $plugin_public, 'pm_update_user_profile_image' );
+		// $this->loader->add_action( 'wp_ajax_pm_update_profile_image', $plugin_public, 'pm_update_user_profile_image' );
 		$this->loader->add_action( 'wp_ajax_pm_change_frontend_user_pass', $plugin_public, 'pm_change_frontend_user_pass' );
 		$this->loader->add_action( 'profile_magic_registration_process', $plugin_public, 'pm_submit_user_registration', 1, 7 );
                 $this->loader->add_action( 'profile_magic_show_captcha', $plugin_public, 'profile_magic_recapcha_field', 1, 1 );

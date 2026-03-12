@@ -5,7 +5,7 @@ Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.9.8.3
+Stable tag: 5.9.8.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -664,6 +664,14 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 5.9.8.4: March 12, 2026 =
+* Security: Added centralized, token-context authorization enforcement for integration actions.
+* Security: Expanded nonce hardening across sensitive AJAX workflows.
+* Added: Refreshed APIs / Webhooks settings with tabbed controls, endpoint-level role permissions, and integrated reference view.
+* Fixed: Enforced saved endpoint-role mappings consistently with stable unauthorized responses.
+* Fixed: Added one-time data normalization on update to migrate legacy group membership storage format for consistent member visibility.
+* Improvements: Minor admin UI and validation refinements for safer configuration workflows.
 
 = 5.9.8.3: March 2, 2026 =
 * Security: Added nonce and authorization hardening for membership request AJAX actions.
@@ -1558,6 +1566,14 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 5.9.8.4: March 12, 2026 =
+* Security: Added centralized, token-context authorization enforcement for integration actions.
+* Security: Expanded nonce hardening across sensitive AJAX workflows.
+* Added: Refreshed APIs / Webhooks settings with tabbed controls, endpoint-level role permissions, and integrated reference view.
+* Fixed: Enforced saved endpoint-role mappings consistently with stable unauthorized responses.
+* Fixed: Added one-time data normalization on update to migrate legacy group membership storage format for consistent member visibility.
+* Improvements: Minor admin UI and validation refinements for safer configuration workflows.
 
 = 5.9.8.3: March 2, 2026 =
 * Security: Added nonce and authorization hardening for membership request AJAX actions.

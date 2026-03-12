@@ -327,6 +327,10 @@ class Profile_Magic_Activator {
 					}
 				}
 			}
+
+			if ( $existing_pg_db_version < '4.5' ) {
+				$this->pm_maybe_migrate_legacy_pm_group_storage();
+			}
 		}
 
 		$paypallog  = $dbhandler->get_row( 'PAYPAL_LOG', '1' );
@@ -348,6 +352,82 @@ class Profile_Magic_Activator {
 			$this->upgrade_paypal_tbl();
 		}
 			update_option( 'progrid_db_version', PROGRID_DB_VERSION );
+	}
+
+	public function pm_maybe_migrate_legacy_pm_group_storage() {
+		$migration_flag = 'pg_pm_group_gid_storage_migrated_v1';
+		if ( get_option( $migration_flag, '' ) === '1' ) {
+			return;
+		}
+
+		$users         = get_users(
+			array(
+				'fields'      => 'ID',
+				'number'      => -1,
+				'meta_key'    => 'pm_group',
+				'count_total' => false,
+			)
+		);
+		$updated_count = 0;
+		if ( ! empty( $users ) ) {
+			foreach ( $users as $user_id ) {
+				$raw_groups = get_user_meta( $user_id, 'pm_group', true );
+				$is_legacy  = false;
+				$converted  = $this->pm_convert_legacy_gid_to_string_groups( $raw_groups, $is_legacy );
+
+				if ( $is_legacy && ! empty( $converted ) ) {
+					update_user_meta( $user_id, 'pm_group', $converted );
+					$updated_count++;
+				}
+			}
+		}
+
+		update_option( $migration_flag, '1', false );
+		update_option( 'pg_pm_group_gid_storage_migrated_v1_count', absint( $updated_count ), false );
+	}
+
+	private function pm_convert_legacy_gid_to_string_groups( $raw_groups, &$is_legacy = false ) {
+		if ( $raw_groups === '' || $raw_groups === null || $raw_groups === false ) {
+			return array();
+		}
+
+		if ( is_string( $raw_groups ) ) {
+			$unserialized = maybe_unserialize( $raw_groups );
+			if ( $unserialized !== $raw_groups ) {
+				return $this->pm_convert_legacy_gid_to_string_groups( $unserialized, $is_legacy );
+			}
+		}
+
+		if ( is_numeric( $raw_groups ) ) {
+			$is_legacy = true;
+			$group_id  = absint( $raw_groups );
+			return $group_id > 0 ? array( (string) $group_id ) : array();
+		}
+
+		if ( ! is_array( $raw_groups ) ) {
+			return array();
+		}
+
+		$normalized = array();
+		foreach ( $raw_groups as $group_id ) {
+			if ( is_int( $group_id ) ) {
+				$is_legacy = true;
+				$group_id  = (string) absint( $group_id );
+			} elseif ( is_string( $group_id ) ) {
+				$group_id = trim( $group_id );
+			} elseif ( is_numeric( $group_id ) ) {
+				$is_legacy = true;
+				$group_id  = (string) absint( $group_id );
+			} else {
+				continue;
+			}
+
+			if ( $group_id !== '' && $group_id !== '0' ) {
+				$normalized[] = $group_id;
+			}
+		}
+
+		return array_values( array_unique( $normalized ) );
 	}
 
 	public function upgrade_paypal_tbl() {
