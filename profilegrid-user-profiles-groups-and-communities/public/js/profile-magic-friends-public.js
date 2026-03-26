@@ -62,22 +62,50 @@ function pm_add_friend_request(user1,user2,button)
 	});	
 }
 
+var pm_friend_notification_timer = null;
+var pm_friend_notification_in_flight = false;
+var pm_friend_notification_timestamp = '';
+
+function pm_schedule_friend_notification_poll(delay)
+{
+	if (pm_friend_notification_timer) {
+		clearTimeout(pm_friend_notification_timer);
+		pm_friend_notification_timer = null;
+	}
+	pm_friend_notification_timer = setTimeout(function () {
+		pm_get_notification(pm_friend_notification_timestamp);
+	}, delay);
+}
+
 function pm_get_notification(timestamp)
 { 
-	var data = {'action': 'pm_get_friends_notification','timestamp' :timestamp,'nonce': pm_ajax_object.nonce};	
+	if (pm_friend_notification_in_flight) {
+		return;
+	}
+	if (timestamp !== undefined && timestamp !== null && timestamp !== '') {
+		pm_friend_notification_timestamp = timestamp;
+	}
+	var data = {
+		'action': 'pm_get_friends_notification',
+		'timestamp': pm_friend_notification_timestamp,
+		'nonce': pm_ajax_object.nonce
+	};
+	pm_friend_notification_in_flight = true;
 	jQuery.get(pm_ajax_object.ajax_url, data, function(response) 
 	{
 		if(response)
 		{
-			  var obj = jQuery.parseJSON(response);
-                // put the data_from_file into #response
-                jQuery('#pm_waiting_request').html(obj.data_from_file);
-                // call the function again, this time with the timestamp we just got from server.php
-				pm_get_notification();					
+			var obj = jQuery.parseJSON(response);
+			jQuery('#pm_waiting_request').html(obj.data_from_file);
+			if (obj && obj.timestamp) {
+				pm_friend_notification_timestamp = obj.timestamp;
+			}
 		}
-		
+	}).always(function () {
+		pm_friend_notification_in_flight = false;
+		var delay = (document.visibilityState === 'visible') ? 12000 : 30000;
+		pm_schedule_friend_notification_poll(delay);
 	});
-		
 }
 
 function pm_confirm_request_from_notification(user1,user2,button,id){

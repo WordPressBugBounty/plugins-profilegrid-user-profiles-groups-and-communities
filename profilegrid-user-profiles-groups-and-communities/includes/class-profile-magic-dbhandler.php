@@ -356,7 +356,7 @@ class PM_DBhandler {
 				 unset( $meta_query['search'] );
 			 }
 			 if ( isset( $meta_query['search_columns'] ) ) {
-				 $args['search_columns'] = array( $meta_query['search_columns'] );
+				 $args['search_columns'] = is_array( $meta_query['search_columns'] ) ? $meta_query['search_columns'] : array( $meta_query['search_columns'] );
 				 unset( $meta_query['search_columns'] );
 			 }
 				$args['meta_query'] = $meta_query;
@@ -402,7 +402,7 @@ class PM_DBhandler {
 				unset( $meta_query['search'] );
 			}
 			if ( isset( $meta_query['search_columns'] ) ) {
-				$args['search_columns'] = array( $meta_query['search_columns'] );
+				$args['search_columns'] = is_array( $meta_query['search_columns'] ) ? $meta_query['search_columns'] : array( $meta_query['search_columns'] );
 				unset( $meta_query['search_columns'] );
 			}
                     $args['meta_query'] = $meta_query;

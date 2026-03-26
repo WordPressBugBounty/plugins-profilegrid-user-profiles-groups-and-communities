@@ -35,6 +35,7 @@ if($('#pg-messages').length)
         //refresh_messenger();
         setTimeout(function(){pm_get_messenger_notification('','nottyping');}, 1000);
         setTimeout(function(){pm_messenger_notification_extra_data();}, 1200);
+        setTimeout(function(){pg_msg_bootstrap_from_deeplink(false);}, 1400);
         $("#typing_on .pm-typing-inner").hide();
     }
     
@@ -65,6 +66,139 @@ if($('#pg-messages').length)
 })(jQuery);
 var notification_request = null;
 var pg_unread_thread_count_cache = null;
+function pg_clear_active_thread_unread_badge() {
+    var activeThread = jQuery('.pg-msg-conversation-list.active');
+    if (!activeThread.length) {
+        return;
+    }
+    activeThread.find('.pg-thread-msg').remove();
+    activeThread.find('.pg-thread-notification').remove();
+    activeThread.find('.pg-msg-conversation-unread').remove();
+}
+var pg_msg_poll_timer = null;
+var pg_msg_poll_in_flight = false;
+var pg_msg_poll_next_timestamp = '';
+var pg_msg_poll_pending_activity = '';
+var pg_msg_poll_no_change_streak = 0;
+var pg_msg_poll_error_streak = 0;
+var pg_msg_last_user_activity_at = Date.now();
+var pg_msg_poll_transport = 'rest';
+var pg_msg_poll_transport_locked = false;
+var pg_msg_poll_events_bound = false;
+var pg_msg_deeplink_bootstrap_done = false;
+function pg_msg_bind_poll_events() {
+    if (pg_msg_poll_events_bound) {
+        return;
+    }
+    pg_msg_poll_events_bound = true;
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+            pg_msg_mark_user_active();
+            pg_msg_schedule_poll(1200);
+        }
+    });
+    jQuery(window).on('focus', function () {
+        pg_msg_mark_user_active();
+        pg_msg_schedule_poll(1200);
+    });
+    window.addEventListener('hashchange', function () {
+        pg_msg_deeplink_bootstrap_done = false;
+        pg_msg_bootstrap_from_deeplink(true);
+    });
+    window.addEventListener('pageshow', function (event) {
+        if (event && event.persisted) {
+            pg_msg_deeplink_bootstrap_done = false;
+            pg_msg_bootstrap_from_deeplink(true);
+        }
+    });
+}
+
+function pg_msg_mark_user_active() {
+    pg_msg_last_user_activity_at = Date.now();
+    pg_msg_poll_no_change_streak = 0;
+}
+
+function pg_msg_sync_unread_state() {
+    if (!window.pgUnreadToastSync) {
+        return;
+    }
+    if (typeof window.pgUnreadToastSync.acknowledgeCurrent === 'function') {
+        window.pgUnreadToastSync.acknowledgeCurrent();
+    }
+    if (typeof window.pgUnreadToastSync.hideWhileMessagesVisible === 'function') {
+        window.pgUnreadToastSync.hideWhileMessagesVisible();
+    }
+    if (typeof window.pgUnreadToastSync.refreshNow === 'function') {
+        window.pgUnreadToastSync.refreshNow();
+    }
+}
+
+function pg_msg_mark_thread_read_silent(tid) {
+    tid = parseInt(tid, 10) || 0;
+    if (!tid || !window.pg_msg_object || !pg_msg_object.ajax_url) {
+        return;
+    }
+    jQuery.post(pg_msg_object.ajax_url, { action: 'pm_messages_mark_as_read', tid: tid }, function () {
+        pg_msg_sync_unread_state();
+        pm_messenger_notification_extra_data('');
+    });
+}
+
+function pg_msg_can_use_rest_polling() {
+    return !!(pg_msg_object && pg_msg_object.rest_notification_url && pg_msg_object.rest_nonce);
+}
+
+function pg_msg_get_query_int(name) {
+    var query = window.location.search || '';
+    var match = new RegExp('[?&]' + name + '=([^&#]*)').exec(query);
+    if (!match || !match[1]) {
+        return 0;
+    }
+    var value = parseInt(decodeURIComponent(match[1].replace(/\+/g, ' ')), 10);
+    return isNaN(value) ? 0 : value;
+}
+
+function pg_msg_bootstrap_from_deeplink(force) {
+    if (!jQuery('#pg-messages').length) {
+        return;
+    }
+    if (pg_msg_deeplink_bootstrap_done && !force) {
+        return;
+    }
+    var hash = (window.location.hash || '').toLowerCase();
+    var hasMessageHash = (hash === '#pg-messages');
+    var ridFromUrl = pg_msg_get_query_int('rid');
+    var shouldBootstrap = hasMessageHash || ridFromUrl > 0;
+    if (!shouldBootstrap) {
+        return;
+    }
+    var sid = parseInt(jQuery('#chat_message_form input[name="sid"]').val(), 10) || 0;
+    var rid = parseInt(jQuery('#receipent_field_rid').val(), 10) || 0;
+    var tid = parseInt(jQuery('#thread_hidden_field').val(), 10) || 0;
+    var targetRid = ridFromUrl > 0 ? ridFromUrl : rid;
+    pg_msg_deeplink_bootstrap_done = true;
+    if (sid > 0 && targetRid > 0 && tid > 0) {
+        pg_show_msg_panel(sid, targetRid, tid);
+        return;
+    }
+    if (targetRid > 0 && typeof pg_activate_new_thread === 'function') {
+        pg_msg_mark_user_active();
+        pg_msg_schedule_poll(800);
+        setTimeout(function () {
+            pg_activate_new_thread(targetRid);
+        }, 150);
+        setTimeout(function () {
+            pm_messenger_notification_extra_data('');
+        }, 450);
+        return;
+    }
+    pg_msg_mark_user_active();
+    pg_msg_schedule_poll(800);
+    setTimeout(function () {
+        pm_messenger_notification_extra_data('');
+    }, 300);
+}
+
 function pg_parse_json_if_possible(response) {
     if (typeof response === 'object' && response !== null) {
         return response;
@@ -84,73 +218,176 @@ function pg_is_json_error_response(response) {
     return !!(parsed && parsed.success === false);
 }
 
+function pg_msg_compute_poll_interval(changed) {
+    var now = Date.now();
+    var isVisible = document.visibilityState === 'visible';
+    var idleMs = now - pg_msg_last_user_activity_at;
+    var activeTid = parseInt(jQuery('#thread_hidden_field').val(), 10) || 0;
+    var messagesVisible = jQuery('#pg-messages:visible').length > 0;
+    var interval;
+    if (!isVisible) {
+        interval = 10000;
+    } else if (messagesVisible && activeTid > 0 && idleMs < 30000) {
+        interval = 1400;
+    } else if (messagesVisible && idleMs < 30000) {
+        interval = 2400;
+    } else if (idleMs < 20000) {
+        interval = 3500;
+    } else {
+        interval = 6000;
+    }
+    if (!changed) {
+        interval += Math.min(pg_msg_poll_no_change_streak * 800, 5000);
+    }
+    if (pg_msg_poll_error_streak > 0) {
+        interval += Math.min(pg_msg_poll_error_streak * 2000, 8000);
+    }
+    interval = Math.max(1200, Math.min(interval, 12000));
+    var jitter = Math.floor(interval * ((Math.random() * 0.2) - 0.1));
+    return Math.max(1100, interval + jitter);
+}
+
+function pg_msg_schedule_poll(delay) {
+    if (pg_msg_poll_timer) {
+        clearTimeout(pg_msg_poll_timer);
+        pg_msg_poll_timer = null;
+    }
+    pg_msg_poll_timer = setTimeout(function () {
+        pg_msg_run_notification_poll();
+    }, delay);
+}
+
+function pg_msg_handle_notification_response(parsed, tid) {
+    if (!parsed) {
+        return false;
+    }
+    if (jQuery.isEmptyObject(parsed)) {
+        pg_msg_poll_next_timestamp = '';
+        return false;
+    }
+    if (parsed.activity === 'typing') {
+        jQuery("#typing_on .pm-typing-inner").show();
+        if (jQuery('.pg-users-search-list-wrap div.pg-message-list').length) {
+            jQuery(".pg-users-search-list-wrap").scrollTop(jQuery(".pg-users-search-list-wrap div.pg-message-list:last").offset().top);
+        }
+    }
+    if (parsed.activity === 'nottyping') {
+        jQuery("#typing_on .pm-typing-inner").hide();
+    }
+    if (parsed.data_changed === true) {
+        pg_show_all_threads(tid);
+        show_thread_messages(tid, 1);
+        pg_msg_mark_thread_read_silent(tid);
+        pm_messenger_notification_extra_data('');
+    }
+    pg_msg_poll_next_timestamp = parsed.timestamp || '';
+    return parsed.data_changed === true;
+}
+
+function pg_msg_send_notification_request(payload) {
+    if (pg_msg_poll_transport === 'rest' && pg_msg_can_use_rest_polling()) {
+        return jQuery.ajax({
+            url: pg_msg_object.rest_notification_url,
+            type: 'GET',
+            dataType: 'json',
+            cache: false,
+            headers: {'X-WP-Nonce': pg_msg_object.rest_nonce},
+            data: {
+                timestamp: payload.timestamp,
+                activity: payload.activity,
+                tid: payload.tid,
+                _wpnonce: pg_msg_object.rest_nonce
+            }
+        });
+    }
+    return jQuery.get(pg_msg_object.ajax_url, {
+        action: 'pm_get_messenger_notification',
+        timestamp: payload.timestamp,
+        activity: payload.activity,
+        tid: payload.tid,
+        nonce: pg_msg_object.nonce,
+        ts: Date.now()
+    });
+}
+
 function pm_get_messenger_notification(timestamp, activity)
 {
-    if (activity === undefined)activity = '';
-    var tid = jQuery('#thread_hidden_field').val();
-    var data = {'action': 'pm_get_messenger_notification',
-        'timestamp': timestamp,
-        'activity': activity,
-        'tid': tid,
-        'nonce': pg_msg_object.nonce,
-        'ts': Date.now()
-    };
-    if(notification_request !== null){
-        notification_request.abort();
-
+    if (activity === undefined) {
+        activity = '';
     }
+    if (timestamp !== undefined && timestamp !== null && timestamp !== '') {
+        pg_msg_poll_next_timestamp = timestamp;
+    }
+    if (activity !== '') {
+        pg_msg_poll_pending_activity = activity;
+        pg_msg_mark_user_active();
+    }
+    pg_msg_bind_poll_events();
+    pg_msg_schedule_poll(0);
+}
 
-    var nextTimestamp = '';
-    notification_request = jQuery.get(pg_msg_object.ajax_url, data, function (response)
-    {
+function pg_msg_run_notification_poll() {
+    if (pg_msg_poll_in_flight) {
+        return;
+    }
+    var tid = jQuery('#thread_hidden_field').val();
+    if (!tid) {
+        pg_msg_poll_in_flight = true;
+        pm_messenger_notification_extra_data('').done(function () {
+            pg_msg_poll_error_streak = 0;
+            pg_msg_poll_no_change_streak++;
+        }).fail(function (jqXHR) {
+            if (jqXHR && jqXHR.statusText === 'abort') {
+                return;
+            }
+            pg_msg_poll_error_streak++;
+        }).always(function (jqXHR) {
+            pg_msg_poll_in_flight = false;
+            if (jqXHR && jqXHR.statusText === 'abort') {
+                return;
+            }
+            pg_msg_schedule_poll(pg_msg_compute_poll_interval(false));
+        });
+        return;
+    }
+    var payload = {
+        timestamp: pg_msg_poll_next_timestamp,
+        activity: pg_msg_poll_pending_activity || '',
+        tid: tid
+    };
+    pg_msg_poll_pending_activity = '';
+    pg_msg_poll_in_flight = true;
+    notification_request = pg_msg_send_notification_request(payload);
+    notification_request.done(function (response) {
         if (pg_is_json_error_response(response)) {
+            pg_msg_poll_error_streak++;
             return;
         }
-        if (response)
-        {
-            var obj = jQuery.parseJSON(response);
-            if(jQuery.isEmptyObject(obj))
-            {
-                nextTimestamp = '';
-            }
-            else
-            {
-                if (obj.activity == 'typing') {
-                    jQuery("#typing_on .pm-typing-inner").show();
-                    if(jQuery('.pg-users-search-list-wrap div.pg-message-list').length)
-                    {
-                      jQuery(".pg-users-search-list-wrap").scrollTop( jQuery(".pg-users-search-list-wrap div.pg-message-list:last").offset().top);
-                    }
-                }
-                if (obj.activity == 'nottyping') {
-                    jQuery("#typing_on .pm-typing-inner").hide();
-                }
-                if (obj.data_changed === true)
-                {
-                    pg_show_all_threads(tid);
-                    show_thread_messages(tid,1);
-                    pm_messenger_notification_extra_data('');
-
-                }
-                nextTimestamp = obj.timestamp;
-
-            }
-            // call the function again, this time with the timestamp we just got from server.php
-
-        }else{
-       //console.log("error in notif");    
-       }
-    
-    }).always(function (jqXHR) {
+        var parsed = pg_parse_json_if_possible(response);
+        var changed = pg_msg_handle_notification_response(parsed, tid);
+        pg_msg_poll_error_streak = 0;
+        if (changed) {
+            pg_msg_mark_user_active();
+            pg_msg_poll_no_change_streak = 0;
+        } else {
+            pg_msg_poll_no_change_streak++;
+        }
+    }).fail(function (jqXHR) {
         if (jqXHR && jqXHR.statusText === 'abort') {
             return;
         }
-        setTimeout(function () {
-            pm_get_messenger_notification(nextTimestamp)
-        }, 4000);
+        pg_msg_poll_error_streak++;
+        if (!pg_msg_poll_transport_locked && pg_msg_poll_transport === 'rest') {
+            pg_msg_poll_transport = 'ajax';
+            pg_msg_poll_transport_locked = true;
+        }
+    }).always(function (jqXHR) {
+        pg_msg_poll_in_flight = false;
+        if (jqXHR && jqXHR.statusText === 'abort') {
+            return;
+        }
+        pg_msg_schedule_poll(pg_msg_compute_poll_interval(false));
     });
-
-
 }
 
 
@@ -159,7 +396,7 @@ function pm_messenger_notification_extra_data(x){
     //console.log("extra data working");
     var data = {'action': 'pm_messenger_notification_extra_data', 'ts': Date.now()};
 
-    jQuery.get(pg_msg_object.ajax_url, data, function (response)
+    return jQuery.get(pg_msg_object.ajax_url, data, function (response)
     {
         if (response)
         {
@@ -197,6 +434,7 @@ function pm_messenger_notification_extra_data(x){
             }else{
                     jQuery("#unread_thread_count").html('');   
                     jQuery("#unread_thread_count").removeClass("thread-count-show"); 
+                    pg_clear_active_thread_unread_badge();
             }
             pg_unread_thread_count_cache = unreadCount;
           
@@ -211,6 +449,9 @@ function pg_msg_open_tab()
     pg_msg_loader();  
      jQuery("#unread_thread_count").html('');   
     jQuery("#unread_thread_count").removeClass("thread-count-show");
+    pg_msg_mark_user_active();
+    pg_msg_schedule_poll(1000);
+    pg_msg_sync_unread_state();
    jQuery('.pg-message-box-sidebar').addClass('opened');
    setTimeout(function(){pm_messenger_notification_extra_data();}, 500);
 }
@@ -451,8 +692,11 @@ function pm_messenger_send_message(form_values) {
             pg_show_all_threads(resp);
         }
         show_thread_messages(resp,1);
+        pg_msg_mark_user_active();
+        pg_msg_schedule_poll(1200);
         jQuery('#new_thread').val("0");
         jQuery('#mid').val("");
+        pg_msg_sync_unread_state();
 //        jQuery(".pg-users-search-list-wrap").scrollTop( jQuery(".pg-users-search-list-wrap div.pg-message-list:last").offset().top);       
     });
 }
@@ -462,6 +706,9 @@ function pg_show_msg_panel(uid,rid,tid)
 {
      jQuery("#unread_thread_count").html('');   
     jQuery("#unread_thread_count").removeClass("thread-count-show");
+    pg_clear_active_thread_unread_badge();
+    pg_msg_mark_user_active();
+    pg_msg_schedule_poll(1200);
     var search = jQuery('#pg-msg-search-box').val();
     var data = {'action': 'pg_show_msg_panel', 'uid': uid,'rid': rid,'tid':tid,search:search,'nonce':pg_msg_object.nonce};
    //console.log(data);
@@ -481,6 +728,7 @@ function pg_show_msg_panel(uid,rid,tid)
         pg_msg_loader();
         pm_messenger_notification_extra_data();
         setTimeout(function(){pm_messenger_notification_extra_data();}, 300);
+        pg_msg_sync_unread_state();
          
     if(search!=='')
     {
@@ -557,6 +805,7 @@ function show_thread_messages(tid,loadnum)
 {
     jQuery("#unread_thread_count").html('');   
     jQuery("#unread_thread_count").removeClass("thread-count-show");
+    pg_clear_active_thread_unread_badge();
                     
     var offset = new Date().getTimezoneOffset();
     var nonce = pg_msg_object.nonce;
@@ -585,6 +834,7 @@ function show_thread_messages(tid,loadnum)
                 jQuery(this).toggleClass("pg-action-active");
 
             });
+            pg_msg_sync_unread_state();
         
         }
     });

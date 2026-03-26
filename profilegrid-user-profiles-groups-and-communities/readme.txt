@@ -5,7 +5,7 @@ Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.9.8.4
+Stable tag: 5.9.8.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -664,6 +664,14 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 5.9.8.5: March 26, 2026 =
+* Security: Improved file upload validation for safer handling of allowed file types.
+* Security: Refined REST API responses to avoid exposing internal data in group-related output.
+* Fixed: Improved message notification handling for more reliable and efficient updates.
+* Fixed: Improved stability of group settings when older or incomplete group option data is present.
+* Improved: Minor compatibility refinements for WordPress and PHP environments.
+* Multiple bug fixes and improvements.
 
 = 5.9.8.4: March 12, 2026 =
 * Security: Added centralized, token-context authorization enforcement for integration actions.
@@ -1566,6 +1574,14 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 5.9.8.5: March 26, 2026 =
+* Security: Improved file upload validation for safer handling of allowed file types.
+* Security: Refined REST API responses to avoid exposing internal data in group-related output.
+* Fixed: Improved message notification handling for more reliable and efficient updates.
+* Fixed: Improved stability of group settings when older or incomplete group option data is present.
+* Improved: Minor compatibility refinements for WordPress and PHP environments.
+* Multiple bug fixes and improvements.
 
 = 5.9.8.4: March 12, 2026 =
 * Security: Added centralized, token-context authorization enforcement for integration actions.

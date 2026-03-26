@@ -122,6 +122,8 @@ class Profile_Magic_Public {
 				'ajax_url'         => admin_url( 'admin-ajax.php' ),
 				'plugin_emoji_url' => plugin_dir_url( __FILE__ ) . 'partials/images/img',
 				'nonce'            => wp_create_nonce( 'ajax-nonce' ),
+				'rest_nonce'       => wp_create_nonce( 'wp_rest' ),
+				'rest_unread_summary_url' => esc_url_raw( rest_url( 'profilegrid/v1/messenger/unread-summary' ) ),
 			)
 		);
 
@@ -190,6 +192,8 @@ class Profile_Magic_Public {
 		$object['remove_msg']         = esc_html__( 'This message has been deleted.', 'profilegrid-user-profiles-groups-and-communities' );
 		$object['nonce']            = wp_create_nonce( 'ajax-nonce' );
 		$object['pg_delete_msg_nonce'] = wp_create_nonce( 'pg_delete_msg_nonce' );
+		$object['rest_notification_url'] = esc_url_raw( rest_url( 'profilegrid/v1/messenger/notification' ) );
+		$object['rest_nonce']           = wp_create_nonce( 'wp_rest' );
 		wp_localize_script( 'pg-messaging', 'pg_msg_object', $object );
 
 	}
@@ -242,19 +246,23 @@ class Profile_Magic_Public {
 				array(
 					'ajax_url'         => admin_url( 'admin-ajax.php' ),
 					'plugin_emoji_url' => plugin_dir_url( __FILE__ ) . 'partials/images/img',
-					'nonce'            => wp_create_nonce( 'ajax-nonce' )
+					'nonce'            => wp_create_nonce( 'ajax-nonce' ),
+					'rest_nonce'       => wp_create_nonce( 'wp_rest' ),
+					'rest_unread_summary_url' => esc_url_raw( rest_url( 'profilegrid/v1/messenger/unread-summary' ) ),
 				)
 			);
 			$reg_sub_page                     = array();
 			$reg_sub_page['registration_tab'] = isset( $request['rm_reqpage_sub'] ) || isset( $request['rm_reqpage_pay'] ) || isset( $request['rm_reqpage_inbox'] ) ? 1 : 0;
 			wp_localize_script( 'profile-magic-footer.js', 'show_rm_sumbmission_tab', $reg_sub_page );
-                        wp_localize_script(
+			wp_localize_script(
 				'profile-magic-footer.js',
 				'pm_ajax_object',
 				array(
 					'ajax_url'         => admin_url( 'admin-ajax.php' ),
 					'plugin_emoji_url' => plugin_dir_url( __FILE__ ) . 'partials/images/img',
-					'nonce'            => wp_create_nonce( 'ajax-nonce' )
+					'nonce'            => wp_create_nonce( 'ajax-nonce' ),
+					'rest_nonce'       => wp_create_nonce( 'wp_rest' ),
+					'rest_unread_summary_url' => esc_url_raw( rest_url( 'profilegrid/v1/messenger/unread-summary' ) ),
 				)
 			);
 			$error                                 = array();
@@ -1344,6 +1352,75 @@ if ( isset( $_POST['tid'] ) ) {
 
         
 
+	public function register_messenger_notification_rest_routes() {
+		register_rest_route(
+			'profilegrid/v1',
+			'/messenger/notification',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'pm_rest_get_messenger_notification' ),
+				'permission_callback' => array( $this, 'pm_rest_messenger_notification_permission' ),
+			)
+		);
+
+		register_rest_route(
+			'profilegrid/v1',
+			'/messenger/unread-summary',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'pm_rest_unread_message_summary' ),
+				'permission_callback' => array( $this, 'pm_rest_messenger_notification_permission' ),
+			)
+		);
+	}
+
+	public function pm_rest_messenger_notification_permission( $request ) {
+		if ( ! is_user_logged_in() ) {
+			return new WP_Error( 'pg_rest_auth_required', __( 'Authentication required', 'profilegrid-user-profiles-groups-and-communities' ), array( 'status' => 401 ) );
+		}
+
+		$nonce = $request->get_header( 'X-WP-Nonce' );
+		if ( empty( $nonce ) ) {
+			$nonce = $request->get_param( '_wpnonce' );
+		}
+
+		if ( empty( $nonce ) || ! wp_verify_nonce( (string) $nonce, 'wp_rest' ) ) {
+			return new WP_Error( 'pg_rest_invalid_nonce', __( 'Invalid nonce', 'profilegrid-user-profiles-groups-and-communities' ), array( 'status' => 403 ) );
+		}
+
+		return true;
+	}
+
+	public function pm_rest_get_messenger_notification( $request ) {
+		$pmmessenger = new PM_Messenger();
+		$timestamp   = $request->get_param( 'timestamp' );
+		$activity    = $request->get_param( 'activity' );
+		$tid         = absint( $request->get_param( 'tid' ) );
+		$uid         = get_current_user_id();
+
+		if ( $tid > 0 ) {
+			$thread = $this->pg_get_authorized_thread( $tid, $uid );
+			if ( false === $thread ) {
+				return new WP_Error( 'pg_rest_unauthorized_thread', __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), array( 'status' => 403 ) );
+			}
+		}
+
+		if ( $tid === 0 ) {
+			return rest_ensure_response( array() );
+		}
+
+		$payload = $pmmessenger->pm_get_messenger_notification_data( $timestamp, sanitize_text_field( (string) $activity ), $tid );
+		if ( is_array( $payload ) ) {
+			$payload['transport'] = 'rest';
+		}
+
+		return rest_ensure_response( $payload );
+	}
+
+	public function pm_rest_unread_message_summary( $request ) {
+		return rest_ensure_response( $this->pg_get_unread_message_summary_payload( get_current_user_id() ) );
+	}
+
 	public function pm_get_messenger_notification() {
 		if ( ! is_user_logged_in() ) {
 			wp_send_json_error( 'Authentication required', 401 );
@@ -1400,19 +1477,24 @@ if ( isset( $_POST['tid'] ) ) {
 
 		check_ajax_referer( 'ajax-nonce', 'nonce' );
 
+		wp_send_json_success( $this->pg_get_unread_message_summary_payload( get_current_user_id() ) );
+	}
+
+	private function pg_get_unread_message_summary_payload( $uid ) {
 		$pmrequests = new PM_request();
-		$uid        = get_current_user_id();
 		$summary    = $pmrequests->pm_get_unread_message_summary( $uid );
 		$count      = isset( $summary['count'] ) ? (int) $summary['count'] : 0;
 		$latest_ts  = isset( $summary['latest'] ) ? (int) $summary['latest'] : 0;
+		$latest_tid = isset( $summary['latest_tid'] ) ? (int) $summary['latest_tid'] : 0;
+		$latest_rid = isset( $summary['latest_rid'] ) ? (int) $summary['latest_rid'] : 0;
 		$dismissed  = (int) get_user_meta( $uid, 'pg_msg_unread_dismissed_at', true );
 
-		wp_send_json_success(
-			array(
-				'count'     => $count,
-				'latest_ts' => $latest_ts,
-				'dismissed' => $dismissed,
-			)
+		return array(
+			'count'     => $count,
+			'latest_ts' => $latest_ts,
+			'latest_tid'=> $latest_tid,
+			'latest_rid'=> $latest_rid,
+			'dismissed' => $dismissed,
 		);
 	}
 
@@ -2141,53 +2223,33 @@ if ( isset( $_POST['tid'] ) ) {
 	public function pm_get_friends_notification() {
 		$this->pm_validate_ajax_nonce_or_403( 'pm_get_friends_notification' );
 		$dbhandler   = new PM_DBhandler();
-		$identifier   = 'FRIENDS';
-		$timestamp    = filter_input( INPUT_GET, 'timestamp' );
+		$identifier  = 'FRIENDS';
+		$timestamp   = filter_input( INPUT_GET, 'timestamp', FILTER_VALIDATE_INT );
 		$current_user = wp_get_current_user();
 		$uid          = $current_user->ID;
-		set_time_limit( 0 );
-		while ( true ) {
-			$last_ajax_call   = isset( $timestamp ) ? (int) ( $timestamp ) : null;
-			$where            = array(
-				'user2'  => $uid,
-				'status' => 1,
-			);
-			$last_change_data = $dbhandler->get_all_result( $identifier, '*', $where );
-			foreach ( $last_change_data as $last_row ) {
-				$last_change_time = $last_row->action_date;
-			}
-
-			// get timestamp of when file has been changed the last time
-			$last_change_in_data_file = strtotime( $last_change_time );
-
-			// if no timestamp delivered via ajax or data.txt has been changed SINCE last ajax timestamp
-			if ( $last_ajax_call == null || $last_change_in_data_file > $last_ajax_call ) {
-
-				// get content of data.txt
-				$data = count( $last_change_data );
-				if ( ! isset( $data ) || empty( $data ) ) {
-					$data = '0';
-				}
-				// put data.txt's content and timestamp of last data.txt change into array
-				$result = array(
-					'data_from_file' => $data,
-					'timestamp'      => $last_change_in_data_file,
-				);
-
-				// encode to JSON, render the result (for AJAX)
-				$json = wp_json_encode( $result );
-				echo wp_kses_post($json);
-
-				// leave this loop step
-				break;
-
-			} else {
-				// wait for 1 sec (not very sexy as this blocks the PHP/Apache process, but that's how it goes)
-				sleep( 1 );
-				continue;
-			}
+		$last_ajax_call = ! empty( $timestamp ) ? (int) $timestamp : 0;
+		$where          = array(
+			'user2'  => $uid,
+			'status' => 1,
+		);
+		$requests       = $dbhandler->get_all_result( $identifier, '*', $where );
+		$last_change_ts = 0;
+		if ( ! empty( $requests ) ) {
+			$last_row       = end( $requests );
+			$last_change_ts = ! empty( $last_row->action_date ) ? (int) strtotime( $last_row->action_date ) : 0;
 		}
-
+		$data_count = count( $requests );
+		if ( $last_ajax_call > 0 && $last_change_ts <= $last_ajax_call ) {
+			$data_count = 0;
+		}
+		echo wp_kses_post(
+			wp_json_encode(
+				array(
+					'data_from_file' => (string) $data_count,
+					'timestamp'      => $last_change_ts,
+				)
+			)
+		);
 		die;
 	}
 
@@ -3213,7 +3275,7 @@ if ( isset( $_POST['tid'] ) ) {
 		$pmrequests      = new PM_request();
 		$postid          = filter_input( INPUT_POST, 'post_id' );
 		$type            = filter_input( INPUT_POST, 'type' );
-		$content         = filter_input( INPUT_POST, 'pm_author_message' );
+		$content         = filter_input( INPUT_POST, 'pm_author_message', FILTER_UNSAFE_RAW );
 		$current_user    = wp_get_current_user();
 		$sid             = $current_user->ID;
 		$retrieved_nonce = filter_input( INPUT_POST, '_wpnonce' );
@@ -3289,8 +3351,23 @@ if ( isset( $_POST['tid'] ) ) {
 		$pmrequest       = new PM_request();
 		$pm_emails       = new PM_Emails();
 		$dbhandler       = new PM_DBhandler();
-		$gid             = filter_input( INPUT_POST, 'gid' );
+		$gid             = isset( $_POST['gid'] ) && is_scalar( $_POST['gid'] ) ? trim( (string) wp_unslash( $_POST['gid'] ) ) : '';
 		$emails          = $post['pm_email_address'];
+		$current_user_id = get_current_user_id();
+		$basic_functions = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+
+		if ( '' === $gid || ! ctype_digit( $gid ) ) {
+			wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+		}
+
+		$is_group_leader = $pmrequest->pg_check_in_single_group_is_user_group_leader( $current_user_id, $gid );
+		$is_group_manager = $basic_functions->pm_user_is_group_manager( $current_user_id, $gid );
+		if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) && ! $is_group_manager && ! $is_group_leader ) {
+			wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+		}
+
+		$group_type    = $pmrequest->profile_magic_get_group_type( $gid );
+		$is_paid_group = (float) $pmrequest->profile_magic_check_paid_group( $gid ) > 0;
 		
 		$message      = '';
 		$has_success  = false;
@@ -3314,9 +3391,9 @@ if ( isset( $_POST['tid'] ) ) {
 
 				if ( ! in_array( $gid, $gid_array ) ) {
                                     $send_invitation = $dbhandler->get_global_option_value('pm_allow_registered_users_to_accept_invitation', '0');
-                                        if($send_invitation==0)
+                                        if($send_invitation==0 && 'open' === $group_type && ! $is_paid_group)
                                         {
-                                            $pmrequest->profile_magic_join_group_fun( $user_id, $gid, 'open' );
+                                            $pmrequest->profile_magic_join_group_fun( $user_id, $gid, $group_type );
                                             $message .= '<div class="pg-invited-user-result pg-group-user-info-box pg-invitation-failed pm-pad10 pm-bg pm-dbfl">
                                                 <div class="pm-difl pg-invited-user">' . get_avatar( $email, 26, '', false, array( 'force_display' => true ) ) . '</div>
                                                 <div class="pm-difl pg-invited-user-info">
@@ -4751,8 +4828,11 @@ if ( isset( $_POST['tid'] ) ) {
 		$object['seding_text']        = esc_html__( 'Sending', 'profilegrid-user-profiles-groups-and-communities' );
 		$object['remove_msg']         = esc_html__( 'This message has been deleted.', 'profilegrid-user-profiles-groups-and-communities' );
                 $object['nonce']            = wp_create_nonce( 'ajax-nonce' );
+		$object['rest_notification_url'] = esc_url_raw( rest_url( 'profilegrid/v1/messenger/notification' ) );
+		$object['rest_nonce']           = wp_create_nonce( 'wp_rest' );
 		wp_localize_script( 'pg-messaging', 'pg_msg_object', $object );
-		$rid          = filter_input( INPUT_GET, 'rid' );
+		$rid          = absint( filter_input( INPUT_GET, 'rid', FILTER_VALIDATE_INT ) );
+		$rid_from_url = $rid;
 		$current_user = wp_get_current_user();
 		$profilechat  = new ProfileMagic_Chat();
 		$pmrequests   = new PM_request();
@@ -4762,7 +4842,7 @@ if ( isset( $_POST['tid'] ) ) {
 			?>
 		<div id="pg-messages" class="pm-dbfl pg-profile-tab-content pg-message-tab">
 			<?php
-			if ( ! isset( $rid ) ) {
+			if ( ! $rid ) {
 				$threads = $pmrequests->pm_get_user_all_threads( $uid, 1, 1 );
 				if ( ! empty( $threads ) ) {
 					if ( $uid == $threads[0]->r_id ) {
@@ -4780,6 +4860,9 @@ if ( isset( $_POST['tid'] ) ) {
 
 			if ( $tid == false ) {
 				$tid = 0;
+			}
+			if ( $rid_from_url > 0 && $tid > 0 ) {
+				$pmrequests->update_message_status_to_read( $tid );
 			}
 
 			$profilechat->pg_show_message_tab_html( $uid, $rid, $tid );
@@ -6476,6 +6559,12 @@ if ( isset( $_POST['tid'] ) ) {
 			$show_toast  = ( $unread > 0 && ( $latest_ts === 0 || $dismissed < $latest_ts ) );
 
 			$message_url = $pmrequests->pm_get_user_profile_url( $current_uid );
+			$latest_rid  = isset( $summary['latest_rid'] ) ? (int) $summary['latest_rid'] : 0;
+			$latest_tid  = isset( $summary['latest_tid'] ) ? (int) $summary['latest_tid'] : 0;
+			$base_url    = $message_url;
+			if ( $message_url && $latest_rid > 0 ) {
+				$message_url = add_query_arg( 'rid', $latest_rid, $message_url );
+			}
 			$message_url = $message_url ? $message_url . '#pg-messages' : '';
 
 			if ( $message_url === '' ) {
@@ -6483,169 +6572,11 @@ if ( isset( $_POST['tid'] ) ) {
 			}
 
 			?>
-			<style id="pg-unread-toast-style">
-				#pg-unread-toast {
-					position: fixed;
-					right: 20px;
-					bottom: 20px;
-					z-index: 99999;
-					max-width: 320px;
-					background: #1f2937;
-					color: #fff;
-					border-radius: 6px;
-					box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-					padding: 12px 14px;
-					display: none;
-					align-items: center;
-					gap: 10px;
-				}
-				#pg-unread-toast.pg-unread-toast--show {
-					display: flex;
-				}
-				.pg-unread-toast__text {
-					flex: 1 1 auto;
-					font-size: 14px;
-					line-height: 1.4;
-					margin: 0;
-				}
-				.pg-unread-toast__action {
-					background: #0d9488;
-					color: #fff;
-					border: none;
-					border-radius: 4px;
-					padding: 6px 10px;
-					cursor: pointer;
-					font-size: 13px;
-				}
-				.pg-unread-toast__action:hover {
-					background: #0f766e;
-				}
-				.pg-unread-toast__close {
-					background: transparent;
-					color: #fff;
-					border: none;
-					font-size: 16px;
-					line-height: 1;
-					padding: 2px 6px;
-					cursor: pointer;
-				}
-				@media (max-width: 480px) {
-					#pg-unread-toast {
-						right: 12px;
-						bottom: 12px;
-						max-width: calc(100% - 24px);
-					}
-				}
-			</style>
-			<div id="pg-unread-toast" class="pg-unread-toast" data-target="<?php echo esc_url( $message_url ); ?>" data-count="<?php echo esc_attr( $unread ); ?>" data-latest="<?php echo esc_attr( $latest_ts ); ?>" data-dismissed="<?php echo esc_attr( $dismissed ); ?>" data-show="<?php echo esc_attr( $show_toast ? 1 : 0 ); ?>">
+			<div id="pg-unread-toast" class="pg-unread-toast" data-target="<?php echo esc_url( $message_url ); ?>" data-base-target="<?php echo esc_url( $base_url ); ?>" data-count="<?php echo esc_attr( $unread ); ?>" data-latest="<?php echo esc_attr( $latest_ts ); ?>" data-latest-rid="<?php echo esc_attr( $latest_rid ); ?>" data-latest-tid="<?php echo esc_attr( $latest_tid ); ?>" data-dismissed="<?php echo esc_attr( $dismissed ); ?>" data-show="<?php echo esc_attr( $show_toast ? 1 : 0 ); ?>" data-single-label="<?php echo esc_attr__( 'You have 1 unread message', 'profilegrid-user-profiles-groups-and-communities' ); ?>" data-multi-label="<?php echo esc_attr__( 'You have {{count}} unread messages', 'profilegrid-user-profiles-groups-and-communities' ); ?>">
 				<span class="pg-unread-toast__text"></span>
 				<button type="button" class="pg-unread-toast__action"><?php esc_html_e( 'Open', 'profilegrid-user-profiles-groups-and-communities' ); ?></button>
 				<button type="button" class="pg-unread-toast__close" aria-label="<?php esc_attr_e( 'Dismiss', 'profilegrid-user-profiles-groups-and-communities' ); ?>">×</button>
 			</div>
-			<script>
-				(function () {
-					var toast = document.getElementById('pg-unread-toast');
-					if (!toast) {
-						return;
-					}
-					var target = toast.getAttribute('data-target');
-					var latest = parseInt(toast.getAttribute('data-latest'), 10) || 0;
-					var dismissed = parseInt(toast.getAttribute('data-dismissed'), 10) || 0;
-					var count = parseInt(toast.getAttribute('data-count'), 10) || 0;
-					var show = parseInt(toast.getAttribute('data-show'), 10) || 0;
-					var text = toast.querySelector('.pg-unread-toast__text');
-					var openBtn = toast.querySelector('.pg-unread-toast__action');
-					var closeBtn = toast.querySelector('.pg-unread-toast__close');
-					var hideToast = function () {
-						toast.classList.remove('pg-unread-toast--show');
-					};
-					var singleLabel = "<?php echo esc_js( __( 'You have 1 unread message', 'profilegrid-user-profiles-groups-and-communities' ) ); ?>";
-					var multiLabel = "<?php echo esc_js( __( 'You have {{count}} unread messages', 'profilegrid-user-profiles-groups-and-communities' ) ); ?>";
-					var buildLabel = function (countValue) {
-						if (countValue === 1) {
-							return singleLabel;
-						}
-						return multiLabel.replace('{{count}}', countValue);
-					};
-					var renderToast = function (countValue, latestValue, dismissedValue) {
-						if (!countValue || (latestValue > 0 && dismissedValue >= latestValue)) {
-							hideToast();
-							return;
-						}
-						if (text) {
-							text.textContent = buildLabel(countValue);
-						}
-						toast.classList.add('pg-unread-toast--show');
-					};
-
-					if (show) {
-						renderToast(count, latest, dismissed);
-					}
-
-					if (openBtn && target) {
-						openBtn.addEventListener('click', function (e) {
-							e.preventDefault();
-							window.location.href = target;
-						});
-					}
-
-					if (closeBtn) {
-						closeBtn.addEventListener('click', function (e) {
-							e.preventDefault();
-							hideToast();
-							dismissed = latest;
-
-							if (!window.pm_ajax_object || !pm_ajax_object.ajax_url || !pm_ajax_object.nonce) {
-								return;
-							}
-
-							var formData = new FormData();
-							formData.append('action', 'pm_dismiss_unread_message_toast');
-							formData.append('nonce', pm_ajax_object.nonce);
-							formData.append('latest_ts', latest);
-
-							fetch(pm_ajax_object.ajax_url, {
-								method: 'POST',
-								credentials: 'same-origin',
-								body: formData
-							});
-						});
-					}
-
-					var fetchSummary = function () {
-						if (!window.pm_ajax_object || !pm_ajax_object.ajax_url || !pm_ajax_object.nonce) {
-							return;
-						}
-
-						var data = new FormData();
-						data.append('action', 'pm_unread_message_summary');
-						data.append('nonce', pm_ajax_object.nonce);
-
-						fetch(pm_ajax_object.ajax_url, {
-							method: 'POST',
-							credentials: 'same-origin',
-							body: data
-						})
-						.then(function (response) { return response.json(); })
-						.then(function (response) {
-							if (!response || !response.success || !response.data) {
-								return;
-							}
-							var latestValue = parseInt(response.data.latest_ts, 10) || 0;
-							var dismissedValue = parseInt(response.data.dismissed, 10) || 0;
-							var countValue = parseInt(response.data.count, 10) || 0;
-							latest = latestValue;
-							dismissed = dismissedValue;
-							renderToast(countValue, latestValue, dismissedValue);
-						})
-						.catch(function () {
-							return;
-						});
-					};
-
-					setInterval(fetchSummary, 8000);
-				})();
-			</script>
 			<?php
 		}
 

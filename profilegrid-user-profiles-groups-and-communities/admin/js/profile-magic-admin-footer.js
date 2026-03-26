@@ -333,7 +333,8 @@ jQuery(document).ready(function(e){
                                         var group_sortable = jQuery(this).sortable('toArray').toString();
                                         var data = {
                                         'action': 'pm_set_group_order',
-                                        'list_order': group_sortable
+                                        'list_order': group_sortable,
+                                        'nonce': pm_ajax_object.nonce
                                 };
                                 jQuery.post(pm_ajax_object.ajax_url, data, function(response) {});
                         }
@@ -350,7 +351,8 @@ jQuery(document).ready(function(e){
         }
         var data = {
                         'action': 'pm_set_group_items',
-                        'icon': icon
+                        'icon': icon,
+                        'nonce': pm_ajax_object.nonce
                    };
         jQuery.post(pm_ajax_object.ajax_url, data, function(response) {});
     });
@@ -372,7 +374,8 @@ jQuery(document).ready(function(e){
                 var items = list.toString();
                 var data = {
                                   'action': 'pm_set_group_items',
-                                  'list_items': items
+                                  'list_items': items,
+                                  'nonce': pm_ajax_object.nonce
                           };
                 jQuery.post(pm_ajax_object.ajax_url, data, function(response) {});
             } 
@@ -383,7 +386,8 @@ jQuery(document).ready(function(e){
                 var items = list.toString();
                var data = {
                               'action': 'pm_set_group_items',
-                              'list_items': items
+                              'list_items': items,
+                              'nonce': pm_ajax_object.nonce
                       };
                 jQuery.post(pm_ajax_object.ajax_url, data, function(response) {});
             }

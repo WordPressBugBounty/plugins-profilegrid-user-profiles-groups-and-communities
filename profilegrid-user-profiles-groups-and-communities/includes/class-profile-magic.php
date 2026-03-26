@@ -355,6 +355,8 @@ class Profile_Magic {
 				$this->loader->add_action( 'wp_ajax_pm_messenger_delete_threads', $plugin_public, 'pm_messenger_delete_threads' );
 				$this->loader->add_action( 'wp_ajax_pm_messenger_notification_extra_data', $plugin_public, 'pm_messenger_notification_extra_data' );
 				$this->loader->add_action( 'wp_ajax_pm_unread_message_summary', $plugin_public, 'pm_unread_message_summary' );
+				// REST is the default transport for notification polling; AJAX remains backward-compatible fallback.
+				$this->loader->add_action( 'rest_api_init', $plugin_public, 'register_messenger_notification_rest_routes' );
 				$this->loader->add_action( 'init', $plugin_public, 'pg_create_post_type' );
 				$this->loader->add_action( 'wp_ajax_pm_load_pg_blogs', $plugin_public, 'pm_load_pg_blogs' );
 				$this->loader->add_action( 'wp_ajax_pm_load_user_blogs_shortcode_posts', $plugin_public, 'pm_load_user_blogs_shortcode_posts' );

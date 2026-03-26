@@ -26,6 +26,9 @@ if ( $id==false || $id==null ) {
     $row = $dbhandler->get_row( $identifier, $id );
 	if ( $row->group_options!='' ) {
 		$group_options = maybe_unserialize( $row->group_options );
+		if ( ! is_array( $group_options ) ) {
+			$group_options = array();
+		}
     }
 	if ( !empty( $row ) && $row->leader_rights!='' ) {
 		$leader_rights = maybe_unserialize( $row->leader_rights );
@@ -59,9 +62,8 @@ if ( filter_input( INPUT_POST, 'submit_group' ) ) {
 	$groupid       = filter_input( INPUT_POST, 'group_id' );
         $group_tab = filter_input( INPUT_POST, 'group_tab' );
         $post      = wp_unslash( $_POST );
-	$raw_group_options = array();
-	if ( isset( $post['group_options'] ) && is_array( $post['group_options'] ) ) {
-		$raw_group_options = $post['group_options'];
+	if ( ! isset( $post['group_options'] ) || ! is_array( $post['group_options'] ) ) {
+		$post['group_options'] = array();
 	}
 	$add_members_raw = filter_input( INPUT_POST, 'pg_add_members', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );
 	if ( $add_members_raw === null && isset( $_POST['pg_add_members'] ) ) {
@@ -1482,7 +1484,7 @@ if ( $id==false || $id==null ) {
                              </div>
                              <div class="uiminput 
                              <?php
-								if ( !empty( $group_options ) && isset( $group_options['enable_group_admin_notification'] ) && $group_options['enable_group_admin_notification'] == 1 && $group_options['group_type'] == 'closed' ) {
+								if ( !empty( $group_options ) && isset( $group_options['enable_group_admin_notification'] ) && $group_options['enable_group_admin_notification'] == 1 && isset( $group_options['group_type'] ) && $group_options['group_type'] == 'closed' ) {
 									echo '';
 								}
 								?>

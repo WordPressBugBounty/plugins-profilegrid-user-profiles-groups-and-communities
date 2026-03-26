@@ -13,68 +13,62 @@ class PM_Messenger {
 
 
     public function pm_get_messenger_notification( $timestamp, $activity, $tid ) {
-        $dbhandler    = new PM_DBhandler();
+        return wp_json_encode( $this->pm_get_messenger_notification_data( $timestamp, $activity, $tid ) );
+    }
+
+    public function pm_get_messenger_notification_data( $timestamp, $activity, $tid ) {
         $pmrequests   = new PM_request();
         $current_user = wp_get_current_user();
         $uid          = $current_user->ID;
-        set_time_limit( 0 );
-        if ( $tid!=''&& $activity!='' ) {
+        $tid          = absint( $tid );
+
+        if ( $tid > 0 && $activity != '' ) {
             $pmrequests->update_typing_timestamp( $tid, $activity );
         }
-        $last_typing_ajax_call = strtotime( current_time( 'mysql' ) );
-        $last_ajax_call        = $timestamp!='' ? (int) ( $timestamp ) : null;
 
-            $flag    = 0;
-            $threads = $pmrequests->pm_get_user_all_threads( $uid );
-		if ( !empty( $threads ) ) {
-			$last_change_time      = $threads[0]->timestamp;
-			$last_change_in_thread = strtotime( $last_change_time );
+        $last_ajax_call = $timestamp != '' ? (int) $timestamp : null;
+        $threads        = $pmrequests->pm_get_user_all_threads( $uid );
 
-			if ( $tid!='' ) {
-                $typing_timestamp      = $pmrequests->get_typing_timestamp( $tid );
-                $last_change_in_typing = strtotime( $typing_timestamp );
-			}
+        if ( empty( $threads ) ) {
+            return array();
+        }
 
-			if ( $last_change_in_thread > $last_ajax_call && ( $last_ajax_call != null||$tid=='' ) ) {
-				if ( $tid=='' ) {
-					return wp_json_encode( array() );
-				}
+        $last_change_time      = $threads[0]->timestamp;
+        $last_change_in_thread = strtotime( $last_change_time );
+        $last_change_in_typing = 0;
 
-				  $data   = true;
-				  $result = array(
-					  'activity'         => $activity,
-					  'data_changed'     => $data,
-					  'typing_timestamp' => $last_change_in_typing,
-					  'timestamp'        => $last_change_in_thread,
-				  );
-				  $json   = wp_json_encode( $result );
-				  return $json;
-			}
+        if ( $tid > 0 ) {
+            $typing_timestamp      = $pmrequests->get_typing_timestamp( $tid );
+            $last_change_in_typing = ( $typing_timestamp ) ? strtotime( $typing_timestamp ) : 0;
+        }
 
-                $data2 = false;
-			if ( $tid!='' ) {
-				$activity = $pmrequests->get_typing_status( $tid );
-			} else {
-				$activity ='nottyping';
-			}
-                $result = array(
-					'activity'         => $activity,
-					'data_changed'     => $data2,
-					'typing_timestamp' => $last_change_in_typing,
-					'timestamp'        => $last_change_in_thread,
-					'timexxx'          =>$timestamp,
-					'last_ajax'        =>$last_ajax_call,
-				);
+        if ( $last_change_in_thread > $last_ajax_call && ( $last_ajax_call != null || $tid == 0 ) ) {
+            if ( $tid == 0 ) {
+                return array();
+            }
 
-						$json =  wp_json_encode( $result );
-						 return $json;
+            return array(
+                'activity'         => $activity,
+                'data_changed'     => true,
+                'typing_timestamp' => $last_change_in_typing,
+                'timestamp'        => $last_change_in_thread,
+            );
+        }
 
-		}
+        if ( $tid > 0 ) {
+            $activity = $pmrequests->get_typing_status( $tid );
+        } else {
+            $activity = 'nottyping';
+        }
 
-                $result =array();
-                $json   = wp_json_encode( $result );
-                return $json;
-
+        return array(
+            'activity'         => $activity,
+            'data_changed'     => false,
+            'typing_timestamp' => $last_change_in_typing,
+            'timestamp'        => $last_change_in_thread,
+            'timexxx'          => $timestamp,
+            'last_ajax'        => $last_ajax_call,
+        );
     }
     public function pm_messenger_delete_threads( $tid ) {
         $dbhandler    = new PM_DBhandler();
@@ -123,8 +117,10 @@ class PM_Messenger {
         if ( $uid !=$current_user->ID && $dbhandler->get_global_option_value( 'pm_enable_private_messaging', '1' )==1 ) :
             if ( is_user_logged_in() ) {
                 $messenger_url =  $pmrequests->profile_magic_get_frontend_url( 'pm_user_profile_page', '' );
-                $messenger_url = add_query_arg( '#pg-messages', '', $messenger_url );
                 $messenger_url = add_query_arg( 'rid', $uid, $messenger_url );
+                if ( false === strpos( $messenger_url, '#pg-messages' ) ) {
+                    $messenger_url .= '#pg-messages';
+                }
             } else {
                 $messenger_url = $pmrequests->profile_magic_get_frontend_url( 'pm_user_login_page', site_url( '/wp-login.php' ) );
                 $messenger_url = add_query_arg( 'errors', 'loginrequired', $messenger_url );

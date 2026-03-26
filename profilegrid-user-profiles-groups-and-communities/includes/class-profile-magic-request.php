@@ -187,9 +187,14 @@ class PM_request {
 		return $extensions;
 	}
 
+	private function pm_get_allowed_extensions_array( $extensions ) {
+		$normalized = strtolower( trim( (string) $extensions ) );
+		return array_values( array_unique( array_filter( array_map( 'trim', explode( '|', $normalized ) ) ) ) );
+	}
+
 	public function make_upload_and_get_attached_id( $filefield, $allowed_ext, $require_imagesize = array(), $parent_post_id = 0 ) {
-		$allowfieldstypes = strtolower( trim( $allowed_ext ) );
-		$attach_id        = '';
+		$allowed_extensions = $this->pm_get_allowed_extensions_array( $allowed_ext );
+		$attach_id          = '';
 		if ( is_array( $filefield ) && ! empty( $filefield ) ) {
 			$file = array(
 				'name'     => $filefield['name'],
@@ -230,7 +235,7 @@ class PM_request {
 					// Check the type of tile. We'll use this as the 'post_mime_type'.
 					$filetype          = wp_check_filetype( basename( $filename ), null );
 					$current_file_type = strtolower( $filetype['ext'] );
-					if ( strpos( $allowfieldstypes, $current_file_type ) !== false && $too_small == false ) {
+					if ( in_array( $current_file_type, $allowed_extensions, true ) && $too_small == false ) {
 
 						// Get the path to the upload directory.
 						$wp_upload_dir = wp_upload_dir();
@@ -250,7 +255,7 @@ class PM_request {
                                                 do_action('pg_media_file_uploaded', $attach_id, $attachment);
 
 					} else {
-						if ( strpos( $allowfieldstypes, $current_file_type ) === false ) {
+						if ( ! in_array( $current_file_type, $allowed_extensions, true ) ) {
 							return esc_html__( 'This file type is not allowed.', 'profilegrid-user-profiles-groups-and-communities' );
 						} else {
 							return $too_small;
@@ -498,7 +503,7 @@ class PM_request {
                                             $allowed_ext       = $this->pm_maybe_extend_image_types( $allowed_ext );
                                             $require_imagesize = false;
                                         }
-					$allowfieldstypes = strtolower( trim( $allowed_ext ) );
+					$allowed_extensions = $this->pm_get_allowed_extensions_array( $allowed_ext );
 					$filefield        = $files[ $field_key ];
 
 					if ( is_array( $filefield ) ) {
@@ -515,7 +520,7 @@ class PM_request {
 								 $current_file_type = strtolower( $filetype['ext'] );
 								if ( empty( $current_file_type ) || $current_file_type == '' ) {
 														  $error[] = esc_html__( 'This file type is not allowed.', 'profilegrid-user-profiles-groups-and-communities' );
-								} elseif ( strpos( $allowfieldstypes, $current_file_type ) === false ) {
+								} elseif ( ! in_array( $current_file_type, $allowed_extensions, true ) ) {
 														   $error[] = esc_html__( 'This file type is not allowed.', 'profilegrid-user-profiles-groups-and-communities' );
 								}
 
@@ -2288,8 +2293,7 @@ class PM_request {
 
 			$identifier   = 'MSG_CONVERSATION';
 			$status       = apply_filters('pm_default_chat_status',2, $sid);
-			$allowed_html = array();
-			$content      = $content;
+			$content      = $this->pg_sanitize_message_content( $content );
                         if($tid=='')
                         {
                             $tid          = $this->fetch_or_create_thread( $sid, $rid );
@@ -2339,15 +2343,13 @@ class PM_request {
                 $dbhandler    = new PM_DBhandler();
                 $identifier   = 'MSG_CONVERSATION';
                 $orignal_msg = $dbhandler->get_row($identifier,$mid,'m_id');
+		$content      = $this->pg_sanitize_message_content( $content );
                 
                 if($sid!=$orignal_msg->s_id)
                 {
                     return false;
                 }
 		if ( $sid != '' && $rid != '' ) {
-			
-			$allowed_html = array();
-			$content      = wp_kses( $content, $allowed_html );
 			//$tid          = $this->fetch_or_create_thread( $sid, $rid );
 			$tid = $orignal_msg->t_id;
 			$data = array( 'content' => $content );
@@ -2424,11 +2426,13 @@ class PM_request {
 	}
 
 	public function is_thread_exsist( $sid, $rid ) {
-		if ( $sid != '' && $rid != '' ) {
+		$sid = absint( $sid );
+		$rid = absint( $rid );
+		if ( $sid > 0 && $rid > 0 ) {
 			$dbhandler  = new PM_DBhandler();
 			$identifier = 'MSG_THREADS';
 			$where      = 1;
-			$additional = " s_id in ($sid,$rid) AND r_id in ($sid,$rid)";
+			$additional = sprintf( ' s_id in (%1$d,%2$d) AND r_id in (%1$d,%2$d)', $sid, $rid );
 			$thread     = $dbhandler->get_all_result( $identifier, $column = '*', $where, 'results', 0, false, $sort_by = 'timestamp', true, $additional );
 			if ( $thread > 1 ) {
 				return true;
@@ -2441,11 +2445,13 @@ class PM_request {
 	}
 
 	public function get_thread_id( $sid, $rid ) {
-		if ( $sid != '' && $rid != '' ) {
+		$sid = absint( $sid );
+		$rid = absint( $rid );
+		if ( $sid > 0 && $rid > 0 ) {
 			$dbhandler  = new PM_DBhandler();
 			$identifier = 'MSG_THREADS';
 			$where      = 1;
-			$additional = " s_id in ($sid,$rid) AND r_id in ($sid,$rid)";
+			$additional = sprintf( ' s_id in (%1$d,%2$d) AND r_id in (%1$d,%2$d)', $sid, $rid );
 			$thread     = $dbhandler->get_all_result( $identifier, $column = 't_id', $where, 'results', 0, false, $sort_by = 'timestamp', true, $additional );
 
 			if ( isset( $thread ) && count( $thread ) > 0 ) {
@@ -2460,10 +2466,31 @@ class PM_request {
 
 	}
 
+	private function pg_sanitize_message_content( $content ) {
+		$content      = wp_unslash( (string) $content );
+		$allowed_html = $this->pg_allowed_html_wp_kses();
+
+		foreach ( $allowed_html as $tag => $attributes ) {
+			if ( ! is_array( $attributes ) ) {
+				continue;
+			}
+
+			foreach ( array_keys( $attributes ) as $attribute ) {
+				if ( 0 === strpos( $attribute, 'on' ) ) {
+					unset( $allowed_html[ $tag ][ $attribute ] );
+				}
+			}
+		}
+
+		return wp_kses( $content, $allowed_html );
+	}
+
 	public function pm_get_unread_message_summary( $uid ) {
 		$summary = array(
-			'count'  => 0,
-			'latest' => 0,
+			'count'      => 0,
+			'latest'     => 0,
+			'latest_tid' => 0,
+			'latest_rid' => 0,
 		);
 
 		$uid = absint( $uid );
@@ -2498,6 +2525,32 @@ class PM_request {
 		if ( $result ) {
 			$summary['count']  = isset( $result->unread_count ) ? (int) $result->unread_count : 0;
 			$summary['latest'] = ( isset( $result->latest_ts ) && ! empty( $result->latest_ts ) ) ? strtotime( $result->latest_ts ) : 0;
+		}
+
+		if ( $summary['count'] > 0 ) {
+			$latest_unread = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT mc.t_id, mc.s_id
+					FROM {$conversation_table} mc
+					INNER JOIN {$thread_table} mt ON mc.t_id = mt.t_id
+					WHERE mt.status = %d
+						AND ( mt.s_id = %d OR mt.r_id = %d )
+						AND mc.s_id != %d
+						AND mc.status = %d
+					ORDER BY mc.timestamp DESC, mc.m_id DESC
+					LIMIT 1",
+					$thread_active_status,
+					$uid,
+					$uid,
+					$uid,
+					$message_unread_status
+				)
+			);
+
+			if ( $latest_unread ) {
+				$summary['latest_tid'] = isset( $latest_unread->t_id ) ? (int) $latest_unread->t_id : 0;
+				$summary['latest_rid'] = isset( $latest_unread->s_id ) ? (int) $latest_unread->s_id : 0;
+			}
 		}
 
 		return $summary;

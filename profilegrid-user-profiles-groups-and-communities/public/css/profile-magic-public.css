@@ -4630,3 +4630,62 @@ body.theme-twentytwenty-two .pmagic .pm-friend-action-bar button{
     white-space: pre-line;
     word-break: break-word;
 }
+
+#pg-unread-toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 99999;
+    max-width: 320px;
+    background: #1f2937;
+    color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    padding: 12px 14px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
+#pg-unread-toast.pg-unread-toast--show {
+    display: flex;
+}
+
+.pg-unread-toast__text {
+    flex: 1 1 auto;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.pg-unread-toast__action {
+    background: #0d9488;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.pg-unread-toast__action:hover {
+    background: #0f766e;
+}
+
+.pg-unread-toast__close {
+    background: transparent;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 6px;
+    cursor: pointer;
+}
+
+@media (max-width: 480px) {
+    #pg-unread-toast {
+        right: 12px;
+        bottom: 12px;
+        max-width: calc(100% - 24px);
+    }
+}

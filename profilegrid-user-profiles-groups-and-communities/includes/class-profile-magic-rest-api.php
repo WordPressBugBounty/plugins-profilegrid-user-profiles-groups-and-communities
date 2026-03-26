@@ -2819,10 +2819,7 @@ class Profile_Magic_Rest_API {
 		$dbhandler = new PM_DBhandler();
 		$gid       = isset( $data['id'] ) ? absint( $data['id'] ) : 0;
 
-		// Always expose the raw DB row so callers can see every stored column
-		$data['db_row'] = (array) $group;
-
-		// If possible, include related records: group requests and paypal logs
+		// Keep the default group payload minimal and schema-oriented.
 		if ( $gid > 0 ) {
 			$group_requests = $dbhandler->get_all_result( 'GROUP_REQUESTS', '*', array( 'gid' => $gid ), 'results' );
 			if ( ! empty( $group_requests ) ) {
@@ -2830,9 +2827,6 @@ class Profile_Magic_Rest_API {
 			} else {
 				$data['group_requests'] = array();
 			}
-
-			$paypal_logs = $dbhandler->get_all_result( 'PAYPAL_LOG', '*', array( 'gid' => $gid ), 'results' );
-			$data['paypal_logs'] = $paypal_logs ? array_map( function( $r ) { return (array) $r; }, $paypal_logs ) : array();
 
 			// Fetch members: users whose usermeta 'pm_group' contains this gid (stored as serialized array)
 			$members = array();
@@ -2845,7 +2839,7 @@ class Profile_Magic_Rest_API {
 						'compare' => 'LIKE',
 					),
 				),
-				'fields' => array( 'ID', 'user_login', 'display_name', 'user_email' ),
+				'fields' => array( 'ID', 'user_login', 'display_name' ),
 			);
 
 			$wp_users = get_users( $user_query_args );
@@ -2855,7 +2849,6 @@ class Profile_Magic_Rest_API {
 						'id'           => (int) $u->ID,
 						'user_login'   => sanitize_user( $u->user_login, true ),
 						'display_name' => sanitize_text_field( $u->display_name ),
-						'email'        => isset( $u->user_email ) ? sanitize_email( $u->user_email ) : '',
 						'avatar'       => esc_url_raw( get_avatar_url( $u->ID ) ),
 					);
 				}

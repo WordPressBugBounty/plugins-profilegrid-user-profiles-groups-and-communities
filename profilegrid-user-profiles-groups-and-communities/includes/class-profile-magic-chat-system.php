@@ -21,17 +21,12 @@ class ProfileMagic_Chat {
 		$extra_notification_data['latest_ts']      = isset( $summary['latest'] ) ? (int) $summary['latest'] : 0;
 		$extra_notification_data['dismissed_at']   = (int) get_user_meta( $uid, 'pg_msg_unread_dismissed_at', true );
 
-		$threads = $pmrequests->pm_get_user_all_threads( $uid );
-		if ( ! empty( $threads ) ) {
-			$thread = $threads[0];
-			if ( $thread->r_id == $uid ) {
-				$rid = $thread->s_id;
-			} else {
-				$rid = $thread->r_id;
-			}
-			$extra_notification_data['last_thread']       = $thread->t_id;
-			$extra_notification_data['rid']               = $rid;
-			$extra_notification_data['last_thread_count'] = $pmrequests->get_unread_msg_count( $thread->t_id );
+		$latest_tid = isset( $summary['latest_tid'] ) ? (int) $summary['latest_tid'] : 0;
+		$latest_rid = isset( $summary['latest_rid'] ) ? (int) $summary['latest_rid'] : 0;
+		if ( $latest_tid > 0 ) {
+			$extra_notification_data['last_thread']       = $latest_tid;
+			$extra_notification_data['rid']               = $latest_rid;
+			$extra_notification_data['last_thread_count'] = $pmrequests->get_unread_msg_count( $latest_tid );
 		}
 		return wp_json_encode( $extra_notification_data );
 

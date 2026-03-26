@@ -174,6 +174,9 @@ function pm_messenger_send_message(form_values) {
     
     jQuery.post(pm_chat_object.ajax_url, data, function (resp) {
         show_thread_messages(tid,1);
+        pm_chat_mark_user_active();
+        pm_chat_schedule_poll(1200);
+        pm_chat_sync_unread_state();
         jQuery("#message_display_area").scrollTop( jQuery("#message_display_area div:last").offset().top)
     });
 }
@@ -199,6 +202,7 @@ function pg_activate_new_thread(uid)
         jQuery('#threads_ul').html(resp.threads);
         pm_get_active_thread_header(resp.rid);
         show_thread_messages(resp.tid,1); 
+        pm_chat_sync_unread_state();
         //show_message_pane(resp.tid,resp.rid);
     },'JSON');
 }
@@ -210,6 +214,7 @@ function pm_get_rid_by_uname(uname)
 
 function show_thread_messages(tid,loadnum) 
 {
+    pm_chat_clear_active_thread_unread_badge();
     
     //var tid = id.replace('t_id_', '');
     //console.log("showing thread  message of tid : "+tid);
@@ -237,6 +242,7 @@ function show_thread_messages(tid,loadnum)
             }
         
         }
+        pm_chat_sync_unread_state();
     });
 
 }
@@ -251,6 +257,7 @@ function show_message_pane(tid,rid) {
         jQuery("#threads_ul li").attr("active", "false");
         jQuery("#t_id_"+tid).attr("active", "true");
         jQuery("#t_id_"+tid+" #unread_msg_count").html(" ");
+        pm_chat_clear_active_thread_unread_badge();
         var uid = jQuery("#t_id_"+tid).attr("uid");
         pm_get_active_thread_header(rid);
         show_thread_messages(tid,1); 
@@ -260,6 +267,9 @@ function show_message_pane(tid,rid) {
     jQuery("#thread_hidden_field").attr("value", tid);
     
     pm_messages_mark_as_read(tid);
+    pm_chat_mark_user_active();
+    pm_chat_schedule_poll(1200);
+    pm_chat_sync_unread_state();
     //activate_thread_with_uid(uid,mid);
 
 }
@@ -277,7 +287,7 @@ function pm_messenger_notification_extra_data(x){
     //console.log("extra data working");
     var data = {'action': 'pm_messenger_notification_extra_data', 'ts': Date.now()};
 
-    jQuery.get(pm_chat_object.ajax_url, data, function (response)
+    return jQuery.get(pm_chat_object.ajax_url, data, function (response)
     {
         if (response)
         {
@@ -312,8 +322,9 @@ function pm_messenger_notification_extra_data(x){
                 
                    
             }else{
-                jQuery("#unread_thread_count").html('');   
-                jQuery("#unread_thread_count").removeClass("thread-count-show");
+                    jQuery("#unread_thread_count").html('');   
+                    jQuery("#unread_thread_count").removeClass("thread-count-show"); 
+                    pm_chat_clear_active_thread_unread_badge();
             }
             pg_unread_thread_count_cache = unreadCount;
           
@@ -333,68 +344,261 @@ function refresh_messenger()
 }
 var notification_request = null;
 var pg_unread_thread_count_cache = null;
+var pm_chat_poll_timer = null;
+var pm_chat_poll_in_flight = false;
+var pm_chat_poll_next_timestamp = '';
+var pm_chat_poll_pending_activity = '';
+var pm_chat_poll_no_change_streak = 0;
+var pm_chat_poll_error_streak = 0;
+var pm_chat_last_user_activity_at = Date.now();
+var pm_chat_poll_transport = 'rest';
+var pm_chat_poll_transport_locked = false;
+var pm_chat_poll_events_bound = false;
+
+function pm_chat_get_client_config() {
+    if (typeof pm_chat_object !== 'undefined' && pm_chat_object) {
+        return pm_chat_object;
+    }
+    if (typeof pg_msg_object !== 'undefined' && pg_msg_object) {
+        return pg_msg_object;
+    }
+    return {};
+}
+
+function pm_chat_clear_active_thread_unread_badge() {
+    var activeThread = jQuery('.pg-msg-conversation-list.active');
+    if (!activeThread.length) {
+        return;
+    }
+    activeThread.find('.pg-thread-msg').remove();
+    activeThread.find('.pg-thread-notification').remove();
+    activeThread.find('.pg-msg-conversation-unread').remove();
+}
+
+function pm_chat_can_use_rest_polling() {
+    var cfg = pm_chat_get_client_config();
+    return !!(cfg.rest_notification_url && cfg.rest_nonce);
+}
+
+function pm_chat_bind_poll_events() {
+    if (pm_chat_poll_events_bound) {
+        return;
+    }
+    pm_chat_poll_events_bound = true;
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+            pm_chat_mark_user_active();
+            pm_chat_schedule_poll(1200);
+        }
+    });
+    jQuery(window).on('focus', function () {
+        pm_chat_mark_user_active();
+        pm_chat_schedule_poll(1200);
+    });
+}
+
+function pm_chat_mark_user_active() {
+    pm_chat_last_user_activity_at = Date.now();
+    pm_chat_poll_no_change_streak = 0;
+}
+
+function pm_chat_sync_unread_state() {
+    if (!window.pgUnreadToastSync) {
+        return;
+    }
+    if (typeof window.pgUnreadToastSync.acknowledgeCurrent === 'function') {
+        window.pgUnreadToastSync.acknowledgeCurrent();
+    }
+    if (typeof window.pgUnreadToastSync.hideWhileMessagesVisible === 'function') {
+        window.pgUnreadToastSync.hideWhileMessagesVisible();
+    }
+    if (typeof window.pgUnreadToastSync.refreshNow === 'function') {
+        window.pgUnreadToastSync.refreshNow();
+    }
+}
+
+function pm_chat_mark_thread_read_silent(tid) {
+    tid = parseInt(tid, 10) || 0;
+    if (!tid || !window.pm_chat_object || !pm_chat_object.ajax_url) {
+        return;
+    }
+    jQuery.post(pm_chat_object.ajax_url, { action: 'pm_messages_mark_as_read', tid: tid }, function () {
+        pm_chat_sync_unread_state();
+        pm_messenger_notification_extra_data('');
+    });
+}
+
+function pm_chat_compute_poll_interval(changed) {
+    var now = Date.now();
+    var isVisible = document.visibilityState === 'visible';
+    var idleMs = now - pm_chat_last_user_activity_at;
+    var activeTid = parseInt(get_active_thread_id(), 10) || 0;
+    var interval;
+    if (!isVisible) {
+        interval = 10000;
+    } else if (activeTid > 0 && idleMs < 30000) {
+        interval = 1400;
+    } else if (idleMs < 30000) {
+        interval = 2400;
+    } else if (idleMs < 20000) {
+        interval = 3500;
+    } else {
+        interval = 6000;
+    }
+    if (!changed) {
+        interval += Math.min(pm_chat_poll_no_change_streak * 800, 5000);
+    }
+    if (pm_chat_poll_error_streak > 0) {
+        interval += Math.min(pm_chat_poll_error_streak * 2000, 8000);
+    }
+    interval = Math.max(1200, Math.min(interval, 12000));
+    var jitter = Math.floor(interval * ((Math.random() * 0.2) - 0.1));
+    return Math.max(1100, interval + jitter);
+}
+
+function pm_chat_schedule_poll(delay) {
+    if (pm_chat_poll_timer) {
+        clearTimeout(pm_chat_poll_timer);
+        pm_chat_poll_timer = null;
+    }
+    pm_chat_poll_timer = setTimeout(function () {
+        pm_chat_run_notification_poll();
+    }, delay);
+}
+
+function pm_chat_parse_json_if_possible(response) {
+    if (typeof response === 'object' && response !== null) {
+        return response;
+    }
+    if (typeof response !== 'string' || response === '') {
+        return null;
+    }
+    try {
+        return jQuery.parseJSON(response);
+    } catch (e) {
+        return null;
+    }
+}
+
+function pm_chat_send_notification_request(payload) {
+    var cfg = pm_chat_get_client_config();
+    if (pm_chat_poll_transport === 'rest' && pm_chat_can_use_rest_polling()) {
+        return jQuery.ajax({
+            url: cfg.rest_notification_url,
+            type: 'GET',
+            dataType: 'json',
+            cache: false,
+            headers: {'X-WP-Nonce': cfg.rest_nonce},
+            data: {
+                timestamp: payload.timestamp,
+                activity: payload.activity,
+                tid: payload.tid,
+                _wpnonce: cfg.rest_nonce
+            }
+        });
+    }
+    return jQuery.get(cfg.ajax_url, {
+        action: 'pm_get_messenger_notification',
+        timestamp: payload.timestamp,
+        activity: payload.activity,
+        tid: payload.tid,
+        nonce: cfg.nonce || '',
+        ts: Date.now()
+    });
+}
+
 function pm_get_messenger_notification(timestamp, activity)
 {
-   
-    if (activity === undefined)activity = '';
-    var tid = get_active_thread_id();
-    var data = {'action': 'pm_get_messenger_notification',
-        'timestamp': timestamp,
-        'activity': activity,
-        'tid': tid,
-        'ts': Date.now()
-    };
-    if(notification_request !== null){
-        notification_request.abort();
-
+    if (activity === undefined) {
+        activity = '';
     }
+    if (timestamp !== undefined && timestamp !== null && timestamp !== '') {
+        pm_chat_poll_next_timestamp = timestamp;
+    }
+    if (activity !== '') {
+        pm_chat_poll_pending_activity = activity;
+        pm_chat_mark_user_active();
+    }
+    pm_chat_bind_poll_events();
+    pm_chat_schedule_poll(0);
+}
 
-    var nextTimestamp = '';
-    notification_request = jQuery.get(pm_chat_object.ajax_url, data, function (response)
-    {
-        if (response)
-        {
-           
-            var obj = jQuery.parseJSON(response);           
-            if(jQuery.isEmptyObject(obj))
-            {
-                nextTimestamp = '';
+function pm_chat_run_notification_poll() {
+    if (pm_chat_poll_in_flight) {
+        return;
+    }
+    var tid = get_active_thread_id();
+    if (!tid) {
+        pm_chat_poll_in_flight = true;
+        pm_messenger_notification_extra_data('').done(function () {
+            pm_chat_poll_error_streak = 0;
+            pm_chat_poll_no_change_streak++;
+        }).fail(function (jqXHR) {
+            if (jqXHR && jqXHR.statusText === 'abort') {
+                return;
             }
-            else
-            {
-                if (obj.activity == 'typing') {
-                    jQuery("#typing_on .pm-typing-inner").show();
-                }
-                if (obj.activity == 'nottyping') {
-                    jQuery("#typing_on .pm-typing-inner").hide();
-                }
-                if (obj.data_changed === true)
-                {
-
-                    update_thread();
-                    pm_messenger_notification_extra_data('');
-
-                }
-                nextTimestamp = obj.timestamp;
-
-
+            pm_chat_poll_error_streak++;
+        }).always(function (jqXHR) {
+            pm_chat_poll_in_flight = false;
+            if (jqXHR && jqXHR.statusText === 'abort') {
+                return;
             }
-            // call the function again, this time with the timestamp we just got from server.php
-
-        }else{
-       //console.log("error in notif");    
-       }
-    
-    }).always(function (jqXHR) {
+            pm_chat_schedule_poll(pm_chat_compute_poll_interval(false));
+        });
+        return;
+    }
+    var payload = {
+        timestamp: pm_chat_poll_next_timestamp,
+        activity: pm_chat_poll_pending_activity || '',
+        tid: tid
+    };
+    pm_chat_poll_pending_activity = '';
+    pm_chat_poll_in_flight = true;
+    notification_request = pm_chat_send_notification_request(payload);
+    notification_request.done(function (response) {
+        var obj = pm_chat_parse_json_if_possible(response);
+        if (!obj) {
+            pm_chat_poll_error_streak++;
+            return;
+        }
+        if (jQuery.isEmptyObject(obj)) {
+            pm_chat_poll_next_timestamp = '';
+            pm_chat_poll_no_change_streak++;
+            return;
+        }
+        if (obj.activity === 'typing') {
+            jQuery("#typing_on .pm-typing-inner").show();
+        }
+        if (obj.activity === 'nottyping') {
+            jQuery("#typing_on .pm-typing-inner").hide();
+        }
+        if (obj.data_changed === true) {
+            update_thread();
+            pm_chat_mark_thread_read_silent(tid);
+            pm_messenger_notification_extra_data('');
+            pm_chat_mark_user_active();
+            pm_chat_poll_no_change_streak = 0;
+        } else {
+            pm_chat_poll_no_change_streak++;
+        }
+        pm_chat_poll_next_timestamp = obj.timestamp || '';
+        pm_chat_poll_error_streak = 0;
+    }).fail(function (jqXHR) {
         if (jqXHR && jqXHR.statusText === 'abort') {
             return;
         }
-        setTimeout(function () {
-            pm_get_messenger_notification(nextTimestamp)
-        }, 4000);
+        pm_chat_poll_error_streak++;
+        if (!pm_chat_poll_transport_locked && pm_chat_poll_transport === 'rest') {
+            pm_chat_poll_transport = 'ajax';
+            pm_chat_poll_transport_locked = true;
+        }
+    }).always(function (jqXHR) {
+        pm_chat_poll_in_flight = false;
+        if (jqXHR && jqXHR.statusText === 'abort') {
+            return;
+        }
+        pm_chat_schedule_poll(pm_chat_compute_poll_interval(false));
     });
-
-
 }
 
 function pm_messages_mark_as_read(tid)

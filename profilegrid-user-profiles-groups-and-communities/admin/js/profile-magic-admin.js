@@ -1114,7 +1114,8 @@ jQuery(
 					var list_sortable = jQuery( this ).sortable( 'toArray' ).toString();
 					var data          = {
 						'action': 'pm_set_field_order',
-						'list_order': list_sortable
+						'list_order': list_sortable,
+						'nonce': pm_ajax_object.nonce
 					};
 					jQuery.post( pm_ajax_object.ajax_url, data, function(response) {} );
 				}

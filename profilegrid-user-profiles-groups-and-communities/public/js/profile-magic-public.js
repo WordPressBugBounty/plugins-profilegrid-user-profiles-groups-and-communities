@@ -1775,6 +1775,425 @@ var parent = jQuery('ul.pm-profile-tab-wrap');
  jQuery('#pg-groups').css("display","block");
 }
 
+function pg_init_unread_message_toast() {
+    var toast = document.getElementById('pg-unread-toast');
+    if (!toast || toast.getAttribute('data-pg-initialized') === '1') {
+        return;
+    }
+
+    toast.setAttribute('data-pg-initialized', '1');
+
+    var target = toast.getAttribute('data-target');
+    var baseTarget = toast.getAttribute('data-base-target') || '';
+    var latest = parseInt(toast.getAttribute('data-latest'), 10) || 0;
+    var latestRid = parseInt(toast.getAttribute('data-latest-rid'), 10) || 0;
+    var latestTid = parseInt(toast.getAttribute('data-latest-tid'), 10) || 0;
+    var dismissed = parseInt(toast.getAttribute('data-dismissed'), 10) || 0;
+    var count = parseInt(toast.getAttribute('data-count'), 10) || 0;
+    var show = parseInt(toast.getAttribute('data-show'), 10) || 0;
+    var text = toast.querySelector('.pg-unread-toast__text');
+    var openBtn = toast.querySelector('.pg-unread-toast__action');
+    var closeBtn = toast.querySelector('.pg-unread-toast__close');
+    var singleLabel = toast.getAttribute('data-single-label') || '';
+    var multiLabel = toast.getAttribute('data-multi-label') || '';
+    var summaryTimer = null;
+    var summaryInFlight = false;
+    var summaryNoChangeStreak = 0;
+    var summaryErrorStreak = 0;
+    var summaryLastActivityAt = Date.now();
+    var summaryTransport = 'rest';
+    var summaryTransportLocked = false;
+    var dismissStorageKey = 'pgUnreadToastDismissedAt';
+    var lastAutoOpenKey = '';
+
+    var buildMessageTarget = function (ridValue) {
+        if (!baseTarget) {
+            return target;
+        }
+
+        var url = baseTarget;
+        if (ridValue > 0) {
+            url += (url.indexOf('?') === -1 ? '?' : '&') + 'rid=' + encodeURIComponent(ridValue);
+        }
+
+        return url + '#pg-messages';
+    };
+
+    var isMessagesTabActive = function () {
+        var messagesTab = document.getElementById('pg-messages');
+        if (!messagesTab) {
+            return false;
+        }
+
+        if (messagesTab.offsetParent !== null) {
+            return true;
+        }
+
+        return (window.location.hash || '').toLowerCase() === '#pg-messages';
+    };
+
+    var getStoredDismissed = function () {
+        var storedValue;
+
+        try {
+            storedValue = window.localStorage ? parseInt(window.localStorage.getItem(dismissStorageKey), 10) || 0 : 0;
+        } catch (e) {
+            storedValue = 0;
+        }
+
+        return storedValue;
+    };
+
+    var storeDismissed = function (latestValue) {
+        try {
+            if (window.localStorage) {
+                window.localStorage.setItem(dismissStorageKey, String(latestValue || 0));
+            }
+        } catch (e) {
+        }
+    };
+
+    var clearStoredDismissed = function () {
+        try {
+            if (window.localStorage) {
+                window.localStorage.removeItem(dismissStorageKey);
+            }
+        } catch (e) {
+        }
+    };
+
+    dismissed = Math.max(dismissed, getStoredDismissed());
+
+    var hideToast = function () {
+        toast.classList.remove('pg-unread-toast--show');
+    };
+
+    var playUnreadSound = function () {
+        var tone = document.getElementById('msg_tone');
+        var now = Date.now();
+
+        if (!tone) {
+            return;
+        }
+
+        if (window.pgUnreadSoundLastPlayedAt && (now - window.pgUnreadSoundLastPlayedAt) < 1200) {
+            return;
+        }
+
+        window.pgUnreadSoundLastPlayedAt = now;
+
+        try {
+            if (typeof tone.currentTime === 'number') {
+                tone.currentTime = 0;
+            }
+            if (typeof tone.play === 'function') {
+                var promise = tone.play();
+                if (promise && typeof promise.catch === 'function') {
+                    promise.catch(function () {});
+                }
+            }
+        } catch (e) {
+        }
+    };
+
+    var acknowledgeLatestUnread = function () {
+        if (!latest) {
+            return;
+        }
+
+        dismissed = Math.max(dismissed, latest);
+        storeDismissed(latest);
+        persistToastDismissal(latest);
+        hideToast();
+    };
+
+    var buildLabel = function (countValue) {
+        if (countValue === 1) {
+            return singleLabel;
+        }
+
+        return multiLabel.replace('{{count}}', countValue);
+    };
+
+    var renderToast = function (countValue, latestValue, dismissedValue) {
+        if (!countValue || isMessagesTabActive() || (latestValue > 0 && dismissedValue >= latestValue)) {
+            if (!countValue) {
+                clearStoredDismissed();
+            }
+            hideToast();
+            return;
+        }
+
+        if (text) {
+            text.textContent = buildLabel(countValue);
+        }
+
+        toast.classList.add('pg-unread-toast--show');
+    };
+
+    var markSummaryActive = function () {
+        summaryLastActivityAt = Date.now();
+        summaryNoChangeStreak = 0;
+    };
+
+    var parseSummaryPayload = function (response) {
+        if (!response) {
+            return null;
+        }
+
+        if (typeof response.success !== 'undefined') {
+            if (!response.success || !response.data) {
+                return null;
+            }
+
+            return response.data;
+        }
+
+        return response;
+    };
+
+    var computeSummaryInterval = function (changed) {
+        var isVisible = document.visibilityState === 'visible';
+        var idleMs = Date.now() - summaryLastActivityAt;
+        var interval = 9000;
+
+        if (!isVisible) {
+            interval = 25000;
+        } else if (isMessagesTabActive()) {
+            interval = 2500;
+        } else if (idleMs > 30000) {
+            interval = 12000;
+        }
+
+        if (!changed) {
+            interval += Math.min(summaryNoChangeStreak * 2000, 12000);
+        }
+
+        if (summaryErrorStreak > 0) {
+            interval += Math.min(summaryErrorStreak * 4000, 12000);
+        }
+
+        interval = Math.max(2000, Math.min(interval, 30000));
+
+        var jitter = Math.floor(interval * ((Math.random() * 0.2) - 0.1));
+        return Math.max(1800, interval + jitter);
+    };
+
+    var scheduleSummary = function (delay) {
+        if (summaryTimer) {
+            clearTimeout(summaryTimer);
+        }
+
+        summaryTimer = setTimeout(runSummaryPoll, delay);
+    };
+
+    var fetchSummaryRest = function () {
+        if (!window.pm_ajax_object || !pm_ajax_object.rest_unread_summary_url || !pm_ajax_object.rest_nonce) {
+            return Promise.reject(new Error('rest_not_available'));
+        }
+
+        return fetch(pm_ajax_object.rest_unread_summary_url + '?_wpnonce=' + encodeURIComponent(pm_ajax_object.rest_nonce), {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                'X-WP-Nonce': pm_ajax_object.rest_nonce
+            }
+        }).then(function (response) {
+            return response.json();
+        });
+    };
+
+    var fetchSummaryAjax = function () {
+        if (!window.pm_ajax_object || !pm_ajax_object.ajax_url || !pm_ajax_object.nonce) {
+            return Promise.reject(new Error('ajax_not_available'));
+        }
+
+        var data = new FormData();
+        data.append('action', 'pm_unread_message_summary');
+        data.append('nonce', pm_ajax_object.nonce);
+
+        return fetch(pm_ajax_object.ajax_url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: data
+        }).then(function (response) {
+            return response.json();
+        });
+    };
+
+    var persistToastDismissal = function (latestValue) {
+        if (!latestValue || !window.pm_ajax_object || !pm_ajax_object.ajax_url || !pm_ajax_object.nonce) {
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('action', 'pm_dismiss_unread_message_toast');
+        formData.append('nonce', pm_ajax_object.nonce);
+        formData.append('latest_ts', latestValue);
+
+        if (navigator.sendBeacon && typeof URLSearchParams !== 'undefined') {
+            var beaconData = new URLSearchParams();
+            beaconData.append('action', 'pm_dismiss_unread_message_toast');
+            beaconData.append('nonce', pm_ajax_object.nonce);
+            beaconData.append('latest_ts', latestValue);
+            navigator.sendBeacon(pm_ajax_object.ajax_url, beaconData);
+            return;
+        }
+
+        fetch(pm_ajax_object.ajax_url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData,
+            keepalive: true
+        });
+    };
+
+    var runSummaryPoll = function () {
+        if (summaryInFlight) {
+            return;
+        }
+
+        summaryInFlight = true;
+
+        var request = (summaryTransport === 'rest') ? fetchSummaryRest() : fetchSummaryAjax();
+
+        request.then(function (response) {
+            var payload = parseSummaryPayload(response);
+
+            if (!payload) {
+                summaryErrorStreak++;
+                return;
+            }
+
+            var latestValue = parseInt(payload.latest_ts, 10) || 0;
+            var latestRidValue = parseInt(payload.latest_rid, 10) || 0;
+            var latestTidValue = parseInt(payload.latest_tid, 10) || 0;
+            var dismissedValue = parseInt(payload.dismissed, 10) || 0;
+            var countValue = parseInt(payload.count, 10) || 0;
+            var previousCountValue = count;
+            var changed = (latestValue !== latest || latestRidValue !== latestRid || latestTidValue !== latestTid || dismissedValue !== dismissed || countValue !== count);
+
+            latest = latestValue;
+            latestRid = latestRidValue;
+            latestTid = latestTidValue;
+            dismissed = dismissedValue;
+            count = countValue;
+            target = buildMessageTarget(latestRid);
+            toast.setAttribute('data-target', target);
+            toast.setAttribute('data-latest-rid', String(latestRid));
+            toast.setAttribute('data-latest-tid', String(latestTid));
+
+            if (!isMessagesTabActive() && countValue > previousCountValue) {
+                playUnreadSound();
+            }
+
+            renderToast(countValue, latestValue, dismissedValue);
+
+            if (changed) {
+                markSummaryActive();
+            } else {
+                summaryNoChangeStreak++;
+            }
+
+            summaryErrorStreak = 0;
+        }).catch(function () {
+            summaryErrorStreak++;
+
+            if (!summaryTransportLocked && summaryTransport === 'rest') {
+                summaryTransport = 'ajax';
+                summaryTransportLocked = true;
+            }
+        }).then(function () {
+            summaryInFlight = false;
+            scheduleSummary(computeSummaryInterval(false));
+        });
+    };
+
+    if (show) {
+        renderToast(count, latest, dismissed);
+    }
+
+    if (openBtn && target) {
+        openBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            acknowledgeLatestUnread();
+            window.location.href = target;
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.textContent = String.fromCharCode(215);
+        closeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            acknowledgeLatestUnread();
+        });
+    }
+
+    var activateLatestUnreadThread = function () {
+        if (!latestRid || typeof window.pg_activate_new_thread !== 'function') {
+            return;
+        }
+
+        var autoOpenKey = String(latest) + ':' + String(latestRid) + ':' + String(latestTid);
+        if (lastAutoOpenKey === autoOpenKey) {
+            return;
+        }
+
+        lastAutoOpenKey = autoOpenKey;
+        setTimeout(function () {
+            window.pg_activate_new_thread(latestRid);
+            scheduleSummary(1200);
+        }, 250);
+    };
+
+    var syncUnreadStateOnMessagesVisit = function () {
+        if (!count || !latest) {
+            return;
+        }
+
+        acknowledgeLatestUnread();
+        activateLatestUnreadThread();
+    };
+
+    document.querySelectorAll('a[href="#pg-messages"]').forEach(function (link) {
+        link.addEventListener('click', function () {
+            markSummaryActive();
+            syncUnreadStateOnMessagesVisit();
+        });
+    });
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+            markSummaryActive();
+            scheduleSummary(1500);
+        }
+    });
+
+    window.addEventListener('focus', function () {
+        markSummaryActive();
+        scheduleSummary(1500);
+    });
+
+    if ((window.location.hash || '').toLowerCase() === '#pg-messages') {
+        syncUnreadStateOnMessagesVisit();
+    }
+
+    window.pgUnreadToastSync = {
+        acknowledgeCurrent: acknowledgeLatestUnread,
+        refreshNow: function () {
+            markSummaryActive();
+            scheduleSummary(200);
+        },
+        hideWhileMessagesVisible: function () {
+            if (isMessagesTabActive()) {
+                hideToast();
+            }
+        }
+    };
+
+    scheduleSummary(6000);
+}
+
 jQuery(document).ready(function() {
     jQuery('.pm_linked_in_url, .pm_twitter_url, .pm_youtube_url, .pm_soundcloud_url, .pm_mixcloud_url, .pm_instagram_url, .pm_google_url').each(function(index, element) {
         var $wrapper = jQuery(element);
@@ -1792,4 +2211,6 @@ jQuery(document).ready(function() {
             }
         });
     });
+
+    pg_init_unread_message_toast();
 });

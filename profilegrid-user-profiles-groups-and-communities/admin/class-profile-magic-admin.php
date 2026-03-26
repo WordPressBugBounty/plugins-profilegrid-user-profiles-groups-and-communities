@@ -868,18 +868,31 @@ class Profile_Magic_Admin {
 
 
 	public function profile_magic_set_field_order() {
+		$this->pg_validate_reorder_ajax_request();
 		include 'partials/set-fields-order.php';
 		die;
 	}
 
 	public function profile_magic_set_group_order() {
+		$this->pg_validate_reorder_ajax_request();
 		include 'partials/set-groups-order.php';
 		die;
 	}
 
 	public function profile_magic_set_group_items() {
+		$this->pg_validate_reorder_ajax_request();
 		include 'partials/set-groups-order.php';
 		die;
+	}
+
+	private function pg_validate_reorder_ajax_request() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( esc_html__( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), 403 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ), 403 );
+		}
 	}
 
 	public function profile_magic_set_section_order() {
@@ -1876,6 +1889,15 @@ class Profile_Magic_Admin {
 
         }
 	public function pm_group_option_update() {
+		// This option sync is only needed on normal wp-admin page loads.
+		if ( ! is_admin() || wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			return;
+		}
+
+		if ( ! class_exists( 'PM_DBhandler' ) || ! class_exists( 'PM_request' ) ) {
+			return;
+		}
+
 		$dbhandler = new PM_DBhandler();
 		$pmrequest = new PM_request();
 
