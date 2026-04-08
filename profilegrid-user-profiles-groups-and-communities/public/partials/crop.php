@@ -50,14 +50,19 @@ $jpeg_quality = intval($dbhandler->get_global_option_value('pg_image_quality','9
             $can_process_image = ( $is_authorized && $post['user_meta']=='pm_user_avatar' && ! is_wp_error( $image ) );
 
             if ( $can_process_image ) {
-                $crop_result = $image->crop( $post['x'], $post['y'], $post['w'], $post['h'], $post['w'], $post['h'], false );
+                $crop_x = isset( $post['x'] ) ? max( 0, (int) round( (float) $post['x'] ) ) : 0;
+                $crop_y = isset( $post['y'] ) ? max( 0, (int) round( (float) $post['y'] ) ) : 0;
+                $crop_w = isset( $post['w'] ) ? max( 1, (int) round( (float) $post['w'] ) ) : 1;
+                $crop_h = isset( $post['h'] ) ? max( 1, (int) round( (float) $post['h'] ) ) : 1;
+
+                $crop_result = $image->crop( $crop_x, $crop_y, $crop_w, $crop_h, $crop_w, $crop_h, false );
                 if ( is_wp_error( $crop_result ) ) {
                     $can_process_image = false;
                 }
             }
 
             if ( $can_process_image ) {
-                $resize_result = $image->resize( $post['w'], $post['h'], array($post['x'], $post['y']) );
+                $resize_result = $image->resize( $crop_w, $crop_h, false );
                 if ( is_wp_error( $resize_result ) ) {
                     $can_process_image = false;
                 }

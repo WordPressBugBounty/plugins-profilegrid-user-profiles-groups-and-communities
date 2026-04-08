@@ -447,11 +447,13 @@ class Profile_Magic {
 				$this->loader->add_action( 'clean_user_online_status', $plugin_public, 'clean_user_online_status' );
 				$this->loader->add_action( 'clear_auth_cookie', $plugin_public, 'profile_magic_set_logged_out_status', 10, 1 );
 
+				// RegistrationMagic integration hooks (single registration).
 				$this->loader->add_action( 'rm_submission_completed', $plugin_public, 'profile_magic_rm_form_submission', 10, 3 );
 				$this->loader->add_action( 'rm_payment_completed', $plugin_public, 'profile_magic_rm_form_submission_payment_completed', 10, 3 );
 				$this->loader->add_action( 'profile_magic_profile_settings_tab', $plugin_public, 'pg_rm_registration_tab', 10, 2 );
-                                $this->loader->add_action( 'rm_payment_completed', $plugin_public, 'profile_magic_rm_form_submission_payment_completed', 10, 3 );
-				$this->loader->add_action( 'profile_magic_profile_settings_tab', $plugin_public, 'pg_rm_registration_tab', 10, 2 );
+				// Duplicate registrations retained as comments for audit history:
+				// $this->loader->add_action( 'rm_payment_completed', $plugin_public, 'profile_magic_rm_form_submission_payment_completed', 10, 3 );
+				// $this->loader->add_action( 'profile_magic_profile_settings_tab', $plugin_public, 'pg_rm_registration_tab', 10, 2 );
 				$this->loader->add_action( 'profile_magic_profile_settings_tab_content', $plugin_public, 'pg_rm_registration_tab_content', 10, 2 );
 				$this->loader->add_action( 'profile_magic_profile_settings_tab', $plugin_public, 'pg_rm_payment_tab', 10, 2 );
 				$this->loader->add_action( 'profile_magic_profile_settings_tab_content', $plugin_public, 'pg_rm_payment_tab_content', 10, 2 );

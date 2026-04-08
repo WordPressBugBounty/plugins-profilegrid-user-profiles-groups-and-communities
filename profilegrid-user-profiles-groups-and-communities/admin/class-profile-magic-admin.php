@@ -1063,14 +1063,56 @@ class Profile_Magic_Admin {
 			$gid = array( $prefill_gid );
 		}
 
+		$fields = array();
 		if ( ! empty( $gid ) ) :
 			if ( current_user_can( 'manage_options' ) ) {
 				$exclude = 'associate_group in(' . implode( ',', $gid ) . ") and field_type not in('first_name','last_name','user_name','user_email','user_url','user_pass','confirm_pass','description','user_avatar','heading','paragraph')";
 			} else {
 				$exclude = 'associate_group in(' . implode( ',', $gid ) . ") and field_type not in('first_name','last_name','user_name','user_email','user_url','user_pass','confirm_pass','description','user_avatar','heading','paragraph','read_only')";
 			}
+			$section_field_filters = 'AND ' . $exclude;
 
-			$fields = $dbhandler->get_all_result( 'FIELDS', '*', 1, 'results', 0, false, 'ordering', false, $exclude );
+			foreach ( $gid as $group_id ) {
+				$sections = $dbhandler->get_all_result( 'SECTION', '*', array( 'gid' => $group_id ), 'results', 0, false, 'ordering' );
+
+				if ( empty( $sections ) ) {
+					continue;
+				}
+
+				foreach ( $sections as $section ) {
+					$section_fields = $dbhandler->get_all_result(
+						'FIELDS',
+						'*',
+						array( 'associate_section' => $section->id ),
+						'results',
+						0,
+						false,
+						'ordering',
+						false,
+						$section_field_filters
+					);
+
+					if ( ! empty( $section_fields ) ) {
+						$fields = array_merge( $fields, $section_fields );
+					}
+				}
+			}
+
+			$unsectioned_fields = $dbhandler->get_all_result(
+				'FIELDS',
+				'*',
+				array( 'associate_section' => 0 ),
+				'results',
+				0,
+				false,
+				'ordering',
+				false,
+				$section_field_filters
+			);
+
+			if ( ! empty( $unsectioned_fields ) ) {
+				$fields = array_merge( $fields, $unsectioned_fields );
+			}
 		endif;
 		$col = $dbhandler->get_global_option_value( 'pm_reg_form_cols', 1 );
 

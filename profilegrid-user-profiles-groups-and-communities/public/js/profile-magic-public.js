@@ -1906,7 +1906,6 @@ function pg_init_unread_message_toast() {
         persistToastDismissal(latest);
         hideToast();
     };
-
     var buildLabel = function (countValue) {
         if (countValue === 1) {
             return singleLabel;
@@ -2161,7 +2160,6 @@ function pg_init_unread_message_toast() {
             syncUnreadStateOnMessagesVisit();
         });
     });
-
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'visible') {
             markSummaryActive();
@@ -2190,7 +2188,6 @@ function pg_init_unread_message_toast() {
             }
         }
     };
-
     scheduleSummary(6000);
 }
 

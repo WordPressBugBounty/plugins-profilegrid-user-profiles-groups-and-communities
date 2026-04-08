@@ -1,6 +1,8 @@
 <?php
 class PM_DBhandler {
 
+	private $pm_table_columns_cache = array();
+
     public function insert_row( $identifier, $data, $format = null ) {
         global $wpdb;
         $pm_activator = new Profile_Magic_Activator();
@@ -148,6 +150,11 @@ class PM_DBhandler {
         $table          = esc_sql( $pm_activator->get_db_table_name( $identifier ) );
         $unique_id_name = esc_sql( $pm_activator->get_db_table_unique_field_name( $identifier ) );
         $args           = array();
+
+        if ( $table === '' || $unique_id_name === '' ) {
+            return null;
+        }
+
         if ( !$sort_by ) {
             $sort_by = $unique_id_name;
         }
@@ -157,6 +164,16 @@ class PM_DBhandler {
         } elseif ( is_string( $column ) && strpos( $column, 'DISTINCT' ) ) {
             $column   = str_replace( 'DISTINCT ', '', $column );
             $distinct = true;
+        }
+
+        $column = $this->pm_validate_query_columns( $identifier, $table, $column );
+        if ( $column === false ) {
+            return null;
+        }
+
+        $sort_by = $this->pm_validate_sort_columns( $identifier, $table, $sort_by, $unique_id_name );
+        if ( $sort_by === false ) {
+            $sort_by = $unique_id_name;
         }
 
         if ( $column != '' && !is_array( $column ) && $distinct == false ) {
@@ -174,6 +191,10 @@ class PM_DBhandler {
                 if ( $i !== 0 ) {
 					$qry .= ' AND'; }
 
+                if ( ! $this->pm_is_allowed_identifier( $identifier, $table, $column_name ) ) {
+                    return null;
+                }
+
                 $format = $pm_activator->get_db_table_field_type( $identifier, $column_name );
                 $qry   .= " $column_name = $format";
 
@@ -184,12 +205,18 @@ class PM_DBhandler {
 					$i++;
             }
 			if ( $additional!='' ) {
-                             $additional = $this->pm_filter_addtional_query_parameter($additional);
+                             $additional = $this->pm_filter_addtional_query_parameter($identifier, $table, $additional);
+                if ( $additional === '' ) {
+                    return null;
+                }
                 $qry .= ' ' . $additional;
 			}
         } elseif ( $where == 1 ) {
             if ( $additional!='' ) {
-                $additional = $this->pm_filter_addtional_query_parameter($additional);
+                $additional = $this->pm_filter_addtional_query_parameter($identifier, $table, $additional);
+                if ( $additional === '' ) {
+                    return null;
+                }
                 $qry .= ' ' . $additional;
             } else {
                 $qry .= ' 1';
@@ -551,21 +578,139 @@ class PM_DBhandler {
 
     public function pm_get_all_groups_ajax( $search, $offset = 0, $limit = '10', $order = 'DESC', $sort_by = 'members' ) {
     }
-    
-    public function pm_filter_addtional_query_parameter($additional)
-    {
-        $forbidden_keywords = array('union', 'select', '+','sleep', '...','INSERT','DELETE','UPDATE','DROP','EXEC','EXECUTE','DECLARE','FROM','ORDER BY','--');
-        // Check if $additional contains any forbidden keywords
-        foreach ($forbidden_keywords as $keyword) {
-            if (stripos($additional, $keyword) !== false) {
-                // Handle the error or sanitize the $additional parameter as needed
-                $additional = '';
+
+    private function pm_get_table_columns( $identifier, $table ) {
+        global $wpdb;
+
+        if ( isset( $this->pm_table_columns_cache[ $identifier ] ) ) {
+            return $this->pm_table_columns_cache[ $identifier ];
+        }
+
+        $columns = $wpdb->get_col( "SHOW COLUMNS FROM `{$table}`", 0 );
+        if ( ! is_array( $columns ) ) {
+            $columns = array();
+        }
+
+        $this->pm_table_columns_cache[ $identifier ] = array_map( 'strtolower', $columns );
+        return $this->pm_table_columns_cache[ $identifier ];
+    }
+
+    private function pm_is_allowed_identifier( $identifier, $table, $identifier_name ) {
+        $identifier_name = trim( str_replace( '`', '', (string) $identifier_name ) );
+        if ( $identifier_name === '' ) {
+            return false;
+        }
+
+        return in_array( strtolower( $identifier_name ), $this->pm_get_table_columns( $identifier, $table ), true );
+    }
+
+    private function pm_validate_query_columns( $identifier, $table, $column ) {
+        if ( is_array( $column ) ) {
+            $validated_columns = array();
+            foreach ( $column as $single_column ) {
+                $single_column = trim( (string) $single_column );
+                if ( ! $this->pm_is_allowed_identifier( $identifier, $table, $single_column ) ) {
+                    return false;
+                }
+                $validated_columns[] = $single_column;
+            }
+
+            return $validated_columns;
+        }
+
+        $column = trim( (string) $column );
+        if ( $column === '*' ) {
+            return $column;
+        }
+
+        if ( preg_match( '/^COUNT\(\s*([A-Za-z0-9_]+)\s*\)(?:\s+AS\s+([A-Za-z0-9_]+))?$/i', $column, $matches ) ) {
+            if ( ! $this->pm_is_allowed_identifier( $identifier, $table, $matches[1] ) ) {
+                return false;
+            }
+
+            $validated = 'COUNT(' . $matches[1] . ')';
+            if ( ! empty( $matches[2] ) ) {
+                $validated .= ' AS ' . $matches[2];
+            }
+
+            return $validated;
+        }
+
+        if ( $this->pm_is_allowed_identifier( $identifier, $table, $column ) ) {
+            return $column;
+        }
+
+        return false;
+    }
+
+    private function pm_validate_sort_columns( $identifier, $table, $sort_by, $default ) {
+        $sort_by = trim( (string) $sort_by );
+        if ( $sort_by === '' ) {
+            return $default;
+        }
+
+        $columns           = array_map( 'trim', explode( ',', $sort_by ) );
+        $validated_columns = array();
+        foreach ( $columns as $column ) {
+            if ( ! $this->pm_is_allowed_identifier( $identifier, $table, $column ) ) {
+                return false;
+            }
+            $validated_columns[] = $column;
+        }
+
+        return implode( ',', $validated_columns );
+    }
+
+    private function pm_strip_sql_literals( $sql ) {
+        $sql = preg_replace( "/'[^'\\\\]*(?:\\\\.[^'\\\\]*)*'/", "''", $sql );
+        $sql = preg_replace( '/"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"/', '""', $sql );
+        $sql = preg_replace( '/\\b\\d+\\b/', '0', $sql );
+        return $sql;
+    }
+
+    public function pm_filter_addtional_query_parameter( $identifier, $table, $additional ) {
+        $additional = trim( (string) $additional );
+        if ( $additional === '' ) {
+            return '';
+        }
+
+        if ( preg_match( '/\\b(UNION|SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|EXEC|EXECUTE|DECLARE|SLEEP|BENCHMARK|INTO\\s+OUTFILE|LOAD_FILE)\\b/i', $additional ) ) {
+            return '';
+        }
+
+        $normalized = $this->pm_strip_sql_literals( $additional );
+        // Keep quoted literals allowed after normalization so safe clauses like NOT IN ('read_only') still validate.
+        if ( preg_match( '/[;#]/', $normalized ) || strpos( $normalized, '--' ) !== false ) {
+            return '';
+        }
+        if ( preg_match( '/[^A-Za-z0-9_\\s(),.=<>!%`\'"]/', $normalized ) ) {
+            return '';
+        }
+
+        preg_match_all( '/[A-Za-z_][A-Za-z0-9_]*/', $normalized, $matches );
+        $allowed_keywords = array(
+            'AND',
+            'OR',
+            'IN',
+            'NOT',
+            'LIKE',
+            'IS',
+            'NULL',
+            'ASC',
+            'DESC',
+        );
+
+        foreach ( $matches[0] as $token ) {
+            if ( in_array( strtoupper( $token ), $allowed_keywords, true ) ) {
+                continue;
+            }
+
+            if ( ! $this->pm_is_allowed_identifier( $identifier, $table, $token ) ) {
                 return '';
             }
         }
-        
+
         return $additional;
-        
     }
 
 

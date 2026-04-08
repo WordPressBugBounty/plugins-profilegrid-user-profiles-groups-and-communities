@@ -143,7 +143,6 @@ function pg_msg_mark_thread_read_silent(tid) {
         pm_messenger_notification_extra_data('');
     });
 }
-
 function pg_msg_can_use_rest_polling() {
     return !!(pg_msg_object && pg_msg_object.rest_notification_url && pg_msg_object.rest_nonce);
 }
@@ -447,7 +446,7 @@ function pm_messenger_notification_extra_data(x){
 function pg_msg_open_tab()
 {
     pg_msg_loader();  
-     jQuery("#unread_thread_count").html('');   
+    jQuery("#unread_thread_count").html('');
     jQuery("#unread_thread_count").removeClass("thread-count-show");
     pg_msg_mark_user_active();
     pg_msg_schedule_poll(1000);

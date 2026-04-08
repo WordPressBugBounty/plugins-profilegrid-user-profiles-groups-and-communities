@@ -374,7 +374,6 @@ function pm_chat_clear_active_thread_unread_badge() {
     activeThread.find('.pg-thread-notification').remove();
     activeThread.find('.pg-msg-conversation-unread').remove();
 }
-
 function pm_chat_can_use_rest_polling() {
     var cfg = pm_chat_get_client_config();
     return !!(cfg.rest_notification_url && cfg.rest_nonce);

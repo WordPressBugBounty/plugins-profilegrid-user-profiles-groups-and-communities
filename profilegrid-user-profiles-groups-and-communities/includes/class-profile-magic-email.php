@@ -168,7 +168,7 @@ class PM_Emails {
 			if ( $field=='group_name' && $gid!=false ) {
 				$dbhandler = new PM_DBhandler();
 				$group     = $dbhandler->get_row( 'GROUPS', $gid );
-				$value     = $group->group_name;
+				$value     = ( $group && isset( $group->group_name ) ) ? $group->group_name : '';
 			}
                         if ( $field=='registration_url' && $gid!=false ) {
                             
