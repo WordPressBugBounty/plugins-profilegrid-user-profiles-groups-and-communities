@@ -5,7 +5,7 @@ Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.9.8.6
+Stable tag: 5.9.9.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -664,6 +664,11 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 5.9.9.0: April 14, 2026 =
+* Improved: Minor admin navigation refinements.
+* Minor UI fixes.
+* Multiple bug fixes and improvements.
 
 = 5.9.8.6: April 7, 2026 =
 * Fixed: Resolved extension warning issues in group settings and popup templates by adding safer data checks and fallback handling.
@@ -1580,6 +1585,11 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 5.9.9.0: April 14, 2026 =
+* Improved: Minor admin navigation refinements.
+* Minor UI fixes.
+* Multiple bug fixes and improvements.
 
 = 5.9.8.6: April 7, 2026 =
 * Fixed: Resolved extension warning issues in group settings and popup templates by adding safer data checks and fallback handling.

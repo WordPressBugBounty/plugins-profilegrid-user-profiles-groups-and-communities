@@ -43,6 +43,26 @@ $quick_add_users = get_users(
     )
 );
 update_option( 'pg_redirect_to_group_page', '0' );
+
+$pg_demo_content_plugin_file = 'profilegrid-user-profiles-groups-and-communities-profilegrid-demo-content/profilegrid-demo-content.php';
+$pg_demo_content_plugin_path = WP_PLUGIN_DIR . '/' . $pg_demo_content_plugin_file;
+$pg_demo_content_is_installed = file_exists( $pg_demo_content_plugin_path );
+$pg_demo_content_is_active    = false;
+$pg_demo_content_url          = 'https://profilegrid.co/extensions/profilegrid-demo-content/?utm_source=pg_plugin&utm_medium=all_groups_top_bar&utm_campaign=demo_content_promo';
+$pg_demo_content_target       = '_blank';
+
+if ( $pg_demo_content_is_installed ) {
+    if ( ! function_exists( 'is_plugin_active' ) ) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+
+    $pg_demo_content_is_active = is_plugin_active( $pg_demo_content_plugin_file );
+
+    if ( $pg_demo_content_is_active ) {
+        $pg_demo_content_url    = admin_url( 'admin.php?page=pm_demo_content_settings' );
+        $pg_demo_content_target = '_blank';
+    }
+}
 ?>
 <div class="pm_notification"></div>
 <div class="pmagic pg-box-wrap pg-group-manager">
@@ -97,7 +117,7 @@ update_option( 'pg_redirect_to_group_page', '0' );
                       <div class="pg-box-col-6 pg-box-col-md-6 pg-box-text-right">
                           <div class="pg-box-head-ext-nav">
                               <ul>
-                                  <li><a href="https://profilegrid.co/extensions/profilegrid-demo-content/?utm_source=pg_plugin&utm_medium=all_groups_top_bar&utm_campaign=demo_content_promo" target="_blank" class="pg-box-border pg-box-white-bg"><?php esc_html_e('Demo Content', 'profilegrid-user-profiles-groups-and-communities'); ?><span class="material-icons"> system_update_alt </span></a></li>
+                                  <li><a href="<?php echo esc_url( $pg_demo_content_url ); ?>" target="<?php echo esc_attr( $pg_demo_content_target ); ?>" class="pg-box-border pg-box-white-bg"><?php esc_html_e('Demo Content', 'profilegrid-user-profiles-groups-and-communities'); ?><span class="material-icons"> system_update_alt </span></a></li>
                                   
                                   <!--<li><a href="https://profilegrid.co/profilegrid-starter-guide" target="_blank" class="pg-box-border pg-box-white-bg"><?php esc_html_e('Starter Guide', 'profilegrid-user-profiles-groups-and-communities'); ?><span class="material-icons"> lightbulb_outline </span></a></li>-->
                                   <!--<li><a href="https://profilegrid.co/translate-plugins-profilegrid/" target="_blank" class="pg-box-border pg-box-white-bg"><?php esc_html_e('Translate', 'profilegrid-user-profiles-groups-and-communities'); ?><span class="dashicons dashicons-translation"></span></a></li>-->
