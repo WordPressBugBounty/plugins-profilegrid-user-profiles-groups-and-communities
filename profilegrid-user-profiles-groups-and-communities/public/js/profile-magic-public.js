@@ -1014,9 +1014,14 @@ function pm_frontend_change_password(form)
 var searchRequest = null; 
 function pm_advance_user_search(pagenum)
 {
-
-
     var form = jQuery("#pm-advance-search-form");
+    var ajaxUrl = (window.pm_ajax_object && pm_ajax_object.ajax_url) ? pm_ajax_object.ajax_url : (typeof window.ajaxurl === 'string' ? window.ajaxurl : '');
+    var ajaxNonce = (window.pm_ajax_object && pm_ajax_object.nonce) ? pm_ajax_object.nonce : '';
+
+    if (ajaxUrl === '') {
+        return;
+    }
+
     jQuery("#pm_result_pane").html('<div class="pm-loader"></div>');
     var pmDomColor = jQuery(".pmagic").find("a").css('color');
     jQuery(".pm-loader").css('border-top-color', pmDomColor);
@@ -1052,7 +1057,11 @@ function pm_advance_user_search(pagenum)
     }
     var form_values = form.serializeArray();
 
-    var data = {'nonce': pm_ajax_object.nonce};
+    var data = {};
+
+    if (ajaxNonce !== '') {
+        data.nonce = ajaxNonce;
+    }
 
     //creating data in object format and array for multiple checkbox
     jQuery.each(form_values, function () {
@@ -1070,7 +1079,7 @@ function pm_advance_user_search(pagenum)
     if(searchRequest != null)
         searchRequest.abort();
         //ajax call start
-    searchRequest =    jQuery.post(pm_ajax_object.ajax_url, data, function (resp) 
+    searchRequest =    jQuery.post(ajaxUrl, data, function (resp) 
         {
         
                 if (resp)

@@ -1258,7 +1258,7 @@ class Profile_Magic_Public {
 
 
 	public function pm_messenger_show_threads() {
-		$pmmessenger = new PM_Messenger();
+		$pmmessenger = new ProfileMagic_Chat();
                 $nonce = filter_input( INPUT_POST, 'nonce' );
                 if ( !isset( $nonce ) || ! wp_verify_nonce( wp_unslash($nonce), 'ajax-nonce' ) ) {
                     die(esc_html__('Failed security check','profilegrid-user-profiles-groups-and-communities') );
@@ -1559,8 +1559,17 @@ if ( isset( $_POST['tid'] ) ) {
 
 	public function pm_advance_user_search() {
             $pm_sanitizer = new PM_sanitizer;
-            $nonce = filter_input( INPUT_POST, 'nonce' );
-            if ( !isset( $nonce ) || ! wp_verify_nonce( wp_unslash($nonce), 'ajax-nonce' ) ) {
+            $nonce             = filter_input( INPUT_POST, 'nonce' );
+            $search_form_nonce = filter_input( INPUT_POST, 'pm_search_nonce' );
+            $nonce_ok          = false;
+
+            if ( isset( $nonce ) && wp_verify_nonce( wp_unslash( $nonce ), 'ajax-nonce' ) ) {
+                $nonce_ok = true;
+            } elseif ( isset( $search_form_nonce ) && wp_verify_nonce( wp_unslash( $search_form_nonce ), 'pm_search_action' ) ) {
+                $nonce_ok = true;
+            }
+
+            if ( ! $nonce_ok ) {
                 die(esc_html__('Failed security check','profilegrid-user-profiles-groups-and-communities') );
             }
             $post = $pm_sanitizer->sanitize($_POST);
@@ -1569,6 +1578,7 @@ if ( isset( $_POST['tid'] ) ) {
                         $allowed_html = $pmrequests->pg_allowed_html_wp_kses();
 			$pagenum    = filter_input( INPUT_POST, 'pagenum' );
 			$sortby     = filter_input( INPUT_POST, 'member_sort_by' );
+                        $search_term = isset( $post['pm_search'] ) ? trim( (string) $post['pm_search'] ) : '';
 
 		switch ( $sortby ) {
 			case 'name_asc':
@@ -1625,7 +1635,7 @@ if ( isset( $_POST['tid'] ) ) {
 		} else {
                         $pm_default_search_field = $dbhandler->get_global_option_value('pm_default_search_field','first_name');
                         if($pm_default_search_field=='default'):
-                            $search = $post['pm_search'];
+                            $search = $search_term;
                         else:
                             $search ='';
                         endif;
@@ -1640,9 +1650,20 @@ if ( isset( $_POST['tid'] ) ) {
 			$date_query   = $pmrequests->pm_get_user_date_query($post);
 			$exclude      = $pmrequests->pm_get_hide_users_array();
 			$user_query   = $dbhandler->pm_get_all_users_ajax( $search, $meta_query_array, '', $offset, $limit, $order, $sortby, $exclude, $date_query );
-			//print_r($user_query);
                         $total_users  = $user_query->get_total();
 			$users        = $user_query->get_results();
+
+                if ( empty( $users ) && ! isset( $post['match_fields'] ) && $search === '' && $search_term !== '' ) {
+                        $fallback_post                         = $post;
+                        unset( $fallback_post['pm_search'], $fallback_post['field_value'] );
+                        $fallback_meta_query                   = $pmrequests->pm_get_user_meta_query( $fallback_post );
+                        $fallback_meta_query['search']         = $search_term;
+                        $fallback_meta_query['search_columns'] = array( 'user_login', 'user_nicename', 'user_email', 'display_name' );
+                        $user_query                            = $dbhandler->pm_get_all_users_ajax( '', $fallback_meta_query, '', $offset, $limit, $order, $sortby, $exclude, $date_query );
+                        $total_users                           = $user_query->get_total();
+                        $users                                 = $user_query->get_results();
+                }
+
 			$num_of_pages = ceil( $total_users / $limit );
 			$pagination   = $dbhandler->pm_get_pagination( $num_of_pages, $pagenum );
 			$user_info    = array();
@@ -6275,16 +6296,27 @@ if ( isset( $_POST['tid'] ) ) {
 
 		$pmrequests = new PM_request();
 		$rid        = absint( filter_input( INPUT_POST, 'rid', FILTER_VALIDATE_INT ) );
+		$tid        = absint( filter_input( INPUT_POST, 'tid', FILTER_VALIDATE_INT ) );
 		$search     = sanitize_text_field( wp_unslash( filter_input( INPUT_POST, 'search' ) ) );
 		$uid        = get_current_user_id();
-		$tid        = absint( $pmrequests->get_thread_id( $rid, $uid ) );
-		if ( 0 === $tid ) {
+
+		// Use the explicit thread id from the UI when available; falling back to a user-pair lookup
+		// breaks valid legacy/custom thread records even though the thread itself still exists.
+		$thread = false;
+		if ( $tid > 0 ) {
+			$thread = $this->pg_get_authorized_thread( $tid, $uid );
+		}
+
+		if ( false === $thread && $rid > 0 ) {
+			$tid    = absint( $pmrequests->get_thread_id( $rid, $uid ) );
+			$thread = $this->pg_get_authorized_thread( $tid, $uid );
+		}
+
+		if ( false === $thread ) {
 			wp_send_json_error( 'Thread not found', 404 );
 		}
-		$thread = $this->pg_get_authorized_thread( $tid, $uid );
-		if ( false === $thread ) {
-			wp_send_json_error( 'Unauthorized', 403 );
-		}
+
+		$rid = ( absint( $thread->s_id ) === $uid ) ? absint( $thread->r_id ) : absint( $thread->s_id );
 		$chat   = new ProfileMagic_Chat();
 		$chat->pg_show_thread_message_panel( $uid, $rid, $tid, $search );
 		$pmrequests->update_message_status_to_read( $tid );

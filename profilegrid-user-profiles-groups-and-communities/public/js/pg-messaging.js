@@ -36,6 +36,7 @@ if($('#pg-messages').length)
         setTimeout(function(){pm_get_messenger_notification('','nottyping');}, 1000);
         setTimeout(function(){pm_messenger_notification_extra_data();}, 1200);
         setTimeout(function(){pg_msg_bootstrap_from_deeplink(false);}, 1400);
+        setTimeout(function(){pg_msg_restore_thread_messages();}, 1700);
         $("#typing_on .pm-typing-inner").hide();
     }
     
@@ -198,6 +199,21 @@ function pg_msg_bootstrap_from_deeplink(force) {
     }, 300);
 }
 
+function pg_msg_restore_thread_messages() {
+    if (!jQuery('#pg-messages').length) {
+        return;
+    }
+    var tid = parseInt(jQuery('#thread_hidden_field').val(), 10) || 0;
+    if (tid <= 0) {
+        return;
+    }
+    if (jQuery('.pg-users-search-list-wrap .pg-message-list').length > 0 && jQuery('.pg-msg-conversation-list').length > 0) {
+        return;
+    }
+    pg_show_all_threads(tid);
+    show_thread_messages(tid, 1);
+}
+
 function pg_parse_json_if_possible(response) {
     if (typeof response === 'object' && response !== null) {
         return response;
@@ -276,8 +292,11 @@ function pg_msg_handle_notification_response(parsed, tid) {
     if (parsed.data_changed === true) {
         pg_show_all_threads(tid);
         show_thread_messages(tid, 1);
-        pg_msg_mark_thread_read_silent(tid);
-        pm_messenger_notification_extra_data('');
+        // Let the unread summary update first so the existing badge/sound logic can
+        // react to the incoming message before the active thread is silently marked read.
+        pm_messenger_notification_extra_data('').always(function () {
+            pg_msg_mark_thread_read_silent(tid);
+        });
     }
     pg_msg_poll_next_timestamp = parsed.timestamp || '';
     return parsed.data_changed === true;
@@ -461,6 +480,10 @@ function pg_show_new_thread()
     jQuery('#pg-msg-thread-container #pg-new-msg').show();
     jQuery('.pg-users-search-list-wrap').html('');
     jQuery('.emojionearea-editor').attr('placeholder','');
+    jQuery('#thread_hidden_field').val('');
+    jQuery('#receipent_field_rid').val('');
+    jQuery('#mid').val('');
+    jQuery('#new_thread').val('1');
     jQuery('#send_msg_btn').attr('disabled','disabled');
     jQuery(".pg-message-box-sidebar").removeClass('opened');
 }
@@ -686,11 +709,19 @@ function pm_messenger_send_message(form_values) {
     });
     
     jQuery.post(pg_msg_object.ajax_url, data, function (resp) {
+        var resolvedTid = parseInt(resp, 10);
+        if (!resolvedTid) {
+            if (typeof resp === 'string' && jQuery.trim(resp) !== '') {
+                alert(jQuery.trim(resp));
+            }
+            pg_msg_sync_unread_state();
+            return;
+        }
         if(data['new_thread']=="1")
         {
-            pg_show_all_threads(resp);
+            pg_show_all_threads(resolvedTid);
         }
-        show_thread_messages(resp,1);
+        show_thread_messages(resolvedTid,1);
         pg_msg_mark_user_active();
         pg_msg_schedule_poll(1200);
         jQuery('#new_thread').val("0");

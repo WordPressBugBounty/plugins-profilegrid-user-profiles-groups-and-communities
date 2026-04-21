@@ -9,6 +9,63 @@ class ProfileMagic_Chat {
 		$this->version       = $version;
 	}
 
+	private function pg_normalize_thread_markup_value( $value ) {
+		if ( is_scalar( $value ) || null === $value ) {
+			return (string) $value;
+		}
+
+		return '';
+	}
+
+	private function pg_normalize_thread_text_value( $value ) {
+		return wp_strip_all_tags( $this->pg_normalize_thread_markup_value( $value ) );
+	}
+
+	private function pg_get_authorized_thread_row( $tid, $uid ) {
+		$tid = absint( $tid );
+		$uid = absint( $uid );
+		if ( $tid === 0 || $uid === 0 ) {
+			return false;
+		}
+
+		$dbhandler = new PM_DBhandler();
+		$thread    = $dbhandler->get_row( 'MSG_THREADS', $tid, 't_id' );
+		if ( empty( $thread ) ) {
+			return false;
+		}
+
+		$sender_id   = isset( $thread->s_id ) ? absint( $thread->s_id ) : 0;
+		$receiver_id = isset( $thread->r_id ) ? absint( $thread->r_id ) : 0;
+		if ( $sender_id !== $uid && $receiver_id !== $uid ) {
+			return false;
+		}
+
+		return $thread;
+	}
+
+	private function pg_ensure_active_thread_in_list( $threads, $tid, $uid ) {
+		$tid = absint( $tid );
+		$uid = absint( $uid );
+		if ( $tid === 0 || $uid === 0 ) {
+			return $threads;
+		}
+
+		$thread_list = is_array( $threads ) ? $threads : array();
+		foreach ( $thread_list as $thread ) {
+			if ( isset( $thread->t_id ) && absint( $thread->t_id ) === $tid ) {
+				return $thread_list;
+			}
+		}
+
+		$active_thread = $this->pg_get_authorized_thread_row( $tid, $uid );
+		if ( false === $active_thread ) {
+			return $thread_list;
+		}
+
+		array_unshift( $thread_list, $active_thread );
+		return $thread_list;
+	}
+
 	public function pm_messenger_notification_extra_data() {
 		$dbhandler               = new PM_DBhandler();
 		$pmrequests              = new PM_request();
@@ -69,6 +126,7 @@ class ProfileMagic_Chat {
 			$count               = 1;
 			if ( ! empty( $threads ) ) {
 				foreach ( $threads as $thread ) {
+					try {
 					if ( ! empty( $thread->title ) && $thread->title == $uid ) {
 						continue;
 					}
@@ -107,6 +165,7 @@ class ProfileMagic_Chat {
                                         }
 
 					$last_message = apply_filters('pm_last_msg_show', $last_message, $status, $uid, $s_id);
+					$last_message = $this->pg_normalize_thread_markup_value( $last_message );
 					$profile_url                    = $pmrequests->pm_get_user_profile_url( $other_uid );
 					$other_user_info['profile_url'] = $profile_url;
 					$other_user_info['avatar']      = get_avatar(
@@ -119,7 +178,8 @@ class ProfileMagic_Chat {
 							'force_display' => true,
 						)
 					);
-					$other_user_info['name']        = $pmrequests->pm_get_display_name( $other_uid, true );
+					$other_user_info['avatar']      = $this->pg_normalize_thread_markup_value( $other_user_info['avatar'] );
+					$other_user_info['name']        = $this->pg_normalize_thread_markup_value( $pmrequests->pm_get_display_name( $other_uid, true ) );
 					$thread_timestamp               = human_time_diff( strtotime( $thread->timestamp ), time() );
 
 					$thread_timestamp     = $thread_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' );
@@ -155,6 +215,7 @@ class ProfileMagic_Chat {
 					$login_status = ( $pmrequests->pm_get_user_online_status( $other_uid ) == 1 ? 'pm-online' : 'pm-offline' );
 
 					$add_chat_members = apply_filters('pm_add_chat_members', '', $tid);
+					$add_chat_members = $this->pg_normalize_thread_markup_value( $add_chat_members );
 
 					 $return .= ' <div id="pg-msg-thread-' . $tid . '" data-thread="' . $tid . '" class="pg-msg-conversation-list ' . $active_class . '" onclick="pg_show_msg_panel(' . $uid . ',' . $other_uid . ',' . $tid . ')">' . $other_user_info['avatar'] . '<div class="' . $login_status . '"></div><div class="pg-msg-conversation-info">
                         <div class="pg-list-user-img-wrap">
@@ -168,9 +229,13 @@ class ProfileMagic_Chat {
                           </div>
                           ' . $unread_visual . '
                         </div>
-                      <span class="pg-thread-msg">' . stripslashes( wp_strip_all_tags( $last_message ) ) . '</span>
+                      <span class="pg-thread-msg">' . stripslashes( $this->pg_normalize_thread_text_value( $last_message ) ) . '</span>
                     </div>
                   </div>';
+					} catch ( Throwable $exception ) {
+						error_log( sprintf( 'ProfileGrid messenger search thread render failed for thread %d: %s', isset( $thread->t_id ) ? (int) $thread->t_id : 0, $exception->getMessage() ) );
+						continue;
+					}
 
 				}
 			} else {
@@ -192,12 +257,15 @@ class ProfileMagic_Chat {
 		$current_user        = wp_get_current_user();
 		$uid                 = $current_user->ID;
 		$threads             = $pmrequests->pm_get_user_all_threads( $uid );
+		$threads             = $this->pg_ensure_active_thread_in_list( $threads, $tid, $uid );
 		$unread_thread_count = 0;
 		$return              = '';
 		$active_tid          = $tid;
 		$count               = 1;
+		$seen_pairs          = array();
 		if ( ! empty( $threads ) ) {
 			foreach ( $threads as $thread ) {
+				try {
 				if ( ! empty( $thread->title ) && $thread->title == $uid ) {
 					continue;
 				}
@@ -212,6 +280,14 @@ class ProfileMagic_Chat {
 				if ( get_user_by( 'ID', $other_uid ) == false ) {
 					continue;
 				}
+
+				$pair = array( (int) $thread->s_id, (int) $thread->r_id );
+				sort( $pair );
+				$pair_key = implode( ':', $pair );
+				if ( isset( $seen_pairs[ $pair_key ] ) ) {
+					continue;
+				}
+				$seen_pairs[ $pair_key ] = true;
 
 				$tid     = $thread->t_id;
 				$lastmsg = $pmrequests->get_message_of_thread( $tid, 1, 0, true );
@@ -238,6 +314,7 @@ class ProfileMagic_Chat {
 				}
 
 				$last_message = apply_filters('pm_last_msg_show', $last_message, $status, $uid, $s_id );
+				$last_message = $this->pg_normalize_thread_markup_value( $last_message );
                                 
 				$profile_url                    = $pmrequests->pm_get_user_profile_url( $other_uid );
 				$other_user_info['profile_url'] = $profile_url;
@@ -251,7 +328,8 @@ class ProfileMagic_Chat {
 						'force_display' => true,
 					)
 				);
-				$other_user_info['name']        = $pmrequests->pm_get_display_name( $other_uid, true );
+				$other_user_info['avatar']      = $this->pg_normalize_thread_markup_value( $other_user_info['avatar'] );
+				$other_user_info['name']        = $this->pg_normalize_thread_markup_value( $pmrequests->pm_get_display_name( $other_uid, true ) );
 				$thread_timestamp               = human_time_diff( strtotime( $thread->timestamp ), time() );
 
 				$thread_timestamp     = $thread_timestamp . __( ' ago', 'profilegrid-user-profiles-groups-and-communities' );
@@ -287,6 +365,7 @@ class ProfileMagic_Chat {
 				$login_status = ( $pmrequests->pm_get_user_online_status( $other_uid ) == 1 ? 'pg-msg-online' : 'pg-msg-offline' );
 
 				$add_chat_members = apply_filters('pm_add_chat_members', '', $tid);
+				$add_chat_members = $this->pg_normalize_thread_markup_value( $add_chat_members );
 
 				 $return .= ' <div id="pg-msg-thread-' . $tid . '" data-thread="' . $tid . '" class="pg-msg-conversation-list ' . $active_class . '" onclick="pg_show_msg_panel(' . $uid . ',' . $other_uid . ',' . $tid . ')">' . $other_user_info['avatar'] . '<div class="pg-user-status ' . $login_status . '"></div><div class="pg-msg-conversation-info">
                     <div class="pg-list-user-img-wrap">
@@ -300,11 +379,15 @@ class ProfileMagic_Chat {
                     
                     </div>
                     <div class="pg-thread-notification">
-                  <div class="pg-thread-msg">' . stripslashes( wp_strip_all_tags( $last_message ) ) . '</div>
+                  <div class="pg-thread-msg">' . stripslashes( $this->pg_normalize_thread_text_value( $last_message ) ) . '</div>
                     ' . $unread_visual . '
                     </div>    
                 </div>
               </div>';
+				} catch ( Throwable $exception ) {
+					error_log( sprintf( 'ProfileGrid messenger thread render failed for thread %d: %s', isset( $thread->t_id ) ? (int) $thread->t_id : 0, $exception->getMessage() ) );
+					continue;
+				}
 
 			}
 		} else {
@@ -381,19 +464,25 @@ class ProfileMagic_Chat {
         {
                 $current_user = wp_get_current_user();
 		$cur_uid      = $current_user->ID;
-                $dbhandler  = new PM_DBhandler();
-                $identifier = 'MSG_THREADS';
-                $where      = 1;
-                $additional = " t_id = $tid AND (s_id = $cur_uid OR r_id = $cur_uid)";
-                $thread     = $dbhandler->get_all_result( $identifier, $column = '*', $where, 'results', 0, false, $sort_by = 'timestamp', true, $additional );
-                if(!empty($thread))
-                {
-                    return true;
-                }
-                else
-                {
+                $tid        = absint( $tid );
+                $cur_uid    = absint( $cur_uid );
+                if ( $tid <= 0 || $cur_uid <= 0 ) {
                     return false;
                 }
+
+                global $wpdb;
+                $pm_activator = new Profile_Magic_Activator();
+                $table        = esc_sql( $pm_activator->get_db_table_name( 'MSG_THREADS' ) );
+                $thread       = $wpdb->get_var(
+                    $wpdb->prepare(
+                        "SELECT t_id FROM {$table} WHERE t_id = %d AND (s_id = %d OR r_id = %d) LIMIT 1",
+                        $tid,
+                        $cur_uid,
+                        $cur_uid
+                    )
+                );
+
+                return ! empty( $thread );
         }
 
 	public function pm_messenger_show_messages( $tid, $loadnum, $timezone = 0, $search = '' ) {

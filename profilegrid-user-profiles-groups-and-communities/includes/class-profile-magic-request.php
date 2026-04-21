@@ -2255,18 +2255,48 @@ class PM_request {
 
 	public function pm_get_user_all_threads( $uid, $limit = false, $active = false ) {
 		if ( $uid ) {
-			$dbhandler  = new PM_DBhandler();
-			$identifier = 'MSG_THREADS';
-			$where      = array( 'status' => 2 );
+			global $wpdb;
+			$uid          = absint( $uid );
+			$limit        = ( false === $limit ) ? false : absint( $limit );
+			$pm_activator = new Profile_Magic_Activator();
+			$table        = esc_sql( $pm_activator->get_db_table_name( 'MSG_THREADS' ) );
+			$query        = "SELECT * FROM {$table} WHERE status = %d AND (s_id = %d OR r_id = %d)";
+			$query_args   = array( 2, $uid, $uid );
+
 			if ( $active ) {
-				 $additional = "AND title IS NULL AND (s_id = $uid OR r_id = $uid)";
-			} else {
-				// Group OR participant checks so status and other filters apply to both sender and receiver sides.
-				 $additional = 'AND (s_id = ' . $uid . ' OR r_id = ' . $uid . ')';
+				$query .= ' AND title IS NULL';
 			}
-			$additional = apply_filters('pm_get_user_all_threads_additional',$additional,$uid,$active);
-                        $threads = $dbhandler->get_all_result( $identifier, $column = '*', $where, 'results', 0, $limit, 'timestamp', true, $additional );
-			return $threads;
+
+			$additional = apply_filters( 'pm_get_user_all_threads_additional', '', $uid, $active );
+			if ( is_string( $additional ) && trim( $additional ) !== '' ) {
+				// Keep legacy filter support for trusted in-repo extensions without depending on PM_DBhandler query assembly.
+				$query .= ' ' . trim( $additional );
+			}
+
+			$query .= ' ORDER BY timestamp DESC';
+
+			$threads = $wpdb->get_results( $wpdb->prepare( $query, $query_args ) );
+			if ( ! empty( $threads ) ) {
+				$deduped_threads = array();
+				$seen_pairs      = array();
+				foreach ( $threads as $thread ) {
+					$pair = array( (int) $thread->s_id, (int) $thread->r_id );
+					sort( $pair );
+					$pair_key = implode( ':', $pair );
+					if ( isset( $seen_pairs[ $pair_key ] ) ) {
+						continue;
+					}
+					$seen_pairs[ $pair_key ] = true;
+					$deduped_threads[]       = $thread;
+				}
+
+				if ( false !== $limit && $limit > 0 ) {
+					$deduped_threads = array_slice( $deduped_threads, 0, $limit );
+				}
+
+				return $deduped_threads;
+			}
+			return null;
 		}
 	}
         
@@ -2294,14 +2324,10 @@ class PM_request {
 			$identifier   = 'MSG_CONVERSATION';
 			$status       = apply_filters('pm_default_chat_status',2, $sid);
 			$content      = $this->pg_sanitize_message_content( $content );
-                        if($tid=='')
-                        {
-                            $tid          = $this->fetch_or_create_thread( $sid, $rid );
-                        }
-                        else
-                        {
-                            $tid  = $this->get_thread_id($sid, $rid);
-                        }
+                        $tid          = $this->pg_resolve_message_thread_id( $sid, $rid, $tid );
+                        if ( empty( $tid ) ) {
+				return false;
+			}
 			$data = array(
 				's_id'      => $sid,
 				't_id'      => $tid,
@@ -2398,9 +2424,9 @@ class PM_request {
 	public function fetch_or_create_thread( $sid, $rid ) {
 		$dbhandler   = new PM_DBhandler();
 		 $identifier = 'MSG_THREADS';
-		 
-		if ( $this->is_thread_exsist( $sid, $rid ) ) {
-			$tid = $this->get_thread_id( $sid, $rid );
+
+		$tid = $this->get_thread_id( $sid, $rid );
+		if ( ! empty( $tid ) ) {
                         do_action('pg_update_thread_desc_add_members',$tid,$sid,$rid);
 		} else {
 
@@ -2429,12 +2455,8 @@ class PM_request {
 		$sid = absint( $sid );
 		$rid = absint( $rid );
 		if ( $sid > 0 && $rid > 0 ) {
-			$dbhandler  = new PM_DBhandler();
-			$identifier = 'MSG_THREADS';
-			$where      = 1;
-			$additional = sprintf( ' s_id in (%1$d,%2$d) AND r_id in (%1$d,%2$d)', $sid, $rid );
-			$thread     = $dbhandler->get_all_result( $identifier, $column = '*', $where, 'results', 0, false, $sort_by = 'timestamp', true, $additional );
-			if ( $thread > 1 ) {
+			$thread = $this->pg_get_best_thread_for_pair( $sid, $rid );
+			if ( ! empty( $thread ) ) {
 				return true;
 			} else {
 				return false;
@@ -2448,22 +2470,46 @@ class PM_request {
 		$sid = absint( $sid );
 		$rid = absint( $rid );
 		if ( $sid > 0 && $rid > 0 ) {
-			$dbhandler  = new PM_DBhandler();
-			$identifier = 'MSG_THREADS';
-			$where      = 1;
-			$additional = sprintf( ' s_id in (%1$d,%2$d) AND r_id in (%1$d,%2$d)', $sid, $rid );
-			$thread     = $dbhandler->get_all_result( $identifier, $column = 't_id', $where, 'results', 0, false, $sort_by = 'timestamp', true, $additional );
-
-			if ( isset( $thread ) && count( $thread ) > 0 ) {
-				$tid = $thread[0]->t_id;
-				return $tid;
-			} else {
-				return false;
+			$thread = $this->pg_get_best_thread_for_pair( $sid, $rid );
+			if ( isset( $thread->t_id ) ) {
+				return (int) $thread->t_id;
 			}
+			return false;
 		} else {
 			return false;
 		}
 
+	}
+
+	private function pg_get_best_thread_for_pair( $sid, $rid ) {
+		global $wpdb;
+		$pm_activator = new Profile_Magic_Activator();
+		$threads_table = esc_sql( $pm_activator->get_db_table_name( 'MSG_THREADS' ) );
+		$messages_table = esc_sql( $pm_activator->get_db_table_name( 'MSG_CONVERSATION' ) );
+
+		$query = $wpdb->prepare(
+			"SELECT t.*, COUNT(m.m_id) AS message_count
+			FROM {$threads_table} t
+			LEFT JOIN {$messages_table} m ON m.t_id = t.t_id
+			WHERE t.s_id IN (%d,%d) AND t.r_id IN (%d,%d)
+			GROUP BY t.t_id
+			ORDER BY
+				CASE WHEN COUNT(m.m_id) > 0 THEN 0 ELSE 1 END,
+				CASE WHEN t.status = 2 THEN 0 ELSE 1 END,
+				t.timestamp DESC
+			LIMIT 1",
+			$sid,
+			$rid,
+			$sid,
+			$rid
+		);
+
+		$thread = $wpdb->get_row( $query );
+		if ( ! empty( $thread ) ) {
+			return $thread;
+		}
+
+		return false;
 	}
 
 	private function pg_sanitize_message_content( $content ) {
@@ -2581,25 +2627,40 @@ class PM_request {
 
 
 	public function get_message_of_thread( $tid, $limit = false, $offset = 0, $descending = true, $search = '' ) {
+		global $wpdb;
 		$dbhandler   = new PM_DBhandler();
-		$identifier  = 'MSG_CONVERSATION';
-		$where       = 1;
 		$uid         = get_current_user_id();
-                $additional = '';
+		$tid         = absint( $tid );
+		$offset      = absint( $offset );
+		$limit       = ( false === $limit ) ? false : absint( $limit );
 		$thread_desc = maybe_unserialize( $dbhandler->get_value( 'MSG_THREADS', 'thread_desc', $tid, 't_id' ) );
 		if ( isset( $thread_desc ) && isset( $thread_desc[ "$uid" ]['delete_mid'] ) ) {
-			$delete_mid = $thread_desc[ "$uid" ]['delete_mid'];
+			$delete_mid = absint( $thread_desc[ "$uid" ]['delete_mid'] );
 		} else {
-			   $delete_mid = 0;
+			$delete_mid = 0;
+		}
+		$pm_activator   = new Profile_Magic_Activator();
+		$table          = esc_sql( $pm_activator->get_db_table_name( 'MSG_CONVERSATION' ) );
+		$order          = $descending ? 'DESC' : 'ASC';
+		$query          = "SELECT * FROM {$table} WHERE t_id = %d";
+		$query_args     = array( $tid );
+
+		if ( '' === $search ) {
+			$query      .= ' AND m_id > %d';
+			$query_args[] = $delete_mid;
+		} else {
+			$query      .= ' AND content LIKE %s';
+			$query_args[] = '%' . $wpdb->esc_like( $search ) . '%';
 		}
 
-		if ( $search == '' ) {
-			$additional = " and m_id > $delete_mid";
+		$query .= " ORDER BY timestamp {$order}";
+		if ( false !== $limit && $limit > 0 ) {
+			$query      .= ' LIMIT %d OFFSET %d';
+			$query_args[] = $limit;
+			$query_args[] = $offset;
 		}
 
-		
-
-		$message = $dbhandler->get_all_result( $identifier, $column = '*', array( 't_id' => $tid ), 'results', $offset, $limit, $sort_by = 'timestamp', $descending, $additional );
+		$message = $wpdb->get_results( $wpdb->prepare( $query, $query_args ) );
 		if ( isset( $message ) && ! empty( $message ) ) :
 			if ( count( $message ) > 0 ) {
 				return $message;
@@ -4695,6 +4756,30 @@ class PM_request {
 		} else {
 			return false;
 		}
+	}
+
+	private function pg_resolve_message_thread_id( $sid, $rid, $tid = '' ) {
+		$tid = absint( $tid );
+		if ( $tid > 0 ) {
+			$dbhandler = new PM_DBhandler();
+			$thread    = $dbhandler->get_row( 'MSG_THREADS', $tid, 't_id' );
+			if ( isset( $thread->s_id, $thread->r_id ) ) {
+				$participants = array( (int) $thread->s_id, (int) $thread->r_id );
+				sort( $participants );
+				$expected = array( absint( $sid ), absint( $rid ) );
+				sort( $expected );
+				if ( $participants === $expected ) {
+					return $tid;
+				}
+			}
+		}
+
+		$pair_thread_id = $this->get_thread_id( $sid, $rid );
+		if ( ! empty( $pair_thread_id ) ) {
+			return $pair_thread_id;
+		}
+
+		return $this->fetch_or_create_thread( $sid, $rid );
 	}
 
 	public function profile_magic_get_group_type( $gid ) {
