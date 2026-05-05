@@ -4,7 +4,7 @@ $.fn.PGresponsiveMenu = function () {
 		$(this).addClass("pg-horizontal-responsive-menu");
 		alignMenu(this);
 		var robj = this;
-		$(window).resize(function () {
+		$(window).on( 'resize', function () {
 			$(robj).append($($($(robj).children("li.hideshow")).children("ul")).html());
 			$(robj).children("li.hideshow").remove();
 			alignMenu(robj);
@@ -30,11 +30,11 @@ $.fn.PGresponsiveMenu = function () {
                             $(obj).append('<li  style="position:relative;" href="#" class="hideshow">' + '<a href="javascript:void(0)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg> ' + '</a><ul>' + menuhtml + '</ul></li>');
                             $(obj).children("li.hideshow ul").css("top", $(obj).children("li.hideshow").outerHeight(true) + "px");
                         }
-			$(obj).children("li.hideshow").click(function () {
+			$(obj).children("li.hideshow").on( 'click', function () {
 				$(this).children("ul").toggle();
 			});  
 			
-                        $('li.hideshow ul li.pm-profile-tab a').click(function(){
+                        $('li.hideshow ul li.pm-profile-tab a').on( 'click', function(){
                             var t = $(this).attr('href');
                             $('li.pm-profile-tab a').removeClass('active');         
                             $(this).addClass('active');

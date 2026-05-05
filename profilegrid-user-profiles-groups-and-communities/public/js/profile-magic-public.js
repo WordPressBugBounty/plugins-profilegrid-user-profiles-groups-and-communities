@@ -1688,7 +1688,7 @@ function pm_save_account_setting(form)
         $is_resize = 0;
         
 
-    $window.resize(function resize() {
+    $window.on( 'resize', function resize() {
         if ($window.width() < 479) {
             if($is_resize==0)
             {
@@ -2200,7 +2200,7 @@ function pg_init_unread_message_toast() {
     scheduleSummary(6000);
 }
 
-jQuery(document).ready(function() {
+jQuery(function() {
     jQuery('.pm_linked_in_url, .pm_twitter_url, .pm_youtube_url, .pm_soundcloud_url, .pm_mixcloud_url, .pm_instagram_url, .pm_google_url').each(function(index, element) {
         var $wrapper = jQuery(element);
         var $input = $wrapper.find('input');

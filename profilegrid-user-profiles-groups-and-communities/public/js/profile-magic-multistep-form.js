@@ -130,7 +130,7 @@
             $(id + '_nav .multipage_next').show();
         }
 
-        $(id + ' fieldset.active input:first').focus();
+        $(id + ' fieldset.active input:first').trigger( 'focus' );
         state.curpage = page;
         setState($(this), state);
         return false;
@@ -203,7 +203,7 @@
                             multistep_stripe_form(this);
                         }
                     } else {
-                        $(this).submit();
+                        $(this).trigger( 'submit' );
                     }
                     
                     state.curpage = settings.pages.length;
@@ -265,7 +265,7 @@
         form.addClass('multipage');
         
 
-        form.submit(function(e) {
+        form.on( 'submit', function(e) {
             if (!$(this).validateAll()) {
                 e.preventDefault();
             }
@@ -350,7 +350,7 @@
             });
         });
         
-        $('form').submit(function(){
+        $('form').on( 'submit', function(){
             return true;
         });
     });

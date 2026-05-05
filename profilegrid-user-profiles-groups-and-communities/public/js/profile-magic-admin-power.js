@@ -117,13 +117,13 @@ function parseDate(dateString, isMax) {
             }
     });
     
-    $('#reset_btn').click(function(){
+    $('#reset_btn').on( 'click', function(){
         $("#pm-advance-search-form").attr("event","reset");
-        $("#pm-advance-search-form").submit();
+        $("#pm-advance-search-form").trigger( 'submit' );
         return false;
     });
     
-    $("#pm-advance-search-form").submit(function(e)
+    $("#pm-advance-search-form").on( 'submit', function(e)
     {
         e.preventDefault();
         var event = $(this).attr('event');
@@ -161,7 +161,7 @@ function parseDate(dateString, isMax) {
                }
         });
     
-    $('#advance_search_option').click(function(e)
+    $('#advance_search_option').on( 'click', function(e)
     {
         e.preventDefault();
         $('#advance_search_pane').slideToggle('slow');
@@ -187,7 +187,7 @@ function parseDate(dateString, isMax) {
         }
     });
     
-    $(window).resize(function() 
+    $(window).on( 'resize', function()
     {
         var recaptcha = $(".g-recaptcha");
         if(recaptcha.css('margin') == '1px') {
@@ -243,22 +243,22 @@ function parseDate(dateString, isMax) {
         $(this).children('.pg-profile-change-img').fadeOut();
     });
     //Profile Page Popup
-    $('#pm-remove-image, #pm-change-image').click(function() {
+    $('#pm-remove-image, #pm-change-image').on( 'click', function() {
         callPmPopup("#pm-change-image");
     });
-    $('#pm-remove-cover-image, #pm-change-cover-image, #pm-coverimage-mask').click(function() {
+    $('#pm-remove-cover-image, #pm-change-cover-image, #pm-coverimage-mask').on( 'click', function() {
         callPmPopup("#pm-change-cover-image");
     });
-    $('#pm-change-password').click(function() {
+    $('#pm-change-password').on( 'click', function() {
         callPmPopup("#pm-change-password");
     });
-    $('#pm-show-profile-image img').click(function(){
+    $('#pm-show-profile-image img').on( 'click', function(){
         callPmPopup("#pm-show-profile-image");
     });
-    $('#pm-show-cover-image img').click(function(){
+    $('#pm-show-cover-image img').on( 'click', function(){
         callPmPopup("#pm-show-cover-image");
     });
-    $('.pm-popup-close , .pm-popup-mask , .pg-group-setting-close-btn').click(function (){
+    $('.pm-popup-close , .pm-popup-mask , .pg-group-setting-close-btn').on( 'click', function (){
        
         $('.pm-popup-mask').hide();
         $('.pm-popup-mask').next().hide();
@@ -287,7 +287,7 @@ function parseDate(dateString, isMax) {
         }
     });
     
-    $(".pm_showmoretxt").click(function() 
+    $(".pm_showmoretxt").on( 'click', function()
     {
         if ($(this).hasClass("pm_sample")) 
         {
@@ -335,7 +335,7 @@ function parseDate(dateString, isMax) {
         $('#change-pic').hide();
     });
     
-    $('#photoimg').on('change', function() 
+    $('#photoimg').on('change', function()
     { 
         $("#preview-avatar-profile").html('');
         $("#preview-avatar-profile").html('<div><div class="pm-loader"></div></div>');
@@ -384,7 +384,7 @@ function parseDate(dateString, isMax) {
 
                     $('#image_name').val($('#photo').attr('file-name'));
                 }
-        }).submit();
+        }).trigger( 'submit' );
 
     });
     
@@ -454,7 +454,7 @@ function parseDate(dateString, isMax) {
         $('#cover_minwidth').val($('.pmagic').innerWidth());
     });
     
-    $('#coverimg').on('change', function() 
+    $('#coverimg').on('change', function()
     { 
         $("#preview-cover-image").html('');
         $("#preview-cover-image").html('<div><div class="pm-loader"></div></div>');
@@ -502,7 +502,7 @@ function parseDate(dateString, isMax) {
                                 onSelect: updateCoverCoords
                               });
                     }
-        }).submit();
+        }).trigger( 'submit' );
     });
     
     $('#btn-cover-crop').on('click', function(e)
@@ -574,11 +574,11 @@ function parseDate(dateString, isMax) {
 //    $("#pg_group_setting").tabs();
         openParentTab();
     
-    $(".pm-profile-tab a").click(function () {
+    $(".pm-profile-tab a").on( 'click', function () {
         $("#pg-toggle-menu-close").prop('checked', false);
     });
 
-    $(".pm-section-left-panel ul li a").click(function () {
+    $(".pm-section-left-panel ul li a").on( 'click', function () {
         show_pg_section_right_panel();
     });
 

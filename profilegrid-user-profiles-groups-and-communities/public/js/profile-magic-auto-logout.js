@@ -9,7 +9,7 @@ var idleInterval = setInterval(timerIncrement, 1000); // 1 second
     $(document).mousemove(function (e) {
         idleTime = 0;
     });
-    $(document).keypress(function (e) {
+    $(document).on( 'keypress', function (e) {
         idleTime = 0;
     });
 })(jQuery);

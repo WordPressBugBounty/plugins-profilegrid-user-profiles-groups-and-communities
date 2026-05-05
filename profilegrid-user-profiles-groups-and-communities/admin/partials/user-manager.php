@@ -274,10 +274,10 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
             
     <ul class="subsubsub">
 
-        <li class="all"><a href="javascript:void(0)" class="all current" aria-current="page" onclick="jQuery('#pagenum').val(1);jQuery('#status').val('all');jQuery('#user_manager').submit()"><?php esc_html_e('All','profilegrid-user-profiles-groups-and-communities');?> <span class="count">(<?php echo esc_html(get_user_count()); ?>)</span></a> |</li>
+        <li class="all"><a href="javascript:void(0)" class="all current" aria-current="page" onclick="jQuery('#pagenum').val(1);jQuery('#status').val('all');jQuery('#user_manager').trigger( 'submit' )"><?php esc_html_e('All','profilegrid-user-profiles-groups-and-communities');?> <span class="count">(<?php echo esc_html(get_user_count()); ?>)</span></a> |</li>
 
-        <li class="active"><a href="javascript:void(0)" class="" onclick="jQuery('#pagenum').val(1);jQuery('#status').val('0');jQuery('#user_manager').submit()"><?php esc_html_e('Active','profilegrid-user-profiles-groups-and-communities');?> <span class="count">(<?php echo esc_html( $total_activate_users ); ?>)</span></a> |</li>
-        <li class="pending"><a href="javascript:void(0)" class="" onclick="jQuery('#pagenum').val(1);jQuery('#status').val('1');jQuery('#user_manager').submit()"><?php esc_html_e('Inactive','profilegrid-user-profiles-groups-and-communities');?> <span class="count">(<?php echo esc_html( $total_inactivate_users ); ?>)</span></a></li>
+        <li class="active"><a href="javascript:void(0)" class="" onclick="jQuery('#pagenum').val(1);jQuery('#status').val('0');jQuery('#user_manager').trigger( 'submit' )"><?php esc_html_e('Active','profilegrid-user-profiles-groups-and-communities');?> <span class="count">(<?php echo esc_html( $total_activate_users ); ?>)</span></a> |</li>
+        <li class="pending"><a href="javascript:void(0)" class="" onclick="jQuery('#pagenum').val(1);jQuery('#status').val('1');jQuery('#user_manager').trigger( 'submit' )"><?php esc_html_e('Inactive','profilegrid-user-profiles-groups-and-communities');?> <span class="count">(<?php echo esc_html( $total_inactivate_users ); ?>)</span></a></li>
     </ul>
              
     <p class="search-box">
@@ -361,7 +361,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
           <thead>
 	  <tr>
 		<td scope="col" class="manage-column check-column"><input type="checkbox" id="selectall" class="css-checkbox " name="selectall"/></td>
-                <th scope="col" class="manage-column column-username column-primary <?php if($orderby=='user_login'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_login');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-username column-primary <?php if($orderby=='user_login'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_login');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'Username', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">
@@ -371,7 +371,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                     </a>
                 </th>
                 <!--
-                <th scope="col" class="manage-column column-firstname <?php if($orderby=='first_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('first_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-firstname <?php if($orderby=='first_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('first_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'First Name', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">
@@ -382,7 +382,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                 </th>
                
                 
-                <th scope="col" class="manage-column column-lastname <?php if($orderby=='last_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('last_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-lastname <?php if($orderby=='last_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('last_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'Last Name', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">
@@ -392,7 +392,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                     </a>
                 </th>
                 -->
-                <th scope="col" class="manage-column column-displayname <?php if($orderby=='display_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('display_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-displayname <?php if($orderby=='display_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('display_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'Display Name', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">
@@ -401,7 +401,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                         </span>
                     </a>
                 </th>
-                <th scope="col" class="manage-column column-email <?php if($orderby=='user_email'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_email');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-email <?php if($orderby=='user_email'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_email');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'User Email', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">
@@ -411,7 +411,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                     </a>
                 </th>
 		<th><?php esc_html_e( 'Groups', 'profilegrid-user-profiles-groups-and-communities' ); ?></th>
-                <th scope="col" class="manage-column column-user_registered <?php if($orderby=='user_registered'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_registered');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-user_registered <?php if($orderby=='user_registered'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_registered');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'Registered On', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">
@@ -501,7 +501,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                   <tfoot>	 
                       <tr>
 		<td scope="col" class="manage-column check-column"><input type="checkbox" id="selectall" class="css-checkbox " name="selectall"/></td>
-                <th scope="col" class="manage-column column-username column-primary <?php if($orderby=='user_login'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_login');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-username column-primary <?php if($orderby=='user_login'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_login');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'Username', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">
@@ -511,7 +511,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                     </a>
                 </th>
                 <!--
-                <th scope="col" class="manage-column column-firstname <?php if($orderby=='first_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('first_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-firstname <?php if($orderby=='first_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('first_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'First Name', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">
@@ -520,7 +520,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                         </span>
                     </a>
                 </th>
-                <th scope="col" class="manage-column column-lastname <?php if($orderby=='last_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('last_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-lastname <?php if($orderby=='last_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('last_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'Last Name', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">
@@ -530,7 +530,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                     </a>
                 </th>
                -->
-                <th scope="col" class="manage-column column-displayname <?php if($orderby=='display_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('display_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-displayname <?php if($orderby=='display_name'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('display_name');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'Display Name', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">
@@ -539,7 +539,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                         </span>
                     </a>
                 </th>
-                <th scope="col" class="manage-column column-email <?php if($orderby=='user_email'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_email');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-email <?php if($orderby=='user_email'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_email');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'User Email', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">
@@ -549,7 +549,7 @@ $pagination = $dbhandler->pm_get_pagination_new_ui($num_of_pages, $pagenum);
                     </a>
                 </th>
 		<th><?php esc_html_e( 'Groups', 'profilegrid-user-profiles-groups-and-communities' ); ?></th>
-                <th scope="col" class="manage-column column-user_registered <?php if($orderby=='user_registered'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_registered');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').submit()">
+                <th scope="col" class="manage-column column-user_registered <?php if($orderby=='user_registered'){ echo esc_attr("sorted ".strtolower($sort));}else{ echo esc_attr(" sortable"); }?>" onclick="jQuery('#pagenum').val(1);jQuery('#orderby').val('user_registered');jQuery('#sort').val('<?php echo esc_attr(($sort=='ASC')?'DESC':'ASC'); ?>');jQuery('#user_manager').trigger( 'submit' )">
                     <a>
                         <span><?php esc_html_e( 'Registered On', 'profilegrid-user-profiles-groups-and-communities' ); ?></span>
                         <span class="sorting-indicators">

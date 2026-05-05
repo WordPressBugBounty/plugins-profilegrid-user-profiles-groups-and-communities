@@ -5179,7 +5179,7 @@ wp_enqueue_style( 'pg-google-fonts', 'https://fonts.googleapis.com/icon?family=M
 	
 	
 (function($) { 
-    $(document).ready(function() {
+    $(function() {
         // === Show More / See Less in Description ===
         var showChar = 50;
         var ellipsestext = "...";
@@ -5265,7 +5265,7 @@ function pg_copy_shortcode(target) {
 		jQuery(target).parents('.pg-escsubblock').children('.pg-sctitle').children(".pg-shorcode-copied").fadeIn('slow');
 		jQuery(target).parents('.pg-escsubblock').children('.pg-sctitle').children(".pg-shorcode-copied").fadeOut('slow');
 	} else {
-		jQuery(document).mouseup(function (e) {
+		jQuery(document).on( 'mouseup', function (e) {
 			var container = jQuery("#pg_shortcode_input");
 			if (!container.is(e.target)  
 					&& container.has(e.target).length === 0) 

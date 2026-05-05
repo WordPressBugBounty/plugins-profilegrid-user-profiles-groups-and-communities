@@ -1,7 +1,7 @@
 /* uploader js */
-jQuery( document ).ready(
+jQuery(
     function($){
-	    $( '.remove_icon' ).click(
+	    $( '.remove_icon' ).on( 'click',
             function(e) {
 				$( '.icon_id' ).val( '' );
 				$( '#icon_html img' ).hide();
@@ -12,7 +12,7 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function($){
         var currentYear = new Date().getFullYear();
         $( ".pm_calendar" ).datepicker(
@@ -26,9 +26,9 @@ jQuery( document ).ready(
     }
 );
 
-jQuery( document ).ready(
+jQuery(
     function($){
-        $( "#search.sb-search" ).keyup(
+        $( "#search.sb-search" ).on( 'keyup',
             function (event) {
 				if (event.which === 13) {
 					document.user_manager.submit();
@@ -38,11 +38,11 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function(){
 		jQuery( '.pm_action_button input' ).addClass( 'pm_disabled' );
             jQuery( '.pm_action_button input' ).attr( 'disabled','disabled' );
-		jQuery( 'input[name="selected[]"]' ).click(
+		jQuery( 'input[name="selected[]"]' ).on( 'click',
             function() {
                 var atLeastOneIsChecked = jQuery( 'input[name="selected[]"]:checked' ).length > 0;
                 if (atLeastOneIsChecked == true) {
@@ -57,11 +57,11 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function(){
 		jQuery( '#import_hidden_form' ).hide();
 		jQuery( '#import_users' ).prop( 'disabled',true );
-		jQuery( '#pm_export_users' ).submit(
+		jQuery( '#pm_export_users' ).on( 'submit',
             function(event){
                 var validation =false;
                 if (jQuery( '#pm_groups' ).val() === undefined || jQuery( '#pm_groups' ).val() === null) {
@@ -83,10 +83,10 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function($){
 		var custom_uploader;
-		$( '.cover_image_button' ).click(
+		$( '.cover_image_button' ).on( 'click',
             function(e) {
 
                 e.preventDefault();
@@ -126,10 +126,10 @@ jQuery( document ).ready(
 );
 /*uploader js end */
 
-jQuery( document ).ready(
+jQuery(
     function($){
 		var custom_uploader;
-		$( '.group_icon_button' ).click(
+		$( '.group_icon_button' ).on( 'click',
             function(e) {
 
                 e.preventDefault();
@@ -961,14 +961,14 @@ function add_pm_admin_email_option()
 {
 	  var b = '<li class="pm_radio_option_field"><span class="pm_handle"></span><input type="text" name="pm_admin_email[]" value=""><span class="pm_remove_field" onClick="remove_pm_radio_option(this)">' + pm_error_object.delete + '</span></li>';
 	jQuery( '#field_options_radio_html ul#radio_option_ul_li_field' ).append( b );
-	jQuery( '#radio_option_ul_li_field .pm_radio_option_field:last input' ).focus();
+	jQuery( '#radio_option_ul_li_field .pm_radio_option_field:last input' ).trigger( 'focus' );
 
 }
 
 function add_pm_radio_option() {
 	var b = '<li class="pm_radio_option_field"><span class="pm_handle"></span><input type="text" name="field_options[radio_option_value][]" value=""><span class="pm_remove_field" onClick="remove_pm_radio_option(this)">' + pm_error_object.delete + '</span></li>';
 	jQuery( '#field_options_radio_html ul#radio_option_ul_li_field' ).append( b );
-	jQuery( '#radio_option_ul_li_field .pm_radio_option_field:last input' ).focus();
+	jQuery( '#radio_option_ul_li_field .pm_radio_option_field:last input' ).trigger( 'focus' );
 }
 
 function remove_pm_radio_option(a)
@@ -1147,9 +1147,9 @@ jQuery(
 );
 
 
-jQuery( document ).ready(
+jQuery(
     function(){
-		jQuery( "#pm-field-selection-popup" ).click(
+		jQuery( "#pm-field-selection-popup" ).on( 'click',
             function(){
                 jQuery( ".pm-popup" ).css( "visibility", "visible" );
                 jQuery( ".pm-curtains" ).css( "visibility", "visible" );
@@ -1158,9 +1158,9 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function(){
-		jQuery( "#pm-premium-popup" ).click(
+		jQuery( "#pm-premium-popup" ).on( 'click',
             function(){
                 jQuery( ".pm-popup" ).css( "visibility", "visible" );
                 jQuery( ".pm-curtains" ).css( "visibility", "visible" );
@@ -1169,9 +1169,9 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function(){
-		jQuery( "#pm-premium-popup" ).click(
+		jQuery( "#pm-premium-popup" ).on( 'click',
             function(){
                 jQuery( ".pm-popup" ).css( "visibility", "visible" );
                 jQuery( ".pm-curtains" ).css( "visibility", "visible" );
@@ -1180,9 +1180,9 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function(){
-		jQuery( ".pm-popup-close" ).click(
+		jQuery( ".pm-popup-close" ).on( 'click',
             function(){
                 jQuery( ".pm-popup" ).css( "visibility", "hidden" );
                 jQuery( ".pm-curtains" ).css( "visibility", "hidden" );
@@ -1327,7 +1327,7 @@ function pm_upload_csv()
 
 			}
 		}
-    ).submit();
+    ).trigger( 'submit' );
 }
 
 function pm_upload_jsonfile()
@@ -1339,13 +1339,13 @@ function pm_upload_jsonfile()
 
 			}
 		}
-    ).submit();
+    ).trigger( 'submit' );
 	  return false;
 }
 
-jQuery( document ).ready(
+jQuery(
     function(){
-		jQuery( "#import_pm_group" ).change(
+		jQuery( "#import_pm_group" ).on( 'change',
             function(){
                 data = {
                     targetUrl: pm_ajax_object.ajax_url,
@@ -1374,9 +1374,9 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function(){
-		jQuery( "#import_users" ).click(
+		jQuery( "#import_users" ).on( 'click',
             function(){
 
                 sep   = jQuery( '#pm_separator' ).val();
@@ -1397,7 +1397,7 @@ jQuery( document ).ready(
                                 jQuery( "#pm_import_user_loader" ).hide();
                             }
                         }
-                    ).submit();
+                    ).trigger( 'submit' );
 
                 }
             }
@@ -1406,9 +1406,9 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function(){
-		jQuery( "#your-profile" ).submit(
+		jQuery( "#your-profile" ).on( 'submit',
             function(){
                 var email_val = "";
                 var formid    = 'your-profile';
@@ -1815,20 +1815,20 @@ function validate_instagram_url(val)
 	}
 }
 /*
-jQuery(document).ready(function(){
-    jQuery('#the-list').find( '[data-slug="profilegrid-user-profiles-groups-and-communities"] span.deactivate a' ).click(function(event){
+jQuery(function(){
+    jQuery('#the-list').find( '[data-slug="profilegrid-user-profiles-groups-and-communities"] span.deactivate a' ).on( 'click', function(event){
 
        jQuery("#pg-deactivate-feedback-dialog-wrapper, .pg-modal-overlay ").show();
        pgDeactivateLocation = jQuery(this).attr('href');
         event.preventDefault();
     });
 
-    jQuery ("#pg-deactivate-feedback-dialog-wrapper .pg-modal-close, .pg-modal-overlay, #pg-feedback-cancel-btn").click( function(){
+    jQuery ("#pg-deactivate-feedback-dialog-wrapper .pg-modal-close, .pg-modal-overlay, #pg-feedback-cancel-btn").on( 'click',  function(){
 
               jQuery("#pg-deactivate-feedback-dialog-wrapper, .pg-modal-overlay").hide();
 
     });
-    jQuery("input[name='pg_feedback_key']").change(function(){
+    jQuery("input[name='pg_feedback_key']").on( 'change', function(){
 
                        var pg_selectedVal= jQuery(this).val();
                        var pg_reasonElement= jQuery("#pg_reason_" + pg_selectedVal);
@@ -1839,7 +1839,7 @@ jQuery(document).ready(function(){
                        }
                 });
 
-    jQuery("#pg-feedback-btn").click(function(){
+    jQuery("#pg-feedback-btn").on( 'click', function(){
                     var selectedVal= jQuery("input[name='pg_feedback_key']:checked").val();
                     if(selectedVal===undefined){
                         location.href= pgDeactivateLocation;
@@ -1863,7 +1863,7 @@ jQuery(document).ready(function(){
 
 */
 
-jQuery( document ).ready(
+jQuery(
     function($) {
 		var a = jQuery( '.pmagic .pg-scblock .pg-scsubblock' );
 		for ( var i = 0; i < a.length; i+=3 ) {
@@ -1872,7 +1872,7 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function(){
 		jQuery(document).on('click', ".pg-dismissible .notice-dismiss",
             function()
@@ -1894,17 +1894,17 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(function(){
-        jQuery( "#pg_dismissible_customization_banner" ).click(function(){
+jQuery(function(){
+        jQuery( "#pg_dismissible_customization_banner" ).on( 'click', function(){
             jQuery('#pg_customization_footer_banner').hide();
         });
 });
 
 
 
-jQuery( document ).ready(
+jQuery(
     function(){
-		jQuery( ".pgrm-dismissible" ).click(
+		jQuery( ".pgrm-dismissible" ).on( 'click',
             function()
             {
 
@@ -1945,7 +1945,7 @@ function check_is_tmpl_associate()
 				alert( response );
 				jQuery( "#pm_import_user_loader" ).hide();
 			} else {
-				jQuery( '#email_manager' ).submit();
+				jQuery( '#email_manager' ).trigger( 'submit' );
 				//jQuery("#pm_import_user_loader").hide();
 			}
 		}
@@ -1980,10 +1980,10 @@ function pm_remove_group_image()
 }
 
 
-jQuery( document ).ready(
+jQuery(
     function($){
 		var custom_uploader;
-		$( '.pm_choose_image_btn' ).click(
+		$( '.pm_choose_image_btn' ).on( 'click',
             function(e) {
                 var parent_div = $( this ).parent( '.uiminput' );
                 e.preventDefault();
@@ -2046,10 +2046,10 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function($){
 		var custom_uploader;
-		$( '#field_cover_icon_button' ).click(
+		$( '#field_cover_icon_button' ).on( 'click',
             function(e) {
                 var parent_div = $( this ).parent( '.uiminput' );
                 e.preventDefault();
@@ -2109,10 +2109,10 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function($){
 		var custom_uploader;
-		$( '#field_group_icon_button' ).click(
+		$( '#field_group_icon_button' ).on( 'click',
             function(e) {
                 var parent_div = $( this ).parent( '.uiminput' );
                 e.preventDefault();
@@ -2320,9 +2320,9 @@ function pg_all_groups_popup(id)
 }
 
 
-    jQuery( document ).ready(
+    jQuery(
         function () {
-			jQuery( '.pg-modal-box-close, .pg-modal-box-overlay' ).click(
+			jQuery( '.pg-modal-box-close, .pg-modal-box-overlay' ).on( 'click',
                 function () {
                     setTimeout(
                         function () {
@@ -2334,7 +2334,7 @@ function pg_all_groups_popup(id)
                 }
 			);
 
-                jQuery( '.pg-offer-button button' ).click(
+                jQuery( '.pg-offer-button button' ).on( 'click',
                     function () {
 						jQuery( '.pg-modal-box-main' ).show();
 						jQuery( '.pg-modal-box-wrap' ).removeClass( 'pg-modal-box-out' );
@@ -2346,7 +2346,7 @@ function pg_all_groups_popup(id)
 					}
                 );
 
-                jQuery( '.pg-modal-box-close, .pg-modal-box-overlay' ).click(
+                jQuery( '.pg-modal-box-close, .pg-modal-box-overlay' ).on( 'click',
                     function () {
 
 						jQuery( '.pg-modal-box-wrap' ).removeClass( 'pg-modal-box-in' );
@@ -2365,14 +2365,14 @@ function pg_all_groups_popup(id)
 
      // Wizard JS
 
-	jQuery( document ).ready(
+	jQuery(
         function($){
 
             var current_fs, next_fs, previous_fs;
             var opacity;
             var animating;
 
-            $( ".pg-next-slide" ).click(
+            $( ".pg-next-slide" ).on( 'click',
                 function(){
 
                     current_fs   = $( this ).closest( ".pg-wzrad-step" );
@@ -2405,7 +2405,7 @@ function pg_all_groups_popup(id)
                 }
             );
 
-            $( ".pg-previous-slide" ).click(
+            $( ".pg-previous-slide" ).on( 'click',
                 function(){
                     animating = true;
 
@@ -2482,7 +2482,7 @@ function pg_all_groups_popup(id)
 							 return true;
 						}
                     }
-                ).submit();
+                ).trigger( 'submit' );
 				return true;
 			} else {
 				return true;
@@ -2494,10 +2494,10 @@ function pg_all_groups_popup(id)
 
 	/*uploader js end */
 
-	jQuery( document ).ready(
+	jQuery(
         function($){
             var custom_uploader;
-            $( '.wizard_group_icon_button' ).click(
+            $( '.wizard_group_icon_button' ).on( 'click',
                 function(e) {
 
                     e.preventDefault();
@@ -2603,7 +2603,7 @@ function pg_all_groups_popup(id)
 			jQuery( target ).parents( '.pg-wzard-links' ).children( ".pg-wizard-shorcode-copied" ).fadeIn( 'slow' );
 			jQuery( target ).parents( '.pg-wzard-links' ).children( '.pg-wizard-shorcode-copied' ).fadeOut( 'slow' );
 		} else {
-			jQuery( document ).mouseup(
+			jQuery( document ).on( 'mouseup',
                 function (e) {
                     var container = jQuery( "#pg_shortcode_input" );
                     if (!container.is( e.target )
@@ -2632,11 +2632,11 @@ function pg_all_groups_popup(id)
         }
         
 
-	jQuery( document ).ready(
+	jQuery(
         function(){
             jQuery( '#pg_selected_group_count' ).hide();
             jQuery( '.pm-disabled' ).attr( 'disabled','disabled' );
-            jQuery( '.pmagic-cards input[name="selected[]"]' ).click(
+            jQuery( '.pmagic-cards input[name="selected[]"]' ).on( 'click',
                 function() {
 
                     var atLeastOneIsChecked = jQuery( 'input[name="selected[]"]:checked' ).length > 0;
@@ -2664,11 +2664,11 @@ function pg_all_groups_popup(id)
             if (action === 'approve') {
                 var form = jQuery("#request_manager");
                 jQuery('#pg_request_bulk_actions').val('approve');
-                form.submit();
+                form.trigger( 'submit' );
             } else if (action === 'decline') {
                 var form = jQuery("#request_manager");
                 jQuery('#pg_request_bulk_actions').val('decline');
-                form.submit();
+                form.trigger( 'submit' );
             }
         }
         
@@ -2688,7 +2688,7 @@ function pg_all_groups_popup(id)
 
 
 
-jQuery(document).ready(function ($) {
+jQuery(function ($) {
     var rmUpgradeNotice = $('.pg-brand-notice');
     setTimeout(function () {
         // Delay 5000ms (1 seconds) before showing the banner

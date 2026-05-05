@@ -591,12 +591,12 @@ if ( $pg_demo_content_is_installed ) {
 
 <script>
 
-jQuery(document).ready(function() {
-//  jQuery('.pmagic .pmagic-cards .pm-card label').click(function() {
+jQuery(function() {
+//  jQuery('.pmagic .pmagic-cards .pm-card label').on( 'click', function() {
 //    jQuery(this).parent().toggleClass('ispgbox-checked');
 //    });
 
-jQuery('.pmagic .pmagic-cards .pm-card input[type=checkbox]').change(function(){
+jQuery('.pmagic .pmagic-cards .pm-card input[type=checkbox]').on( 'change', function(){
     if(jQuery(this).is(":checked")) {
         jQuery(this).parent(this).parent(this).addClass('ispgbox-checked');               
     } else {
@@ -636,7 +636,7 @@ function pgCardUserImages() {
     });
 }
 
-//  jQuery('.pmagic .pmagic-cards .pm-card label').click(function () {
+//  jQuery('.pmagic .pmagic-cards .pm-card label').on( 'click', function () {
 //      jQuery(this).parent().removeClass('ispgbox-checked');
 //      jQuery(this).parent(this).addClass('ispgbox-checked');
 //  });

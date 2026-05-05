@@ -47,7 +47,7 @@ jQuery("#receipent_field").autocomplete({
 
 });
 
-jQuery('#message_display_area').scroll(function() 
+jQuery('#message_display_area').on( 'scroll', function()
 {
     var tid = get_active_thread_id();
     
@@ -89,7 +89,7 @@ jQuery(function() {
             pm_get_messenger_notification('', activity);
         });
     
-   jQuery(document).ready(function(){
+   jQuery(function(){
    
        var pmDomColor = jQuery(".pmagic").find("a").css('color');
         jQuery(".pm-loader").css('border-top-color', pmDomColor);

@@ -6,9 +6,9 @@
 
 
 jQuery( '.soundcloud_play_button_color' ).wpColorPicker();
-jQuery( document ).ready(
+jQuery(
     function() {
-		jQuery( ".pg_profile_tab" ).click(
+		jQuery( ".pg_profile_tab" ).on( 'click',
             function() {
                 jQuery( this ).children( ".pm-slab-buttons" ).children( 'span' ).toggleClass( "dashicons-arrow-up" );
                 jQuery( this ).next( ".pg_profile_tab-setting" ).slideToggle();
@@ -17,15 +17,15 @@ jQuery( document ).ready(
 	}
 );
 
-jQuery( document ).ready(
+jQuery(
     function(){
-        jQuery( '.pg-upgrade-banner' ).mouseenter(
+        jQuery( '.pg-upgrade-banner' ).on( 'mouseenter',
             function() {
                 jQuery( '.pg-upgrade-banner-box' ).addClass( 'pg-banner-hop' );
                 jQuery( this ).siblings().addClass( 'pg-blur' );
             }
         );
-        jQuery( '.pg-upgrade-banner' ).mouseleave(
+        jQuery( '.pg-upgrade-banner' ).on( 'mouseleave',
             function() {
                 jQuery( '.pg-upgrade-banner-box' ).removeClass( 'pg-banner-hop' );
                 jQuery( this ).siblings().removeClass( 'pg-blur' );
@@ -34,9 +34,9 @@ jQuery( document ).ready(
     }
 );
 
-jQuery( document ).ready(
+jQuery(
     function(){
-		jQuery( "#selectall" ).click(
+		jQuery( "#selectall" ).on( 'click',
             function(){
                 if (this.checked) {
                     jQuery( '.pm_selectable input[type="checkbox"]' ).each(
@@ -61,7 +61,7 @@ jQuery( document ).ready(
 );
 
 
-jQuery( '.pg-extension-modal' ).click(
+jQuery( '.pg-extension-modal' ).on( 'click',
     function(){
         jQuery( '.pg-extension-wrap' ).hide();
         jQuery( '#' + jQuery( this ).attr( 'data-popup' ) ).show();
@@ -81,9 +81,9 @@ function CallExtensionModal(ele) {
 
 
 
-    jQuery( document ).ready(
+    jQuery(
         function () {
-            jQuery( '.pg-setting-modal-close, .pg-setting-modal-overlay' ).click(
+            jQuery( '.pg-setting-modal-close, .pg-setting-modal-overlay' ).on( 'click',
                 function () {
                     setTimeout(
                         function () {
@@ -110,7 +110,7 @@ function CallExtensionModal(ele) {
 
 
 
-    jQuery( document ).ready(
+    jQuery(
 		function($) {
 			var a = jQuery( '.pm-group-fields-modal .pm-field-selection .pm-popup-field-box' );
 			for ( var i = 0; i < a.length; i+=2 ) {
@@ -133,9 +133,9 @@ function CallExtensionModal(ele) {
 
 
 
-    jQuery( document ).ready(
+    jQuery(
         function () {
-            jQuery( '.pm-group-fields-popup-close, .pm-group-fields-popup-overlay' ).click(
+            jQuery( '.pm-group-fields-popup-close, .pm-group-fields-popup-overlay' ).on( 'click',
                 function () {
                     setTimeout(
                         function () {
@@ -185,7 +185,7 @@ function CallExtensionModal(ele) {
 			}
         );
 
-        $( document ).ready(
+        $(
             function(){
 
                 $( ".pg-pr-cards-wrap .pg-pr-card.pg-pr-card-2" ).addTemporaryClass( "myClass", 1000 );
@@ -198,14 +198,14 @@ function CallExtensionModal(ele) {
 
 	   (function($){
 
-		$( document ).ready(
+		$(
             function() {
                 $( '#pg-promo-tabs a:first' ).addClass( 'nav-tab-active' );
                 $( '#pg-promo-tabs a:not(:first)' ).addClass( 'nav-tab-inactive' );
                 $( '.pg-promo-nav-container' ).hide();
                 $( '.pg-promo-nav-container:first' ).show();
 
-                $( '#pg-promo-tabs a' ).click(
+                $( '#pg-promo-tabs a' ).on( 'click',
                     function(){
                         var t = $( this ).attr( 'id' );
                         if ($( this ).hasClass( 'nav-tab-inactive' )) {
@@ -227,9 +227,9 @@ function CallExtensionModal(ele) {
 
 	   (function($){
 
-		$( document ).ready(
+		$(
             function(){
-                $( "#pg-group-promo-toggle" ).click(
+                $( "#pg-group-promo-toggle" ).on( 'click',
                     function(){
                         $( ".pg-group-promo-content" ).toggle();
                     }
@@ -319,7 +319,7 @@ function CallExtensionModal(ele) {
 
 
 
-jQuery(document).ready(function(e){
+jQuery(function(e){
    
         let blockLoaded = false;
         let blockLoadedInterval = setInterval(function(){
@@ -340,7 +340,7 @@ jQuery(document).ready(function(e){
                         }
                 });
                 var list = new Array();
-    jQuery(".pg-group-menu-widgets .pg-group-icon-toggle").change(function(){
+    jQuery(".pg-group-menu-widgets .pg-group-icon-toggle").on( 'change', function(){
         if(this.checked)
         {
             var icon = 'yes';
@@ -367,7 +367,7 @@ jQuery(document).ready(function(e){
                 list.pop(id);
             }
         }
-        jQuery(this).change(function() {
+        jQuery(this).on( 'change', function() {
             if (this.checked) {
                 var id = jQuery(this).val();
                 list.push(id);

@@ -269,7 +269,7 @@ function pg_submit_post_status()
         success:function() { 
                       pm_get_all_user_blogs_from_group(1);
                 }
-        }).submit();
+        }).trigger( 'submit' );
 }
 
 function pg_submit_post_access_content()
@@ -279,7 +279,7 @@ function pg_submit_post_access_content()
         success:function() { 
                        
                 }
-        }).submit();
+        }).trigger( 'submit' );
 }
 
 function pg_submit_edit_blog_post()
@@ -295,7 +295,7 @@ function pg_submit_edit_blog_post()
         success:function() { 
                        pm_get_all_user_blogs_from_group(1);
                 }
-        }).submit();  
+        }).trigger( 'submit' );
     }
     else
     {
@@ -316,7 +316,7 @@ function pg_submit_post_admin_note_content()
         success:function() { 
                     pm_get_all_user_blogs_from_group(1);
                 }
-        }).submit();
+        }).trigger( 'submit' );
     }
     else
     {
@@ -334,7 +334,7 @@ function pg_submit_delete_admin_note_content()
         success:function() { 
                    
                 }
-        }).submit();   
+        }).trigger( 'submit' );
 }
 
 function pm_delete_admin_note()
@@ -344,7 +344,7 @@ function pm_delete_admin_note()
         success:function() { 
                       pm_get_all_user_blogs_from_group(1); 
                 }
-    }).submit();
+    }).trigger( 'submit' );
 }
 
 function pg_submit_author_message()
@@ -360,7 +360,7 @@ function pg_submit_author_message()
                       pm_get_all_user_blogs_from_group(1);
                       pm_get_all_users_from_group('1');
                 }
-        }).submit();
+        }).trigger( 'submit' );
     }
     else
     {
@@ -448,7 +448,7 @@ function pg_invite_user()
             success:function() { 
 
                     }
-        }).submit();
+        }).trigger( 'submit' );
     }
 }
 
@@ -459,7 +459,7 @@ function pm_remove_user_from_group()
         success:function() { 
                       pm_get_all_users_from_group('1'); 
                 }
-    }).submit();
+    }).trigger( 'submit' );
 }
 
 function pm_remove_group_from_user()
@@ -469,7 +469,7 @@ function pm_remove_group_from_user()
         success:function() { 
                        
                 }
-    }).submit();
+    }).trigger( 'submit' );
 }
 
 function pg_activate_user(uid,gid)
@@ -643,7 +643,7 @@ function pm_deactivate_user_from_group()
         success:function() { 
                        pm_get_all_users_from_group('1');
                 }
-    }).submit();
+    }).trigger( 'submit' );
 }
 
 function pg_password_auto_generate(id)
@@ -662,7 +662,7 @@ function pm_reset_user_password()
         success:function() { 
                        
                 }
-    }).submit();
+    }).trigger( 'submit' );
 }
 
 function pm_show_hide_batch_operation(tab)
@@ -876,7 +876,7 @@ $('li.pm-profile-tab a:first').addClass('active');
 $('.pg-profile-tab-content').hide();
 $('.pg-profile-tab-content:first').show();
 
-    $('li.pm-profile-tab a').click(function(){
+    $('li.pm-profile-tab a').on( 'click', function(){
         var t = $(this).attr('href'); 
         $('li.pm-profile-tab a').removeClass('active');         
         $(this).addClass('active');
@@ -897,7 +897,7 @@ if($(this).hasClass('active')){ //this is the start of our condition
 $('.pm-section-left-panel ul li a:first').addClass('active');
 $('.pm-section-right-panel .pm-section-content').hide();
 $('.pm-section-right-panel .pm-section-content:first').show();
-$('.pm-section-left-panel ul li a').click(function(){
+$('.pm-section-left-panel ul li a').on( 'click', function(){
     var t = $(this).attr('href');
     $('.pm-section-left-panel ul li a').removeClass('active');        
     $(this).addClass('active');
@@ -945,7 +945,7 @@ if ($('.pm-no-blog-img-wrap')[0]) {
 
 //Toggle Password
 
-$(".pg-toggle-password").click(function() {
+$(".pg-toggle-password").on( 'click', function() {
     $(this).toggleClass("fa-eye fa-eye-slash");
     pgPasswordinput = $(this).parent().find("#user_pass");
     if (pgPasswordinput.attr("type") == "password") {
@@ -955,7 +955,7 @@ $(".pg-toggle-password").click(function() {
     }
 });
 
-$('.pg-group-setting.pm-profile-tab a').click(function(e){
+$('.pg-group-setting.pm-profile-tab a').on( 'click', function(e){
     $('#pg_group_setting .pm-section-content').hide();
     $('#pg_group_setting .pm-section-content:first').show(); 
 });

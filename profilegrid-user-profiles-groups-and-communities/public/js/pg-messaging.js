@@ -18,13 +18,13 @@ function threadWindowOpen (){
 
 threadWindowOpen();
 
-    $(".pg-message-action").click(function () {
+    $(".pg-message-action").on( 'click', function () {
         $(this).toggleClass("pg-action-active");
 
     });
 
 
-//$(".open.secondthread a").click(function(){
+//$(".open.secondthread a").on( 'click', function(){
 //  alert('Hey you clicked')
 //});
 
@@ -56,7 +56,7 @@ if($('#pg-messages').length)
 //--- General action  -----   
     
     
-  $(".pg-new-thread-action svg, .pg-thread-action-controller-overlay").click(function(){
+  $(".pg-new-thread-action svg, .pg-thread-action-controller-overlay").on( 'click', function(){
   $(".pg-thread-action-controller, .pg-thread-action-controller-overlay").toggle();
 });
 
@@ -537,7 +537,7 @@ jQuery("#receipent_field").autocomplete({
 
 function pg_msg_loader()
 {
-    jQuery(document).ready(function() {
+    jQuery(function() {
         /*emoji area JS */
     var el = jQuery("#pg_messaging_text").emojioneArea({
   	pickerPosition: "top",
@@ -549,8 +549,8 @@ function pg_msg_loader()
     events: {
     keyup: function (editor, event) {
         if(event.which == 13) {
-            jQuery(this).blur();
-            jQuery('#send_msg_btn').focus().click();
+            jQuery(this).trigger( 'blur' );
+            jQuery('#send_msg_btn').trigger( 'focus' ).trigger( 'click' );
         }
         
     }}
@@ -562,7 +562,7 @@ function pg_msg_loader()
       jQuery("#pg-msg-thread-container .pg-msg-thread-header .pg-msg-thread-time").html(date);
     }
   /*message scrolling js */
-    jQuery('.pg-users-search-list-wrap').scroll(function() 
+    jQuery('.pg-users-search-list-wrap').on( 'scroll', function()
     {
         var tid = jQuery('#thread_hidden_field').val();
 
@@ -595,7 +595,7 @@ function pg_msg_loader()
             pm_get_messenger_notification('', activity);
         });
     
-        jQuery(".pg-message-action").click(function () {
+        jQuery(".pg-message-action").on( 'click', function () {
         jQuery(this).toggleClass("pg-action-active");
 
     });
@@ -603,7 +603,7 @@ function pg_msg_loader()
 
         
         
-        jQuery(".pg-thread-open a").click(function () {
+        jQuery(".pg-thread-open a").on( 'click', function () {
             //alert('Yes you clicked');
             jQuery(".pg-message-box-sidebar").toggleClass("opened");
         });
@@ -611,21 +611,21 @@ function pg_msg_loader()
         
         
         
-       jQuery(".pg-thread-new-msg a").click(function () {
+       jQuery(".pg-thread-new-msg a").on( 'click', function () {
            // alert('Yes you clicked');
          jQuery(".pg-message-box-sidebar").addClass("opened");
         });
         
         
         // Reponsive//GUI Engine
-        jQuery(window).resize(function () {
+        jQuery(window).on( 'resize', function () {
 
          mobileSizer();
 
 
         });
         
-        jQuery(document).ready(function () {
+        jQuery(function () {
 
          mobileSizer();
 
@@ -689,7 +689,7 @@ function pm_messenger_send_chat_message(event) {
     {
         var html = '<p>'+content+'</p>';
         jQuery('#pg-msg_id_'+mid+' .pg-message-box').html(html);
-        jQuery('#pg-msg_id_'+mid).focus();
+        jQuery('#pg-msg_id_'+mid).trigger( 'focus' );
     }
 }
 
@@ -860,7 +860,7 @@ function show_thread_messages(tid,loadnum)
                 jQuery(".pg-users-search-list-wrap").scrollTop( jQuery("#load_more_message").offset().top+500);
             }
             
-            jQuery(".pg-message-action").click(function () {
+            jQuery(".pg-message-action").on( 'click', function () {
                 jQuery(this).toggleClass("pg-action-active");
 
             });
@@ -952,7 +952,7 @@ function pg_msg_unread_messages(e,tid)
 
 function pg_msg_edit(mid)
 {
-    jQuery('#chat_message_form .emojionearea-editor').focus();
+    jQuery('#chat_message_form .emojionearea-editor').trigger( 'focus' );
     var msg = jQuery('#pg-msg_id_'+mid+' .pg-message-box').html();
     
     jQuery('#chat_message_form .emojionearea-editor').html(jQuery.trim(msg));

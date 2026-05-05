@@ -1050,7 +1050,7 @@ screen and (-ms-high-contrast: none) {
     margin: 0 auto;
 }
 
-.pmagic .pmrow input:not(.pmagic .pm-radio-option input[type=radio]):not(.pmagic .pm-radio-option input[type=checkbox]),
+.pmagic .pmrow input:not(.pmagic .pm-radio-option input[type=radio]):not(.pmagic .pm-radio-option input[type=checkbox]):not(.pmagic form.pg-group-creator input[type=checkbox]),
 .pmagic .pmrow select,
 .pmagic .pmrow textarea {
     width: 100%

@@ -1,5 +1,5 @@
 jQuery( function( $ ) {
-    $(".pg-license-block").keyup(function(e) {
+    $(".pg-license-block").on( 'keyup', function(e) {
         let prefix = $(this).data('key');
         let field = $('#' + prefix + '_license_key' );
         let license_key_length = field.val();
@@ -15,7 +15,7 @@ jQuery( function( $ ) {
         }
     });
 
-    $(".pg-license-block").keydown(function(e) {
+    $(".pg-license-block").on( 'keydown', function(e) {
         let prefix = $(this).data('key');
         if( prefix != 'undefined' && prefix != '' ){
             $('#' + prefix + '_license_activate' ).hide();
@@ -158,12 +158,12 @@ function pg_on_change_bundle(value)
 
 
 
-  jQuery(document).ready(function(){
+  jQuery(function(){
     jQuery('.pg-tooltips').append("<span></span>");
     jQuery('.pg-tooltips:not([tooltip-position])').attr('tooltip-position', 'bottom');
 
 
-    jQuery(".pg-tooltips").mouseenter(function () {
+    jQuery(".pg-tooltips").on( 'mouseenter', function () {
         jQuery(this).find('span').empty().append(jQuery(this).attr('tooltip'));
     });
   });
