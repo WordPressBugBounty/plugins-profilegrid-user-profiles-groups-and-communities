@@ -595,9 +595,68 @@ function pg_msg_loader()
             pm_get_messenger_notification('', activity);
         });
     
-        jQuery(".pg-message-action").on( 'click', function () {
+    jQuery(".pg-message-action").on( 'click', function () {
         jQuery(this).toggleClass("pg-action-active");
 
+    });
+
+    jQuery(document).on('click', '.pg-msg-conversation-list', function (e) {
+        if (jQuery(e.target).closest('.pg-msg-conversation-action, .pg-msg-conversation-delete, .pg-msg-conversation-read, .pg-msg-conversation-unread').length) {
+            return;
+        }
+        var sid = parseInt(jQuery(this).data('sid'), 10) || 0;
+        var rid = parseInt(jQuery(this).data('rid'), 10) || 0;
+        var tid = parseInt(jQuery(this).data('thread'), 10) || 0;
+        if (sid > 0 && rid > 0 && tid > 0) {
+            pg_show_msg_panel(sid, rid, tid);
+        }
+    });
+
+    jQuery(document).on('click', '.pg-msg-conversation-read', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var tid = parseInt(jQuery(this).data('tid'), 10) || 0;
+        if (tid > 0) {
+            pg_msg_read_messages(this, tid);
+        }
+    });
+
+    jQuery(document).on('click', '.pg-msg-conversation-unread', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var tid = parseInt(jQuery(this).data('tid'), 10) || 0;
+        if (tid > 0) {
+            pg_msg_unread_messages(this, tid);
+        }
+    });
+
+    jQuery(document).on('click', '.pg-msg-conversation-delete', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var tid = parseInt(jQuery(this).data('tid'), 10) || 0;
+        var uid = parseInt(jQuery(this).data('uid'), 10) || 0;
+        var mid = parseInt(jQuery(this).data('mid'), 10) || 0;
+        if (tid > 0 && uid > 0 && mid > 0) {
+            pg_msg_delete_thread_confirmbox(tid, uid, mid);
+        }
+    });
+
+    jQuery(document).on('click', '.pg-message-edit', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var mid = parseInt(jQuery(this).data('mid'), 10) || 0;
+        if (mid > 0) {
+            pg_msg_edit(mid);
+        }
+    });
+
+    jQuery(document).on('click', '.pg-message-delete', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var mid = parseInt(jQuery(this).data('mid'), 10) || 0;
+        if (mid > 0) {
+            pg_msg_delete(mid);
+        }
     });
 
 

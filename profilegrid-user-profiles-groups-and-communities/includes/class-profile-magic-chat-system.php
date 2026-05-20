@@ -21,6 +21,14 @@ class ProfileMagic_Chat {
 		return wp_strip_all_tags( $this->pg_normalize_thread_markup_value( $value ) );
 	}
 
+	private function pg_sanitize_message_display_markup( $value ) {
+		return wp_kses_post( wp_unslash( $this->pg_normalize_thread_markup_value( $value ) ) );
+	}
+
+	private function pg_sanitize_message_display_text( $value ) {
+		return wp_strip_all_tags( $this->pg_sanitize_message_display_markup( $value ) );
+	}
+
 	private function pg_get_authorized_thread_row( $tid, $uid ) {
 		$tid = absint( $tid );
 		$uid = absint( $uid );
@@ -145,7 +153,7 @@ class ProfileMagic_Chat {
 					$tid     = $thread->t_id;
 					$lastmsg = $pmrequests->get_message_of_thread( $tid, 1, 0, true );
 					if ( ! empty( $lastmsg ) ) {
-						$last_message = nl2br( $lastmsg[0]->content );
+						$last_message = $this->pg_sanitize_message_display_text( $lastmsg[0]->content );
 						$last_msgid   = $lastmsg[0]->m_id;
 						$last_message = mb_strimwidth( $last_message, 0, 30, '...' );
 					} else {
@@ -189,9 +197,9 @@ class ProfileMagic_Chat {
 					$read_unread_button   = '';
 					if ( ! empty( $unread_message_count ) ) {
 						$unread_visual      = '<div class="pg-unread-count">' . $unread_message_count . '</div>';
-						$read_unread_button = '<div class="pg-msg-conversation-unread" onclick="event.stopPropagation();pg_msg_read_messages(this,' . $tid . ')"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M18.83 7h-2.6L10.5 4 4 7.4V17c-1.1 0-2-.9-2-2V7.17c0-.53.32-1.09.8-1.34L10.5 2l7.54 3.83c.43.23.73.7.79 1.17zM20 8H7c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h13c1.1 0 2-.9 2-2v-9c0-1.1-.9-2-2-2zm0 3.67L13.5 15 7 11.67V10l6.5 3.33L20 10v1.67z"/></svg></div>';
+						$read_unread_button = '<button type="button" class="pg-msg-conversation-unread" data-tid="' . $tid . '"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M18.83 7h-2.6L10.5 4 4 7.4V17c-1.1 0-2-.9-2-2V7.17c0-.53.32-1.09.8-1.34L10.5 2l7.54 3.83c.43.23.73.7.79 1.17zM20 8H7c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h13c1.1 0 2-.9 2-2v-9c0-1.1-.9-2-2-2zm0 3.67L13.5 15 7 11.67V10l6.5 3.33L20 10v1.67z"/></svg></button>';
 					} else {
-						$read_unread_button = '<div class="pg-msg-conversation-read" onclick="event.stopPropagation();pg_msg_unread_messages(this,' . $tid . ')"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>';
+						$read_unread_button = '<button type="button" class="pg-msg-conversation-read" data-tid="' . $tid . '"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></button>';
 					}
 
 					if ( $active_tid != '' ) {
@@ -217,14 +225,14 @@ class ProfileMagic_Chat {
 					$add_chat_members = apply_filters('pm_add_chat_members', '', $tid);
 					$add_chat_members = $this->pg_normalize_thread_markup_value( $add_chat_members );
 
-					 $return .= ' <div id="pg-msg-thread-' . $tid . '" data-thread="' . $tid . '" class="pg-msg-conversation-list ' . $active_class . '" onclick="pg_show_msg_panel(' . $uid . ',' . $other_uid . ',' . $tid . ')">' . $other_user_info['avatar'] . '<div class="' . $login_status . '"></div><div class="pg-msg-conversation-info">
+					 $return .= ' <div id="pg-msg-thread-' . $tid . '" data-thread="' . $tid . '" data-sid="' . $uid . '" data-rid="' . $other_uid . '" class="pg-msg-conversation-list ' . $active_class . '">' . $other_user_info['avatar'] . '<div class="' . $login_status . '"></div><div class="pg-msg-conversation-info">
                         <div class="pg-list-user-img-wrap">
                           <div class="pg-msg-thread-user">' . $other_user_info['name'] . '</div>
                           <div class="pg-msg-thread-time">' . $thread_timestamp . '</div>
                           
                           <div class="pg-msg-conversation-action">' .
 							$read_unread_button . '
-                            <div class="pg-msg-conversation-delete" onclick="event.stopPropagation();pg_msg_delete_thread_confirmbox(' . $tid . ',' . $uid . ',' . $last_msgid . ')"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/></svg></div>
+                            <button type="button" class="pg-msg-conversation-delete" data-tid="' . $tid . '" data-uid="' . $uid . '" data-mid="' . $last_msgid . '"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c1.1 0 2-.9 2-2V7z"/></svg></button>
 							' . $add_chat_members . '
                           </div>
                           ' . $unread_visual . '
@@ -293,7 +301,7 @@ class ProfileMagic_Chat {
 				$lastmsg = $pmrequests->get_message_of_thread( $tid, 1, 0, true );
                                 
 				if ( ! empty( $lastmsg ) ) {
-					$last_message = nl2br( $lastmsg[0]->content );
+					$last_message = $this->pg_sanitize_message_display_text( $lastmsg[0]->content );
 					$last_msgid   = $lastmsg[0]->m_id;
 					$last_message = mb_strimwidth( $last_message, 0, 30, '...' );
 				} else {
@@ -339,9 +347,9 @@ class ProfileMagic_Chat {
 				$read_unread_button   = '';
 				if ( ! empty( $unread_message_count ) ) {
 					$unread_visual      = '<div class="pg-unread-count">' . $unread_message_count . '</div>';
-					$read_unread_button = '<div class="pg-msg-conversation-unread" onclick="event.stopPropagation();pg_msg_read_messages(this,' . $tid . ')"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M18.83 7h-2.6L10.5 4 4 7.4V17c-1.1 0-2-.9-2-2V7.17c0-.53.32-1.09.8-1.34L10.5 2l7.54 3.83c.43.23.73.7.79 1.17zM20 8H7c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h13c1.1 0 2-.9 2-2v-9c0-1.1-.9-2-2-2zm0 3.67L13.5 15 7 11.67V10l6.5 3.33L20 10v1.67z"/></svg></div>';
+					$read_unread_button = '<button type="button" class="pg-msg-conversation-unread" data-tid="' . $tid . '"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M18.83 7h-2.6L10.5 4 4 7.4V17c-1.1 0-2-.9-2-2V7.17c0-.53.32-1.09.8-1.34L10.5 2l7.54 3.83c.43.23.73.7.79 1.17zM20 8H7c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h13c1.1 0 2-.9 2-2v-9c0-1.1-.9-2-2-2zm0 3.67L13.5 15 7 11.67V10l6.5 3.33L20 10v1.67z"/></svg></button>';
 				} else {
-					$read_unread_button = '<div class="pg-msg-conversation-read" onclick="event.stopPropagation();pg_msg_unread_messages(this,' . $tid . ')"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>';
+					$read_unread_button = '<button type="button" class="pg-msg-conversation-read" data-tid="' . $tid . '"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></button>';
 				}
 
 				if ( $active_tid != '' ) {
@@ -367,19 +375,19 @@ class ProfileMagic_Chat {
 				$add_chat_members = apply_filters('pm_add_chat_members', '', $tid);
 				$add_chat_members = $this->pg_normalize_thread_markup_value( $add_chat_members );
 
-				 $return .= ' <div id="pg-msg-thread-' . $tid . '" data-thread="' . $tid . '" class="pg-msg-conversation-list ' . $active_class . '" onclick="pg_show_msg_panel(' . $uid . ',' . $other_uid . ',' . $tid . ')">' . $other_user_info['avatar'] . '<div class="pg-user-status ' . $login_status . '"></div><div class="pg-msg-conversation-info">
+				 $return .= ' <div id="pg-msg-thread-' . $tid . '" data-thread="' . $tid . '" data-sid="' . $uid . '" data-rid="' . $other_uid . '" class="pg-msg-conversation-list ' . $active_class . '">' . $other_user_info['avatar'] . '<div class="pg-user-status ' . $login_status . '"></div><div class="pg-msg-conversation-info">
                     <div class="pg-list-user-img-wrap">
                       <div class="pg-msg-thread-user">' . $other_user_info['name'] . '</div>
                       <div class="pg-msg-thread-time">' . $thread_timestamp . '</div>                    
                       <div class="pg-msg-conversation-action">' .
 						$read_unread_button . '
-                        <div class="pg-msg-conversation-delete" onclick="event.stopPropagation();pg_msg_delete_thread_confirmbox(' . $tid . ',' . $uid . ',' . $last_msgid . ')"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0z" fill="none"/><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></div>
+                        <button type="button" class="pg-msg-conversation-delete" data-tid="' . $tid . '" data-uid="' . $uid . '" data-mid="' . $last_msgid . '"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0z" fill="none"/><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
 						' . $add_chat_members . '
                       </div>
                     
                     </div>
                     <div class="pg-thread-notification">
-                  <div class="pg-thread-msg">' . stripslashes( $this->pg_normalize_thread_text_value( $last_message ) ) . '</div>
+                      <div class="pg-thread-msg">' . stripslashes( $this->pg_normalize_thread_text_value( $last_message ) ) . '</div>
                     ' . $unread_visual . '
                     </div>    
                 </div>
@@ -433,7 +441,7 @@ class ProfileMagic_Chat {
 				} else {
 					$align = 'pm_msg_lf';
 				}
-					$last_message  = nl2br( $message->content );
+					$last_message  = $this->pg_sanitize_message_display_markup( $message->content );
 					$profile_url   = $pmrequests->pm_get_user_profile_url( $uid );
 					$date          = mysql2date( 'd M,g:i A', gmdate( 'Y-m-d H:i:s', ( strtotime( $message->timestamp ) ) - $time_conversion ) );
 					$msg_timestamp = human_time_diff( strtotime( $message->timestamp ), current_time( 'timestamp' ) );
@@ -532,7 +540,7 @@ class ProfileMagic_Chat {
 				} else {
 					$align = '';
 				}
-					$last_message  = nl2br( $message->content );
+					$last_message  = $this->pg_sanitize_message_display_markup( $message->content );
 					if ($uid != $cur_uid && $message->status == 3 && !current_user_can('manage_options')){
 						$last_message  = 'Pending for admin approval';
 					}
@@ -545,7 +553,7 @@ class ProfileMagic_Chat {
 					$return .= '<div id="pg-msg_id_' . $message->m_id . '" class="pg-message-list ' . $align . '">';
 				if ( apply_filters('pm_add_approve_condition', $uid == $cur_uid, $uid, $cur_uid) ) {
 					$return .= '<div class="pg-message-action" ><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0z" fill="none"/><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-                       <div class="pg-message-action-wrap"> <ul>' .apply_filters('pm_add_admin_edit_button', '<li onclick="pg_msg_edit(' . $message->m_id . ')">Edit</li>', $message->m_id, $uid, $cur_uid ) .'<li  onclick="pg_msg_delete(' . $message->m_id . ')">Delete</li> ' .apply_filters('pm_add_approve_button', '', $message->m_id, $message->status) . '</ul></div>
+                       <div class="pg-message-action-wrap"> <ul>' . apply_filters( 'pm_add_admin_edit_button', '<li><button type="button" class="pg-message-edit" data-mid="' . $message->m_id . '">Edit</button></li>', $message->m_id, $uid, $cur_uid ) . '<li><button type="button" class="pg-message-delete" data-mid="' . $message->m_id . '">Delete</button></li> ' . apply_filters( 'pm_add_approve_button', '', $message->m_id, $message->status ) . '</ul></div>
                        </div>';
 				}
 				
@@ -565,7 +573,7 @@ class ProfileMagic_Chat {
 				$return .=  $image . '
 				<div class="pm-thread-user">'. apply_filters('pm_msg_user_name', '', $uid ) .'</div>
                 <div class="pg-message-box pm-border">
-                  ' . stripslashes( $last_message ) . '
+                  ' . $last_message . '
                 </div>
                 <div class="pg-msg-thread-time">' . $date . '</div>
 

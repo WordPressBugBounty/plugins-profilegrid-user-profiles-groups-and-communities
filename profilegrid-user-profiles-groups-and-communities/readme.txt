@@ -3,9 +3,9 @@ Contributors: profilegrid, metagauss
 Donate link: http://profilegrid.co
 Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 5.9.9.2
+Stable tag: 5.9.9.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -664,6 +664,11 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 5.9.9.3: May 20, 2026 =
+* Fixed: YouTube field validation now accepts shortened `youtu.be` URLs in addition to standard `youtube.com` links.
+* Improved: Social Connect email activation now supports an extension-level override while keeping the global ProfileGrid User Accounts setting as the default.
+* Security: Private messaging output handling was hardened to properly escape rendered content and reduce XSS risk.
 
 = 5.9.9.2: May 5, 2026 =
 * Fixed: Deprecated jQuery event shorthand warnings in admin and frontend scripts for better WordPress and jQuery compatibility.
@@ -1597,6 +1602,11 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 5.9.9.3: May 20, 2026 =
+* Fixed: YouTube field validation now accepts shortened `youtu.be` URLs in addition to standard `youtube.com` links.
+* Improved: Social Connect email activation now supports an extension-level override while keeping the global ProfileGrid User Accounts setting as the default.
+* Security: Private messaging output handling was hardened to properly escape rendered content and reduce XSS risk.
 
 = 5.9.9.2: May 5, 2026 =
 * Fixed: Deprecated jQuery event shorthand warnings in admin and frontend scripts for better WordPress and jQuery compatibility.

@@ -1762,7 +1762,7 @@ function validate_linked_in_url(val)
 function validate_youtube_url(val)
 {
 	if (val != '') {
-		if (/(ftp|http|https):\/\/?((www|\w\w)\.)?youtube.com(\w+:{0,1}\w*@)?(\S+)(:([0-9])+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i.test( val )) {
+		if (/(ftp|http|https):\/\/?((www|\w\w)\.)?(youtube\.com|youtu\.be)(\w+:{0,1}\w*@)?(\S+)(:([0-9])+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i.test( val )) {
 			return true;
 		} else {
 			return false;

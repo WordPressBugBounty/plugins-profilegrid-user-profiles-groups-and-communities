@@ -6902,6 +6902,7 @@ class PM_request {
                     'aria-current' => true,
                     'data-*' => true, // Allowing data attributes
                 ),
+                'br' => array(),
                 'input' => array(
                     'type' => array(),
                     'name' => array(),
@@ -6925,7 +6926,6 @@ class PM_request {
                     'target' => array(),
                     'class' => array(),
                     'id' => array(),
-                    'onclick'=>array(),
                     'data-*' => true, // Allowing data attributes
                 ),
                 'h1' => array(
@@ -6937,7 +6937,6 @@ class PM_request {
                     'class' => array(),
                     'style' => array(),
                     'aria-hidden' => array(),
-                    'onclick'=>array(),
                     'data-*' => true, // Allowing data attributes
                 ),
                 'button' => array(
@@ -7003,7 +7002,8 @@ class PM_request {
                     'class' => array(),
                 ),
                 'li' => array(
-                    'onclick' => array(),
+                    'class' => array(),
+                    'data-*' => true, // Allowing data attributes
                 ),
             );
             return $allowed_html;
