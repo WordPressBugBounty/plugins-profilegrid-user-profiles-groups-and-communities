@@ -136,35 +136,6 @@ if ( $pg_demo_content_is_installed ) {
   
       
   <!-------Contentarea Starts----->
-  <?php
-  $group_created = filter_input( INPUT_GET, 'pg_group_created', FILTER_VALIDATE_INT );
-  $new_group_id  = filter_input( INPUT_GET, 'pg_new_group_id', FILTER_VALIDATE_INT );
-  if ( $group_created && $totalgroups === 2 && $new_group_id ) :
-	  $add_members_url = add_query_arg(
-		  array(
-			  'page'            => 'pm_user_manager',
-			  'pagenum'         => 1,
-			  'pg_assign_group' => $new_group_id,
-			  'pg_add_members'  => 1,
-		  ),
-		  admin_url( 'admin.php' )
-	  );
-	  $new_user_url = add_query_arg( 'pg_group_id', $new_group_id, admin_url( 'user-new.php' ) );
-  ?>
-  <div class="pg-uim-notice-row pg-box-row pg-card-mb-16">
-      <div class="pg-box-col-12">
-          <div class="pg-uim-notice pg-box-w-100 pg-white-bg">
-              <strong><?php esc_html_e( 'Next:', 'profilegrid-user-profiles-groups-and-communities' ); ?></strong>
-              <?php esc_html_e( 'add members to your new group.', 'profilegrid-user-profiles-groups-and-communities' ); ?>
-              <a href="<?php echo esc_url( $add_members_url ); ?>"><?php esc_html_e( 'Add existing users', 'profilegrid-user-profiles-groups-and-communities' ); ?></a>
-              <?php esc_html_e( 'or', 'profilegrid-user-profiles-groups-and-communities' ); ?>
-              <a href="<?php echo esc_url( $new_user_url ); ?>"><?php esc_html_e( 'create a new user', 'profilegrid-user-profiles-groups-and-communities' ); ?></a>.
-              <?php esc_html_e( 'Tip: hold Ctrl (Windows) or Cmd (Mac) to select multiple users in multi-selects.', 'profilegrid-user-profiles-groups-and-communities' ); ?>
-          </div>
-      </div>
-  </div>
-  <?php endif; ?>
- 
   <div class="pmagic-cards pg-box-row">
      
       
@@ -251,7 +222,11 @@ if ( $pg_demo_content_is_installed ) {
                 [profilegrid_group <?php echo esc_html('gid="'.$group->id.'');?>"]
             </a>
         </div>
-      <div class="pg-box-card-setting-wrap">
+             <div class="pm-form-links">
+        <div class="pm-form-row"><a href="admin.php?page=pm_add_group&id=<?php echo esc_attr($group->id);?>"><?php esc_html_e('Settings','profile-magic');?></a></div>
+        <div class="pm-form-row"><a href="admin.php?page=pm_profile_fields&gid=<?php echo esc_attr($group->id);?>"><?php esc_html_e('Fields','profile-magic');?></a></div>
+      </div>
+<!--      <div class="pg-box-card-setting-wrap">
            <?php if($group_type=='closed'):?>
           <div class="pg-box-card-setting-item">
                <span class="pg-box-card-setting-info"><?php esc_attr_e('Membership Requests', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
@@ -262,13 +237,13 @@ if ( $pg_demo_content_is_installed ) {
               <span class="pg-box-card-setting-info"><?php esc_attr_e('Members List', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
               <a href="admin.php?page=pm_user_manager&pagenum=1&gid=<?php echo esc_attr($group->id);?>"><span class="material-icons">group</span></a>
           </div>
-          <!--
+          
           <div class="pg-box-card-setting-item">
               <span class="pg-box-card-setting-info"><?php esc_attr_e('Add Members', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
               <a href="admin.php?page=pm_user_manager&pagenum=1&pg_assign_group=<?php echo esc_attr($group->id);?>&pg_add_members=1"><span class="material-icons">person_add_alt_1</span></a>
           </div>
           
-          -->
+          
           <div class="pg-box-card-setting-item">
             <span class="pg-box-card-setting-info"><?php esc_attr_e('Group Options', 'profilegrid-user-profiles-groups-and-communities'); ?></span>
             <?php if(isset( $group_options['group_type'] ) && $group_options['group_type'] == 'form'):?>
@@ -282,7 +257,7 @@ if ( $pg_demo_content_is_installed ) {
             <a href="admin.php?page=pm_profile_fields&gid=<?php echo esc_attr($group->id);?>"><span class="material-icons">view_list</span></a>
           </div>
           
-      </div>
+      </div>-->
       </label>
      </div>
               
@@ -336,7 +311,7 @@ if ( $pg_demo_content_is_installed ) {
                     </div>
                 </div>
                 
-                 <div class="pg-side-banner-wrap pg-customize-banner-main">
+<!--                 <div class="pg-side-banner-wrap pg-customize-banner-main">
                         <div class="pg-side-banner-content pg-customize-banner">
                         <div class="pg-side-banner-text"></div>
                         <div class="pg-side-banner-help-text"> <?php esc_html_e('Custom Solution', 'profilegrid-user-profiles-groups-and-communities'); ?></div>
@@ -348,7 +323,7 @@ if ( $pg_demo_content_is_installed ) {
 
 
 
-                </div>
+                </div>-->
             </div>
         </div>
         <div>

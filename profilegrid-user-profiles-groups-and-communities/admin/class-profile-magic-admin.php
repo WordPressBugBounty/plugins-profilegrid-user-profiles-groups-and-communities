@@ -813,6 +813,171 @@ class Profile_Magic_Admin {
 		include 'partials/manage-groups.php';
 	}
 
+	public function pg_get_eventprime_promo_data() {
+		$rival_plugins = array(
+			'tec' => array(
+				'label'     => 'The Events Calendar',
+				'plugins'   => array(
+					'the-events-calendar/the-events-calendar.php',
+				),
+				'classes'   => array(
+					'Tribe__Events__Main',
+				),
+				'constants' => array(),
+			),
+			'wp_event_manager' => array(
+				'label'     => 'WP Event Manager',
+				'plugins'   => array(
+					'wp-event-manager/wp-event-manager.php',
+				),
+				'classes'   => array(
+					'WP_Event_Manager',
+				),
+				'constants' => array(),
+			),
+			'modern_events_calendar' => array(
+				'label'     => 'Modern Events Calendar',
+				'plugins'   => array(
+					'modern-events-calendar-lite/modern-events-calendar-lite.php',
+					'modern-events-calendar/mec-init.php',
+				),
+				'classes'   => array(
+					'MEC',
+				),
+				'constants' => array(
+					'MEC_VERSION',
+				),
+			),
+			'eventin' => array(
+				'label'     => 'Eventin',
+				'plugins'   => array(
+					'wp-event-solution/eventin.php',
+				),
+				'classes'   => array(
+					'Wpeventin',
+				),
+				'constants' => array(
+					'EVENTIN_VERSION',
+				),
+			),
+			'amelia' => array(
+				'label'     => 'Amelia',
+				'plugins'   => array(
+					'ameliabooking/ameliabooking.php',
+				),
+				'classes'   => array(
+					'AmeliaBooking\\Plugin',
+				),
+				'constants' => array(
+					'AMELIA_VERSION',
+				),
+			),
+			'events_manager' => array(
+				'label'     => 'Events Manager',
+				'plugins'   => array(
+					'events-manager/events-manager.php',
+				),
+				'classes'   => array(
+					'EM_Object',
+				),
+				'constants' => array(
+					'EM_VERSION',
+				),
+			),
+		);
+
+		foreach ( $rival_plugins as $plugin_key => $plugin_data ) {
+			if ( $this->pg_is_eventprime_rival_active( $plugin_data ) ) {
+				return array(
+					'key'   => $plugin_key,
+					'label' => $plugin_data['label'],
+					'url'   => $this->pg_get_eventprime_promo_url( $plugin_key ),
+				);
+			}
+		}
+
+		return false;
+	}
+
+	public function pg_render_eventprime_promo() {
+		$dbhandler  = new PM_DBhandler();
+		$promo_data = $this->pg_get_eventprime_promo_data();
+		$notice_id  = 'pg_eventprime_promo_notice';
+
+		if ( '1' === $dbhandler->get_global_option_value( $notice_id, '0' ) ) {
+			return;
+		}
+
+		if ( empty( $promo_data['url'] ) || empty( $promo_data['label'] ) ) {
+			return;
+		}
+		?>
+		<div class="notice notice-info is-dismissible pg-dismissible" id="<?php echo esc_attr( $notice_id ); ?>">
+			<p>
+				<?php $is_tec = 'tec' === $promo_data['key']; ?>
+				<strong><?php echo esc_html( $is_tec ? __( 'Using The Events Calendar?', 'profilegrid-user-profiles-groups-and-communities' ) : __( 'Need an event plugin alternative?', 'profilegrid-user-profiles-groups-and-communities' ) ); ?></strong>
+				<?php echo ' ' . esc_html( $is_tec ? __( 'See how EventPrime handles events, registration, and paid event workflows inside WordPress.', 'profilegrid-user-profiles-groups-and-communities' ) : __( 'Explore EventPrime for WordPress-native event management and paid event workflows.', 'profilegrid-user-profiles-groups-and-communities' ) ); ?>
+				<a href="<?php echo esc_url( $promo_data['url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $is_tec ? __( 'Discover Why Users Switch to EventPrime', 'profilegrid-user-profiles-groups-and-communities' ) : __( 'Explore EventPrime', 'profilegrid-user-profiles-groups-and-communities' ) ); ?></a>
+			</p>
+		</div>
+		<?php
+	}
+
+	public function pg_eventprime_admin_notice() {
+		if ( ! current_user_can( 'manage_options' ) || ! $this->pg_is_eventprime_notice_screen() ) {
+			return;
+		}
+
+		$this->pg_render_eventprime_promo();
+	}
+
+	private function pg_get_eventprime_promo_url( $plugin_key ) {
+		$homepage_url = 'https://theeventprime.com?utm_source=profilegrid_plugin&utm_medium=admin_banner&utm_campaign=eventprime_promo';
+		$tec_url      = 'https://theeventprime.com/the-events-calendar-alternative?utm_source=profilegrid_plugin&utm_medium=admin_banner&utm_campaign=eventprime_tec_promo';
+
+		if ( 'tec' === $plugin_key ) {
+			return apply_filters( 'profilegrid_eventprime_tec_promo_url', $tec_url, $plugin_key );
+		}
+
+		return apply_filters( 'profilegrid_eventprime_promo_url', $homepage_url, $plugin_key );
+	}
+
+	private function pg_is_eventprime_rival_active( $plugin_data ) {
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		if ( ! empty( $plugin_data['plugins'] ) ) {
+			foreach ( $plugin_data['plugins'] as $plugin_file ) {
+				if ( is_plugin_active( $plugin_file ) ) {
+					return true;
+				}
+			}
+		}
+
+		if ( ! empty( $plugin_data['classes'] ) ) {
+			foreach ( $plugin_data['classes'] as $class_name ) {
+				if ( class_exists( $class_name ) ) {
+					return true;
+				}
+			}
+		}
+
+		if ( ! empty( $plugin_data['constants'] ) ) {
+			foreach ( $plugin_data['constants'] as $constant_name ) {
+				if ( defined( $constant_name ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private function pg_is_eventprime_notice_screen() {
+		return 'pm_manage_groups' === filter_input( INPUT_GET, 'page' );
+	}
+
 	public function pm_add_group() {
 		include 'partials/add-group-tabview.php';
 	}

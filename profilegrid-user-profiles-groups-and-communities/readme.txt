@@ -5,7 +5,7 @@ Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 5.9.9.3
+Stable tag: 5.9.9.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -664,6 +664,9 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 5.9.9.4: May 28, 2026 =
+* Minor UI fixes.
 
 = 5.9.9.3: May 20, 2026 =
 * Fixed: YouTube field validation now accepts shortened `youtu.be` URLs in addition to standard `youtube.com` links.
@@ -1602,6 +1605,9 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 5.9.9.4: May 28, 2026 =
+* Minor UI fixes.
 
 = 5.9.9.3: May 20, 2026 =
 * Fixed: YouTube field validation now accepts shortened `youtu.be` URLs in addition to standard `youtube.com` links.

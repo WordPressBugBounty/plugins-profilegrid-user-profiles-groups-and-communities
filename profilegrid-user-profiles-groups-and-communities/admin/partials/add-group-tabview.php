@@ -341,9 +341,7 @@ if ( filter_input( INPUT_POST, 'submit_group' ) ) {
         if($groupid == 0){
             $redirect_url = add_query_arg(
 				array(
-					'page'            => 'pm_manage_groups',
-					'pg_group_created'=> 1,
-					'pg_new_group_id' => $gid,
+					'page' => 'pm_manage_groups',
 				),
 				admin_url( 'admin.php' )
 			);

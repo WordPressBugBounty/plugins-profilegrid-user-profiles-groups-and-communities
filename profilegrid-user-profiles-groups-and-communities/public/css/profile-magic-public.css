@@ -4370,7 +4370,10 @@ body.theme-twentytwenty-two .pmagic .pm-friend-action-bar button{
 }
 
 @media (max-width: 640px) {
-  .pmagic .pm-all-group-container { grid-template-columns: 1fr; }
+  .pmagic .pm-all-group-container.pg-groups-cols-4,
+  .pmagic .pm-all-group-container.pg-groups-cols-3,
+  .pmagic .pm-all-group-container.pg-groups-cols-2,
+  .pmagic .pm-all-group-container.pg-groups-cols-1 {grid-template-columns: repeat(1, minmax(0, 1fr)); }
 }
 
 .pmagic .pg-group-card {

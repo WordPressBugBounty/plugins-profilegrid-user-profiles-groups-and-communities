@@ -776,6 +776,60 @@ span.card-submissions {
     display: inline-block;
 }
 
+.pg-group-manager .pmagic-cards .pm-card label {
+    display: flex;
+    flex-direction: column;
+}
+
+.pg-group-manager .pm-form-shortcode-row {
+    margin-top: auto;
+    padding: 10px 12px 6px;
+}
+
+.pg-group-manager .pm-form-shortcode-row a {
+    display: inline-block;
+    max-width: 100%;
+    color: #0DB14B;
+    text-decoration: none;
+    word-break: break-word;
+}
+
+.pg-group-manager .pm-form-links {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px 12px;
+    border-top: 1px solid #E6E6E6;
+}
+
+.pg-group-manager .pm-form-row {
+    flex: 1 1 0;
+}
+
+.pg-group-manager .pm-form-row a {
+    display: block;
+    padding: 8px 10px;
+    border: 1px solid #B9D4A9;
+    border-radius: 4px;
+    color: #0DB14B;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.pg-group-manager .pm-form-row a:hover {
+    background-color: #F4F8F1;
+    border-color: #0DB14B;
+}
+
+.pg-group-manager .pm-form-row a:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px #0DB14B;
+}
+
 .pm-new-form {
     z-index: 1000;
     background-color: #fffffe;

@@ -638,7 +638,7 @@ class Profile_Magic_Activator {
 					$data         = array(
 						'group_name'           => __( 'Default User Group', 'profilegrid-user-profiles-groups-and-communities' ),
 						'associate_role'       => 'subscriber',
-						'group_desc'           => __( 'This is the default user group. All existing users are automatically included in this group. Groups can be modified or deleted by the admin.', 'profilegrid-user-profiles-groups-and-communities' ),
+						'group_desc'           => '',
 						'show_success_message' => 1,
 						'success_message'      => __( 'Thank you for signing up.', 'profilegrid-user-profiles-groups-and-communities' ),
 					);
