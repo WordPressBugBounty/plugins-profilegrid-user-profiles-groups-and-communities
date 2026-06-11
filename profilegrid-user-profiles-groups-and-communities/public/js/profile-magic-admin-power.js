@@ -311,6 +311,8 @@ function parseDate(dateString, isMax) {
     $(".pm-section-nav-horizental .pm-profile-tab").append("<div class='pm-border-slide'></div>");
     $(".pm-section-nav-horizental .pm-border-slide").css('background', pmDomColor);
     jQuery(".pmagic #unread_notification_count").css('background-color', pmDomColor);
+    jQuery(".pmagic .pm-group-view .pm-section-nav-vertical ul li a")
+    .css('--pm-theme-color', pmDomColor);
     
      // Sets all user cards equal height
     

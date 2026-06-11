@@ -3945,7 +3945,7 @@ button#send_msg_btn {
 }
 
 .block-editor-page .pmagic .pm-group-view #pg-profile-tabs .pg-profile-tab-content {
-     display: none;
+    display: none;
 }
 
 .block-editor-page .pmagic .pm-group-view #pg-profile-tabs .pg-profile-tab-content#pg-about {
@@ -3962,5 +3962,5 @@ button#send_msg_btn {
 }
 .block-editor-page .pmagic .pm-group-view #pg-about .pm-section .pm-section-right-panel .pm-section-content,
 .block-editor-page .pmagic .pm-group-view #pg-settings .pm-section .pm-section-right-panel .pm-section-content{
-     display: none;
+    display: none;
 }

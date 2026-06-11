@@ -203,7 +203,7 @@ if ( $pg_demo_content_is_installed ) {
               </div>
       
       <div class="pg-submission-wrap"> 
-          <?php if(!empty($leaders)):?>
+          <?php if(!empty($leaders) && array_filter($leaders)):?>
                   <div class="pg-submission-title"><?php esc_html_e("Group Managers", 'profilegrid-user-profiles-groups-and-communities'); ?></div>
                   <div class="pg-box-group-users">
                       <?php foreach ($leaders as $leader): 

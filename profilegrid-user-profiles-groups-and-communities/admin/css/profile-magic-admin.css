@@ -12,7 +12,7 @@
     box-sizing: border-box;
 }
 
-.pmagic a:not(.pg-table-striped a):not(.pg-custom-table a):not(.pg-table-wrap a):not(.pmagic .pm-profile-nav .pm-profile-nav-item a):not(.pmagic .pm-disabled){
+.pmagic a:not(.pg-table-striped a):not(.pg-custom-table a):not(.pg-table-wrap a):not(.pmagic .pm-profile-nav .pm-profile-nav-item a):not(.pmagic .pm-disabled):not(.pg-group-manager .pm-form-shortcode-row a){
     color: #0DB14B;
     text-decoration: none;
     font-size: 12px;
@@ -789,9 +789,10 @@ span.card-submissions {
 .pg-group-manager .pm-form-shortcode-row a {
     display: inline-block;
     max-width: 100%;
-    color: #0DB14B;
+    color: #000000;
     text-decoration: none;
     word-break: break-word;
+    font-size: 12px;
 }
 
 .pg-group-manager .pm-form-links {
@@ -1959,6 +1960,7 @@ select.warning {
 
 .uimagic ul.uimradio {
     display: block;
+    display: inline-flex;
     float: left;
     list-style: none;
     width: 80%;
@@ -2094,14 +2096,9 @@ select.warning {
 }
 
 .uimagic input[type=radio]:checked:before {
+    
     background-color: #fff;
-    margin: 4px 0px 0px 4px;
-    content: "\2022";
-    text-indent: -9999px;
-    border-radius: 50px;
-    font-size: 24px;
-    width: 6px;
-    height: 6px;
+
 }
 
 
@@ -4121,6 +4118,7 @@ div[id*="pg_groups_menu"] .widget-top .widget-title h3 .in-widget-title {
 
 .pg-side-banner-wrap .pg-side-banner-content p {
    margin: 18.5px 0;
+   font-size: 12px;
 }
 
 .pg-side-banner-wrap .pg-side-banner-content.pg-customize-banner {
@@ -4197,7 +4195,7 @@ div[id*="pg_groups_menu"] .widget-top .widget-title h3 .in-widget-title {
 
 .pg-side-banner-help-text {
     color: #283237;
-    font-size: 18px;
+    font-size: 13px;
     font-weight: bold;
     margin-bottom: 6px;
 }
