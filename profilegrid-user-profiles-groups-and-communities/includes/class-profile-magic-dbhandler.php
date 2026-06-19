@@ -316,6 +316,9 @@ class PM_DBhandler {
 				}
 			} else {
                                 $user_id = wp_create_user( $user_name, $password, $user_email );
+				if ( is_wp_error( $user_id ) ) {
+					return $user_id;
+				}
 				if ( is_numeric( $user_id ) ) {
                     $user_id = wp_update_user(
                         array(
@@ -331,6 +334,9 @@ class PM_DBhandler {
 		} else {
 
 			$user_id = wp_create_user( $user_name, $password, $user_email );
+			if ( is_wp_error( $user_id ) ) {
+				return $user_id;
+			}
 			if ( is_numeric( $user_id ) ) {
                 $user_id = wp_update_user(
                     array(

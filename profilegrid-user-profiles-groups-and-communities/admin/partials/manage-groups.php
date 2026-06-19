@@ -292,6 +292,14 @@ if ( $pg_demo_content_is_installed ) {
 <?php  ?>
 <div class="pg-box-col pg-box-col-md-3 pg-group-side-banner-col">
     <div class="pg-group-side-banner pg-box-border pg-box-white-bg">
+             <div class="pg-box-row pg-box-text-center">
+            <div class="pg-box-col-12 ">
+                <div class="pg-sidebanner-image">
+                    <img src="<?php echo esc_url($path . 'images/svg/pg-logo-icon.svg'); ?>">
+                </div>
+               <!-- <div class="pg-side-banner-mg-logo pg-text-a"><img src="<?php echo esc_url($path . 'images/mg-logo.png'); ?>"></div> -->
+            </div>
+        </div>
 
         <div class="pg-box-row">
             <div class="pg-box-col-12">
@@ -304,8 +312,8 @@ if ( $pg_demo_content_is_installed ) {
                         <p> <?php esc_html_e('Looking for quick answers? Check our Starter Guide or reach out to us directly.', 'profilegrid-user-profiles-groups-and-communities'); ?>   
                         </p>
                         <div class="pg-side-banner-buttons">
-                            <a target="_blank" href="https://profilegrid.co/profilegrid-starter-guide/?utm_source=plugin&utm_medium=helpbox" class="button button-primary"> <?php esc_html_e(' Starter Guide', 'profilegrid-user-profiles-groups-and-communities'); ?></a>
-                            <a target="_blank" href="https://wordpress.org/support/plugin/profilegrid-user-profiles-groups-and-communities/" class="button pg-banner-support-btn"> <?php esc_html_e('Create Support Ticket', 'profilegrid-user-profiles-groups-and-communities'); ?></a>
+                            <a target="_blank" href="https://profilegrid.co/profilegrid-starter-guide/?utm_source=plugin&utm_medium=helpbox" class="pg-banner-support-btn"> <?php esc_html_e(' Starter Guide', 'profilegrid-user-profiles-groups-and-communities'); ?></a>
+                            <a target="_blank" href="https://wordpress.org/support/plugin/profilegrid-user-profiles-groups-and-communities/" class="pg-banner-support-btn"> <?php esc_html_e('Create Support Ticket', 'profilegrid-user-profiles-groups-and-communities'); ?></a>
                             </div>
 
                     </div>

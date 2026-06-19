@@ -121,18 +121,23 @@ if ($rmformid != 0 && class_exists('Registration_Magic')) {
                 } else {
                     // New user registration
                     $user_id = $pmrequests->profile_magic_frontend_registration_request($post_obj, $_FILES, $_SERVER, $gid, $fields);
-                    
-                    do_action('profile_magic_registration_process', $post_obj, $_FILES, $_SERVER, $gid, $fields, $user_id, $textdomain);
-                    
-                    // Show success message if configured
-                    if (!isset($post_obj['action']) && $dbhandler->get_value('GROUPS', 'show_success_message', $gid) == 1) {
-                        echo wp_kses_post($dbhandler->get_value('GROUPS', 'success_message', $gid));
-                    }
-                    
-                    // Redirect if configured
-                    if ($pmrequests->pm_get_user_redirect($gid) != '') {
-                        wp_redirect($pmrequests->pm_get_user_redirect($gid));
-                        exit;
+                    if (is_wp_error($user_id)) {
+                        foreach ($user_id->get_error_messages() as $error) {
+                            echo '<div class="pm-error">' . wp_kses_post($error) . '</div>';
+                        }
+                    } else {
+                        do_action('profile_magic_registration_process', $post_obj, $_FILES, $_SERVER, $gid, $fields, $user_id, $textdomain);
+                        
+                        // Show success message if configured
+                        if (!isset($post_obj['action']) && $dbhandler->get_value('GROUPS', 'show_success_message', $gid) == 1) {
+                            echo wp_kses_post($dbhandler->get_value('GROUPS', 'success_message', $gid));
+                        }
+                        
+                        // Redirect if configured
+                        if ($pmrequests->pm_get_user_redirect($gid) != '') {
+                            wp_redirect($pmrequests->pm_get_user_redirect($gid));
+                            exit;
+                        }
                     }
                 }
             } else {

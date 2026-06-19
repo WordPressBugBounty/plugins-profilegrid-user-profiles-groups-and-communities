@@ -414,8 +414,10 @@ class PM_request {
 
 	public function profile_magic_frontend_server_validation( $post, $files, $server, $fields, $textdomain, $type = '' ) {
 				$dbhandler = new PM_DBhandler();
+				$pmsanitizer = new PM_sanitizer();
                                 
 		$error             = array();
+		$has_username_field = false;
 		if ( isset( $fields ) && ! empty( $fields ) ) {
 			foreach ( $fields as $field ) {
 				$field_options = maybe_unserialize( $field->field_options );
@@ -439,6 +441,7 @@ class PM_request {
 					}
 				}
 				if ( $field->field_type == 'user_name' ) {
+					$has_username_field = true;
 
 					if ( ! isset( $post[ $field_key ] ) || $post[ $field_key ] == '' ) {
 							$error[] = $field->field_name . esc_html__( ' is a required field', 'profilegrid-user-profiles-groups-and-communities' );
@@ -574,6 +577,16 @@ class PM_request {
                                                    //$error[] = esc_html__( 'Please enter a valid date (yyyy-mm-dd format)', 'profilegrid-user-profiles-groups-and-communities' ) . '<br />';
 					}
 				}
+			}
+		}
+		if ( 'edit_profile' !== $type && ! $has_username_field ) {
+			$username_source = isset( $post['user_login'] ) ? $post['user_login'] : ( isset( $post['user_email'] ) ? $post['user_email'] : '' );
+			$username        = $pmsanitizer->get_sanitized_frontend_field( 'user_login', $username_source );
+
+			if ( $username == '' || $username == null ) {
+				$error[] = esc_html__( 'This username is invalid because it uses illegal characters. Please enter a valid username.', 'profilegrid-user-profiles-groups-and-communities' );
+			} elseif ( $this->profile_magic_check_username_exist( $username ) ) {
+				$error[] = esc_html__( 'Sorry, username already exist.', 'profilegrid-user-profiles-groups-and-communities' );
 			}
 		}
 				$error = apply_filters( 'pm_frontend_server_validation', $error, $post );
@@ -1050,6 +1063,16 @@ class PM_request {
 		}
 
 		$user_id               = $dbhandler->pm_add_user( $user_name, $password, $user_email, $user_role );
+		if ( is_wp_error( $user_id ) || ! is_numeric( $user_id ) ) {
+			if ( is_wp_error( $user_id ) ) {
+				return $user_id;
+			}
+
+			return new WP_Error(
+				'pm_registration_failed',
+				esc_html__( 'An unknown error occurred. Please try again later.', 'profilegrid-user-profiles-groups-and-communities' )
+			);
+		}
 				$is_paid_group = $this->profile_magic_check_paid_group( $gid );
 				$group_type    = $this->profile_magic_get_group_type( $gid );
 				do_action( 'profile_magic_submit_data_before_join_group', $post, $files, $server, $gid, $fields, $user_id, 'profilegrid-user-profiles-groups-and-communities' );

@@ -12,7 +12,7 @@
     box-sizing: border-box;
 }
 
-.pmagic a:not(.pg-table-striped a):not(.pg-custom-table a):not(.pg-table-wrap a):not(.pmagic .pm-profile-nav .pm-profile-nav-item a):not(.pmagic .pm-disabled):not(.pg-group-manager .pm-form-shortcode-row a){
+.pmagic a:not(.pg-table-striped a):not(.pg-custom-table a):not(.pg-table-wrap a):not(.pmagic .pm-profile-nav .pm-profile-nav-item a):not(.pmagic .pm-disabled):not(.pg-group-manager .pm-form-shortcode-row a):not(.pg-group-side-banner .pg-side-banner-buttons a){
     color: #0DB14B;
     text-decoration: none;
     font-size: 12px;
@@ -4194,10 +4194,22 @@ div[id*="pg_groups_menu"] .widget-top .widget-title h3 .in-widget-title {
 }
 
 .pg-side-banner-help-text {
-    color: #283237;
-    font-size: 13px;
-    font-weight: bold;
+    color: #000;
+    font-size: 12px;
     margin-bottom: 6px;
+}
+
+.pg-group-side-banner .pg-side-banner-buttons a.pg-banner-support-btn{
+    color: #0DB14B;
+    display: inline-flex;
+    margin: 3px 0px !important;
+    align-items: center;
+    justify-content: flex-start;
+    font-size: 12px;
+}
+
+.pg-group-side-banner .pg-side-banner-buttons a.pg-banner-support-btn:hover{
+    color:#000;
 }
 
 .pg-side-banner-buttons .pg-side-banner-button {
