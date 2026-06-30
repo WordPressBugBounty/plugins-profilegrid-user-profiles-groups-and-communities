@@ -75,6 +75,15 @@ if ($rmformid != 0 && class_exists('Registration_Magic')) {
     // Check if form was submitted
     if (isset($post_obj['reg_form_submit']) || isset($post_obj['pm_payment_method'])) {
         $errors = '';
+        $registration_nonce = isset($post_obj['pm_registration_nonce']) ? sanitize_text_field($post_obj['pm_registration_nonce']) : '';
+
+        if (!wp_verify_nonce($registration_nonce, 'pm_registration_action')) {
+            $errors[] = esc_html__('Failed security check', 'profilegrid-user-profiles-groups-and-communities');
+        }
+
+        if (!is_user_logged_in() && !$pmrequests->pg_is_group_open_for_frontend_registration($gid)) {
+            $errors[] = esc_html__('This group is not available for public registration.', 'profilegrid-user-profiles-groups-and-communities');
+        }
         
         // CAPTCHA validation
         if ($pmrequests->profile_magic_show_captcha('pm_enable_recaptcha_in_reg')) {
@@ -88,7 +97,7 @@ if ($rmformid != 0 && class_exists('Registration_Magic')) {
         $error_message = apply_filters('pm_captcha_error', esc_html__('Captcha Failed', 'profilegrid-user-profiles-groups-and-communities'));
         $check_captcha = apply_filters('pm_captcha_validation_in_reg', $check_captcha);
         
-        if ($check_captcha == true) {
+        if ($check_captcha == true && empty($errors)) {
             // Frontend server validation
             $errors = $pmrequests->profile_magic_frontend_server_validation($post_obj, $_FILES, $_SERVER, $fields, $textdomain);
             
@@ -148,7 +157,13 @@ if ($rmformid != 0 && class_exists('Registration_Magic')) {
             }
         } else {
             // CAPTCHA failed
-            echo '<div class="pm-error">' . esc_html($error_message) . '</div>';
+            if (!empty($errors)) {
+                foreach ($errors as $error) {
+                    echo '<div class="pm-error">' . wp_kses_post($error) . '</div>';
+                }
+            } else {
+                echo '<div class="pm-error">' . esc_html($error_message) . '</div>';
+            }
         }
     } else {
         // Form not submitted yet - display the form

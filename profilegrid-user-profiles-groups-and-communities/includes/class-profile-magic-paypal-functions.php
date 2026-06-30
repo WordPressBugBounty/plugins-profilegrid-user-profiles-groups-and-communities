@@ -1,6 +1,38 @@
 <?php
 class PM_paypal_request {
 
+	private function pg_validate_completed_ipn( $post, $gid, $transaction_id ) {
+		$dbhandler = new PM_DBhandler();
+		$pmrequests = new PM_request();
+		$paypal = new profile_magic_paypal_class();
+		$paypal->admin_mail = $pmrequests->profile_magic_get_admin_email();
+		$paypal->paypal_mail = $dbhandler->get_global_option_value( 'pm_paypal_email' );
+		$paypal->from_mail = $pmrequests->profile_magic_get_from_email();
+
+		$existing_logs = $dbhandler->get_all_result( 'PAYPAL_LOG', array( 'txn_id' ), 1, 'results', 0, false, 'id', 'DESC', '', ARRAY_A );
+		$existing_txn_ids = is_array( $existing_logs ) ? wp_list_pluck( $existing_logs, 'txn_id' ) : array();
+		$paypal->txn_id = array_diff( $existing_txn_ids, array( $transaction_id ) );
+
+		if ( ! $paypal->validate_ipn() ) {
+			return false;
+		}
+
+		$expected_amount = (float) $pmrequests->profile_magic_check_paid_group( $gid );
+		$actual_amount = isset( $post['mc_gross'] ) ? (float) $post['mc_gross'] : 0.0;
+		$expected_currency = strtoupper( (string) $dbhandler->get_global_option_value( 'pm_paypal_currency', 'USD' ) );
+		$actual_currency = isset( $post['mc_currency'] ) ? strtoupper( sanitize_text_field( $post['mc_currency'] ) ) : '';
+
+		if ( $expected_amount <= 0 || abs( $expected_amount - $actual_amount ) > 0.00001 ) {
+			return false;
+		}
+
+		if ( '' !== $expected_currency && $expected_currency !== $actual_currency ) {
+			return false;
+		}
+
+		return true;
+	}
+
     public function profile_magic_repayment_process( $user_id, $gid ) {
                  $dbhandler = new PM_DBhandler();
                 $pmrequests = new PM_request();
@@ -138,7 +170,7 @@ class PM_paypal_request {
 					$dbhandler->update_row( 'PAYPAL_LOG', 'txn_id', $trasaction_id, array( 'log'=>$log_array ), array( '%s' ), '%s' );
 				} // Save and update the logs array
 				$paypal_log_id = $dbhandler->get_value( 'PAYPAL_LOG', 'id', $trasaction_id, 'txn_id' );
-				if ( $payment_status=='completed' ) { // validate the IPN, do the others stuffs here as per your app logic
+				if ( $payment_status=='completed' && $this->pg_validate_completed_ipn( $post, $gid, $trasaction_id ) ) { // validate the IPN, do the others stuffs here as per your app logic
                                     
                                         $group_payment_array = maybe_unserialize(get_user_meta($user_id,'pm_group_payment_status', true));
                                         if(empty($group_payment_array))
@@ -266,7 +298,7 @@ class PM_paypal_request {
 					$dbhandler->update_row( 'PAYPAL_LOG', 'txn_id', $trasaction_id, array( 'log'=>$log_array ), array( '%s' ), '%s' );
 				} // Save and update the logs array
 				$paypal_log_id = $dbhandler->get_value( 'PAYPAL_LOG', 'id', $trasaction_id, 'txn_id' );
-				if ( $payment_status=='completed' ) { // validate the IPN, do the others stuffs here as per your app logic
+				if ( $payment_status=='completed' && $this->pg_validate_completed_ipn( $post, $gid, $trasaction_id ) ) { // validate the IPN, do the others stuffs here as per your app logic
                                         $group_payment_array = maybe_unserialize(get_user_meta($user_id,'pm_group_payment_status', true));
                                         if(empty($group_payment_array))
                                         {

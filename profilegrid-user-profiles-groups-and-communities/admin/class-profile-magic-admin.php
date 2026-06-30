@@ -2697,6 +2697,9 @@ class Profile_Magic_Admin {
         
         public function profilegrid_activate_license()
         {
+            if ( ! current_user_can( 'manage_options' ) ) {
+                wp_send_json_error( array( 'message' => esc_html__( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ) ), 403 );
+            }
             $retrieved_nonce = filter_input( INPUT_POST, 'nonce' );
             if ( !wp_verify_nonce( $retrieved_nonce, 'pg-license-nonce' ) ) {
                     die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
@@ -2724,6 +2727,9 @@ class Profile_Magic_Admin {
     }
 
     public function profilegrid_deactivate_license(){
+            if ( ! current_user_can( 'manage_options' ) ) {
+                wp_send_json_error( array( 'message' => esc_html__( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ) ), 403 );
+            }
         
         $retrieved_nonce = filter_input( INPUT_POST, 'nonce' );
             if ( !wp_verify_nonce( $retrieved_nonce, 'pg-license-nonce' ) ) {

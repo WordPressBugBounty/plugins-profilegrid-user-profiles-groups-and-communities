@@ -1053,7 +1053,7 @@ class PM_request {
 			  $dbhandler     = new PM_DBhandler();
 				$pmsanitizer = new PM_sanitizer();
 		$user_email          = $pmsanitizer->get_sanitized_frontend_field( 'user_email', $post['user_email'] );
-		$user_role           = $dbhandler->get_value( 'GROUPS', 'associate_role', $gid, 'id' );
+		$user_role           = $this->pg_get_frontend_registration_role( $gid );
 		$password            = ( isset( $post['user_pass'] ) ? $post['user_pass'] : $this->profile_magic_generate_password() );
 
 		if ( isset( $post['user_login'] ) ) {
@@ -1086,6 +1086,70 @@ class PM_request {
 		}
 
 				return $user_id;
+	}
+
+	public function pg_is_group_open_for_frontend_registration( $gid ) {
+		return 'open' === $this->profile_magic_get_group_type( $gid );
+	}
+
+	public function pg_get_frontend_registration_role( $gid ) {
+		$dbhandler = new PM_DBhandler();
+		$user_role = sanitize_key( (string) $dbhandler->get_value( 'GROUPS', 'associate_role', $gid, 'id' ) );
+
+		if ( ! $this->pg_is_privileged_registration_role( $user_role ) ) {
+			return $user_role;
+		}
+
+		$default_role = sanitize_key( (string) get_option( 'default_role', 'subscriber' ) );
+		if ( $default_role && ! $this->pg_is_privileged_registration_role( $default_role ) ) {
+			return $default_role;
+		}
+
+		return 'subscriber';
+	}
+
+	public function pg_is_privileged_registration_role( $role ) {
+		$role = sanitize_key( (string) $role );
+		if ( '' === $role ) {
+			return true;
+		}
+
+		$wp_roles = wp_roles();
+		if ( ! $wp_roles || empty( $wp_roles->roles[ $role ]['capabilities'] ) ) {
+			return true;
+		}
+
+		$capabilities = $wp_roles->roles[ $role ]['capabilities'];
+		$privileged_caps = array(
+			'activate_plugins',
+			'create_users',
+			'delete_plugins',
+			'delete_themes',
+			'delete_users',
+			'edit_files',
+			'edit_plugins',
+			'edit_theme_options',
+			'edit_themes',
+			'edit_users',
+			'install_plugins',
+			'install_themes',
+			'list_users',
+			'manage_options',
+			'promote_users',
+			'remove_users',
+			'switch_themes',
+			'update_core',
+			'update_plugins',
+			'update_themes',
+		);
+
+		foreach ( $privileged_caps as $capability ) {
+			if ( ! empty( $capabilities[ $capability ] ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public function pm_admin_notification_message_html( $post, $gid, $fields, $exclude = array() ) {

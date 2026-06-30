@@ -1452,12 +1452,22 @@ if ( isset( $_POST['tid'] ) ) {
 
 
 	public function pm_messenger_delete_threads() {
-		 $pmrequests = new PM_request();
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		$uid         = get_current_user_id();
 		$pmmessenger = new ProfileMagic_Chat();
-		$tid         = filter_input( INPUT_POST, 'tid' );
-		$mid         = filter_input( INPUT_POST, 'mid' );
-		$uid         = filter_input( INPUT_POST, 'uid' );
+		$tid         = absint( filter_input( INPUT_POST, 'tid', FILTER_VALIDATE_INT ) );
+		$mid         = absint( filter_input( INPUT_POST, 'mid', FILTER_VALIDATE_INT ) );
+		$thread      = $this->pg_get_authorized_thread( $tid, $uid );
+		if ( false === $thread ) {
+			wp_send_json_error( 'Unauthorized', 403 );
+		}
 		$delete      = $pmmessenger->pm_messenger_delete_threads( $tid, $uid, $mid );
 		echo wp_kses_post( $delete );
 		die;
@@ -4996,8 +5006,20 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_messages_mark_as_read() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		$pmrequests = new PM_request();
-		$tid        = filter_input( INPUT_POST, 'tid', FILTER_VALIDATE_INT );
+		$tid        = absint( filter_input( INPUT_POST, 'tid', FILTER_VALIDATE_INT ) );
+		$thread     = $this->pg_get_authorized_thread( $tid, get_current_user_id() );
+		if ( false === $thread ) {
+			wp_send_json_error( 'Unauthorized', 403 );
+		}
 		$pmrequests->update_message_status_to_read( $tid );
 		die;
 	}

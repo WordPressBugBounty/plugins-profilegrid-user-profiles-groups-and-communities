@@ -139,7 +139,7 @@ function pg_msg_mark_thread_read_silent(tid) {
     if (!tid || !window.pg_msg_object || !pg_msg_object.ajax_url) {
         return;
     }
-    jQuery.post(pg_msg_object.ajax_url, { action: 'pm_messages_mark_as_read', tid: tid }, function () {
+    jQuery.post(pg_msg_object.ajax_url, { action: 'pm_messages_mark_as_read', tid: tid, nonce: pg_msg_object.nonce }, function () {
         pg_msg_sync_unread_state();
         pm_messenger_notification_extra_data('');
     });
@@ -944,7 +944,7 @@ function pg_msg_delete_thread(tid,uid,mid)
        jQuery('.pm-popup-mask, #pm-edit-group-popup, .pg-blog-dialog-mask').hide();
        jQuery('#pg-msg-thread-'+tid).remove();
    }
-    var data = {action: 'pm_messenger_delete_threads', 'tid':tid,'uid':uid,'mid':mid};
+    var data = {action: 'pm_messenger_delete_threads', 'tid':tid,'uid':uid,'mid':mid,'nonce':pg_msg_object.nonce};
     jQuery.post(pg_msg_object.ajax_url, data, function (resp) {
        if(resp=="true")
        {
@@ -990,7 +990,7 @@ function pg_msg_delete_thread_confirmbox(tid,uid,mid)
 
 function pg_msg_read_messages(e,tid)
 {
-    var data = {action: 'pm_messages_mark_as_read', tid: tid};
+    var data = {action: 'pm_messages_mark_as_read', tid: tid, nonce: pg_msg_object.nonce};
     jQuery.post(pg_msg_object.ajax_url, data, function () {
        jQuery('#pg-msg-thread-'+tid+' .pg-unread-count' ).remove(); 
         pg_show_all_threads(tid);
