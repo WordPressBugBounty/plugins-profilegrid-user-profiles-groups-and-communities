@@ -3305,20 +3305,30 @@ if ( isset( $_POST['tid'] ) ) {
 		$html_generator  = new PM_HTML_Creator( $this->profile_magic, $this->version );
 		$pmrequests      = new PM_request();
 		$postid          = filter_input( INPUT_POST, 'post_id' );
+		$gid             = isset( $_POST['gid'] ) ? trim( (string) wp_unslash( $_POST['gid'] ) ) : '';
 		$type            = filter_input( INPUT_POST, 'type' );
 		$content         = filter_input( INPUT_POST, 'pm_author_message', FILTER_UNSAFE_RAW );
 		$current_user    = wp_get_current_user();
 		$sid             = $current_user->ID;
 		$retrieved_nonce = filter_input( INPUT_POST, '_wpnonce' );
+		if ( ! is_user_logged_in() || 0 === $sid ) {
+			wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+		}
 		if ( ! wp_verify_nonce( $retrieved_nonce, 'send_pm_message_to_author' ) ) {
 			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
 		}
 		if ( is_numeric( $postid ) ) {
 			if ( $type == 'blog' ) {
 				$post = get_post( $postid );
+				if ( ! $post ) {
+					wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+				}
 				$rid  = $post->post_author;
 			} else {
-				$rid = $postid;
+				$rid = absint( $postid );
+			}
+			if ( $rid <= 0 || ! get_userdata( $rid ) ) {
+				wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
 			}
 			$is_msg_sent = $pmrequests->pm_create_message( $sid, $rid, $content );
 			if ( $is_msg_sent ) {
@@ -3328,10 +3338,32 @@ if ( isset( $_POST['tid'] ) ) {
 				$html_generator->author_msg_send_success_popup( 'failed' );
 			}
 		} else {
-			$ids = maybe_unserialize( $pmrequests->pm_encrypt_decrypt_pass( 'decrypt', $postid ) );
+			$basic_functions = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+			$is_group_leader = ( '' !== $gid ) ? $pmrequests->pg_check_in_single_group_is_user_group_leader( $sid, $gid ) : false;
+			$is_group_manager = ( '' !== $gid ) ? $basic_functions->pm_user_is_group_manager( $sid, $gid ) : false;
+			if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $sid ) && ! $is_group_leader && ! $is_group_manager ) {
+				wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+			}
+
+			$decrypted_post_id = $pmrequests->pm_encrypt_decrypt_pass( 'decrypt', $postid );
+			if ( false === $decrypted_post_id || '' === $decrypted_post_id ) {
+				wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+			}
+
+			$ids = $this->pg_safe_unserialize_array( $decrypted_post_id );
+			if ( ! is_array( $ids ) ) {
+				wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+			}
 			// print_r($ids);
 			$i = 0;
 			foreach ( $ids as $id ) {
+				$id = absint( $id );
+				if ( 0 === $id ) {
+					continue;
+				}
+				if ( '' !== $gid && ! $pmrequests->profile_magic_check_is_group_member( $gid, $id ) ) {
+					wp_die( __( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+				}
 				if ( $id == $sid ) {
 					continue;
 				}
@@ -3348,6 +3380,34 @@ if ( isset( $_POST['tid'] ) ) {
 		}
 		die;
 
+	}
+
+	private function pg_user_belongs_to_group( $user_id, $gid ) {
+		$user_id = absint( $user_id );
+		$gid     = is_scalar( $gid ) ? trim( (string) $gid ) : '';
+		if ( 0 === $user_id || '' === $gid ) {
+			return false;
+		}
+
+		$pmrequests = new PM_request();
+		return $pmrequests->profile_magic_check_is_group_member( $gid, $user_id );
+	}
+
+	private function pg_safe_unserialize_array( $value ) {
+		if ( ! is_string( $value ) || '' === $value ) {
+			return false;
+		}
+
+		if ( ! is_serialized( $value ) ) {
+			return false;
+		}
+
+		$data = unserialize( $value, array( 'allowed_classes' => false ) );
+		if ( ! is_array( $data ) ) {
+			return false;
+		}
+
+		return $data;
 	}
 
 	public function pm_get_all_user_blogs_from_group() {
@@ -3581,6 +3641,9 @@ if ( isset( $_POST['tid'] ) ) {
 		if ( is_array( $user_id ) ) {
 			foreach ( $user_id as $id ) {
                 $id = absint( $id );
+				if ( ! $this->pg_user_belongs_to_group( $id, $gid ) ) {
+					continue;
+				}
 				update_user_meta( $id, 'rm_user_status', '0' );
 				if ( ! empty( $gid ) ) {
 					$pmemails->pm_send_group_based_notification( $gid, $id, 'on_user_activate' );
@@ -3588,6 +3651,10 @@ if ( isset( $_POST['tid'] ) ) {
 			}
 		} else {
 			$user_id = absint( $user_id );
+			if ( ! $this->pg_user_belongs_to_group( $user_id, $gid ) ) {
+				wp_send_json_error( esc_html__( 'User does not belong to this group', 'profilegrid-user-profiles-groups-and-communities' ), 403 );
+				return;
+			}
 			update_user_meta( $user_id, 'rm_user_status', '0' );
 			if ( ! empty( $gid ) ) {
 				$pmemails->pm_send_group_based_notification( $gid, $user_id, 'on_user_activate' );
@@ -3650,6 +3717,10 @@ if ( isset( $_POST['tid'] ) ) {
 
 		if ( is_numeric( $user_id_raw ) ) {
 			$user_id = absint( $user_id_raw );
+			if ( ! $this->pg_user_belongs_to_group( $user_id, $gid ) ) {
+				wp_send_json_error( esc_html__( 'User does not belong to this group', 'profilegrid-user-profiles-groups-and-communities' ), 403 );
+				return;
+			}
 			update_user_meta( $user_id, 'rm_user_status', '1' );
 			do_action( 'pg_user_suspended', $user_id );
 			if ( ! empty( $gid ) ) {
@@ -3662,6 +3733,9 @@ if ( isset( $_POST['tid'] ) ) {
 			foreach ( $ids as $id ) {
 				$id = absint( $id );
 				if ( 0 === $id ) {
+					continue;
+				}
+				if ( ! $this->pg_user_belongs_to_group( $id, $gid ) ) {
 					continue;
 				}
 				update_user_meta( $id, 'rm_user_status', '1' );

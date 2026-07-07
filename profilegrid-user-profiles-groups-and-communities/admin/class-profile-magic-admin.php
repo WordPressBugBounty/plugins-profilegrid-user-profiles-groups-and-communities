@@ -1629,7 +1629,21 @@ class Profile_Magic_Admin {
 		$mimes['json'] = 'text/plain';
 		return $mimes;
 	}
+
+	private function pg_is_allowed_import_option_name( $option_name ) {
+		$option_name = is_string( $option_name ) ? trim( $option_name ) : '';
+		if ( '' === $option_name ) {
+			return false;
+		}
+
+		return 0 === strpos( $option_name, 'pm_' ) || 0 === strpos( $option_name, 'pg_' );
+	}
+
 	public function pm_upload_json() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			die( esc_html__( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ) );
+		}
+
 		$retrieved_nonce = filter_input( INPUT_POST, '_wpnonce' );
 		if ( ! wp_verify_nonce( $retrieved_nonce, 'pm_import_options' ) ) {
 			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
@@ -1656,9 +1670,17 @@ class Profile_Magic_Admin {
 				$options_data                = json_decode( $filecontent );
 				foreach ( $options_data as $data ) {
 					if ( is_object( $data ) ) {
-						 $dbhandler->update_global_option_value( $data->option_name, $data->option_value );
+						$option_name  = isset( $data->option_name ) ? sanitize_key( $data->option_name ) : '';
+						$option_value = isset( $data->option_value ) ? $data->option_value : '';
+						if ( $this->pg_is_allowed_import_option_name( $option_name ) ) {
+							 $dbhandler->update_global_option_value( $option_name, $option_value );
+						}
 					} elseif ( is_array( $data ) ) {
-						 $dbhandler->update_global_option_value( $data[0], $data[1] );
+						$option_name  = isset( $data[0] ) ? sanitize_key( $data[0] ) : '';
+						$option_value = isset( $data[1] ) ? $data[1] : '';
+						if ( $this->pg_is_allowed_import_option_name( $option_name ) ) {
+							 $dbhandler->update_global_option_value( $option_name, $option_value );
+						}
 					}
 				}
 				echo '<div class="uimrow">' . esc_html__( 'Your configuration file was successfully imported and included settings have been applied.', 'profilegrid-user-profiles-groups-and-communities' ) . '</div>';

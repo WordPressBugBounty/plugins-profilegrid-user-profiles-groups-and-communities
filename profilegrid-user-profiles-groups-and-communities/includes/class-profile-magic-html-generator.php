@@ -1508,6 +1508,7 @@ class PM_HTML_Creator {
             <input type="hidden" name="action" value="pm_send_message_to_author" />
 		 <?php $this->basic_functions->pm_render_nonce_field( 'send_pm_message_to_author' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $post_id ); ?>" />
+            <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
             <input type="hidden" id="type" name="type" value="<?php echo esc_attr( $type ); ?>" />
            
         </form>
@@ -2306,6 +2307,7 @@ class PM_HTML_Creator {
             <input type="hidden" name="action" value="pm_send_message_to_author" />
 		 <?php $this->basic_functions->pm_render_nonce_field( 'send_pm_message_to_author' ); ?>
             <input type="hidden" id="post_id" name="post_id" value="<?php echo esc_attr( $author_id ); ?>" />
+            <input type="hidden" id="gid" name="gid" value="<?php echo esc_attr( $gid ); ?>" />
             <input type="hidden" id="type" name="type" value="<?php echo esc_attr( $type ); ?>" />
            
         </form>

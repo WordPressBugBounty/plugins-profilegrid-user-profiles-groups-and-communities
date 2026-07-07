@@ -1028,7 +1028,23 @@ class Profile_Magic_Notification {
 	public function pm_delete_notification( $id ) {
 		$dbhandler  = new PM_DBhandler();
 		$identifier = 'NOTIFICATION';
-		$return     = $dbhandler->remove_row( $identifier, 'id', $id );
+		$id         = absint( $id );
+		if ( 0 === $id ) {
+			return false;
+		}
+
+		$notification = $dbhandler->get_row( $identifier, $id );
+		if ( empty( $notification ) ) {
+			return false;
+		}
+
+		$current_user_id = get_current_user_id();
+		$recipient_id    = isset( $notification->rid ) ? absint( $notification->rid ) : 0;
+		if ( $recipient_id !== $current_user_id && ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) ) {
+			return false;
+		}
+
+		$return = $dbhandler->remove_row( $identifier, 'id', $id );
 
 		return $return;
 	}

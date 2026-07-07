@@ -351,8 +351,11 @@ class PM_request {
                 $dbhandler = new PM_DBhandler();
 		$output         = false;
 		$encrypt_method = 'AES-256-CBC';
-		$secret_key     = $dbhandler->get_global_option_value( 'pm_encrypt_secret_key','This is my secret key' );
-                $secret_iv      = $dbhandler->get_global_option_value( 'pm_encrypt_secret_iv','This is my secret iv' );
+		$secret_key     = (string) $dbhandler->get_global_option_value( 'pm_encrypt_secret_key', '' );
+                $secret_iv      = (string) $dbhandler->get_global_option_value( 'pm_encrypt_secret_iv', '' );
+		if ( '' === $secret_key || '' === $secret_iv ) {
+			return false;
+		}
 		// hash
 		$key = hash( 'sha256', $secret_key );
 		// iv - encrypt method AES-256-CBC expects 16 bytes - else you will get a warning
@@ -1095,61 +1098,54 @@ class PM_request {
 	public function pg_get_frontend_registration_role( $gid ) {
 		$dbhandler = new PM_DBhandler();
 		$user_role = sanitize_key( (string) $dbhandler->get_value( 'GROUPS', 'associate_role', $gid, 'id' ) );
-
-		if ( ! $this->pg_is_privileged_registration_role( $user_role ) ) {
-			return $user_role;
-		}
-
 		$default_role = sanitize_key( (string) get_option( 'default_role', 'subscriber' ) );
-		if ( $default_role && ! $this->pg_is_privileged_registration_role( $default_role ) ) {
-			return $default_role;
-		}
-
-		return 'subscriber';
-	}
-
-	public function pg_is_privileged_registration_role( $role ) {
-		$role = sanitize_key( (string) $role );
-		if ( '' === $role ) {
-			return true;
+		if ( '' === $default_role ) {
+			$default_role = 'subscriber';
 		}
 
 		$wp_roles = wp_roles();
-		if ( ! $wp_roles || empty( $wp_roles->roles[ $role ]['capabilities'] ) ) {
-			return true;
+		if ( ! $wp_roles || ! isset( $wp_roles->roles[ $default_role ] ) ) {
+			return 'subscriber';
 		}
 
-		$capabilities = $wp_roles->roles[ $role ]['capabilities'];
-		$privileged_caps = array(
-			'activate_plugins',
-			'create_users',
-			'delete_plugins',
-			'delete_themes',
-			'delete_users',
-			'edit_files',
-			'edit_plugins',
-			'edit_theme_options',
-			'edit_themes',
-			'edit_users',
-			'install_plugins',
-			'install_themes',
-			'list_users',
-			'manage_options',
-			'promote_users',
-			'remove_users',
-			'switch_themes',
-			'update_core',
-			'update_plugins',
-			'update_themes',
-		);
+		if ( '' === $user_role || ! isset( $wp_roles->roles[ $user_role ] ) ) {
+			return $default_role;
+		}
 
-		foreach ( $privileged_caps as $capability ) {
-			if ( ! empty( $capabilities[ $capability ] ) ) {
-				return true;
+		if ( $this->pg_is_role_allowed_for_frontend_registration( $user_role, $default_role, $wp_roles ) ) {
+			return $user_role;
+		}
+
+		return $default_role;
+	}
+
+	private function pg_is_role_allowed_for_frontend_registration( $user_role, $default_role, $wp_roles = null ) {
+		$user_role = sanitize_key( (string) $user_role );
+		$default_role = sanitize_key( (string) $default_role );
+		$wp_roles = $wp_roles instanceof WP_Roles ? $wp_roles : wp_roles();
+
+		if ( ! $wp_roles || ! isset( $wp_roles->roles[ $user_role ], $wp_roles->roles[ $default_role ] ) ) {
+			return false;
+		}
+
+		$user_caps = isset( $wp_roles->roles[ $user_role ]['capabilities'] ) && is_array( $wp_roles->roles[ $user_role ]['capabilities'] )
+			? $wp_roles->roles[ $user_role ]['capabilities']
+			: array();
+		$default_caps = isset( $wp_roles->roles[ $default_role ]['capabilities'] ) && is_array( $wp_roles->roles[ $default_role ]['capabilities'] )
+			? $wp_roles->roles[ $default_role ]['capabilities']
+			: array();
+
+		foreach ( $user_caps as $capability => $granted ) {
+			if ( empty( $granted ) ) {
+				continue;
+			}
+
+			if ( empty( $default_caps[ $capability ] ) ) {
+				return false;
 			}
 		}
 
-		return false;
+		return true;
 	}
 
 	public function pm_admin_notification_message_html( $post, $gid, $fields, $exclude = array() ) {

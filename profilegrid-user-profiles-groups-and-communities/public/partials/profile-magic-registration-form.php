@@ -74,7 +74,7 @@ if ($rmformid != 0 && class_exists('Registration_Magic')) {
     
     // Check if form was submitted
     if (isset($post_obj['reg_form_submit']) || isset($post_obj['pm_payment_method'])) {
-        $errors = '';
+        $errors = array();
         $registration_nonce = isset($post_obj['pm_registration_nonce']) ? sanitize_text_field($post_obj['pm_registration_nonce']) : '';
 
         if (!wp_verify_nonce($registration_nonce, 'pm_registration_action')) {
