@@ -390,27 +390,29 @@ class Profile_Magic_Rest_API {
 	 * @return bool|WP_Error
 	 */
 	protected function verify_application_password( $user, $application_pass ) {
-		// Method 1: Use wp_authenticate_application_password (WordPress 5.6+)
-		if ( function_exists( 'wp_authenticate_application_password' ) ) {
-			$authenticated_user = wp_authenticate_application_password( null, $user->user_login, $application_pass );
-			return ! is_wp_error( $authenticated_user ) && $authenticated_user->ID === $user->ID;
-		}
-
-		// Method 2: Use WP_Application_Passwords class directly (WordPress 5.6+)
 		if ( class_exists( 'WP_Application_Passwords' ) ) {
-			// Check if application password exists and is valid for this user
-			$passwords = WP_Application_Passwords::get_user_application_passwords( $user->ID );
-			if ( ! empty( $passwords ) ) {
+			/*
+			 * Core accepts application passwords with or without visual spacing.
+			 * Normalize the submitted password to the same alphanumeric form that
+			 * WordPress uses before comparing it against stored password hashes.
+			 */
+			$application_pass = preg_replace( '/[^a-z\\d]/i', '', (string) $application_pass );
+			$passwords        = WP_Application_Passwords::get_user_application_passwords( $user->ID );
+
+			if ( ! empty( $passwords ) && is_array( $passwords ) ) {
 				foreach ( $passwords as $password ) {
-					if ( WP_Application_Passwords::chunk_password( $application_pass ) === $password['password'] ) {
+					if ( empty( $password['password'] ) ) {
+						continue;
+					}
+
+					if ( WP_Application_Passwords::check_password( $application_pass, $password['password'] ) ) {
 						return true;
 					}
 				}
 			}
-			return false;
 		}
 
-		// Method 3: Fallback for older WordPress versions or if Application Passwords not available.
+		// Fallback for older WordPress versions or if Application Passwords not available.
 		// This path must remain application-password-only (never validate regular account password).
 		return $this->fallback_password_verification( $user, $application_pass );
 	}
@@ -2147,6 +2149,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function activate_user_account_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_user_account_action( 'activate_user_account' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$params  = $this->get_request_payload( $request );
 		$user_id = isset( $params['user_id'] ) ? (int) $params['user_id'] : (int) $request->get_param( 'user_id' );
 
@@ -2187,6 +2194,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function deactivate_user_account_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_user_account_action( 'deactivate_user_account' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$params  = $this->get_request_payload( $request );
 		$user_id = isset( $params['user_id'] ) ? (int) $params['user_id'] : (int) $request->get_param( 'user_id' );
 
@@ -2228,6 +2240,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function activate_all_user_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_user_account_action( 'activate_all_user' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$enabled = $this->assert_api_enabled();
 		if ( is_wp_error( $enabled ) ) {
 			return $enabled;
@@ -2301,6 +2318,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function deactivate_all_user_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_user_account_action( 'deactivate_all_user' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$enabled = $this->assert_api_enabled();
 		if ( is_wp_error( $enabled ) ) {
 			return $enabled;
@@ -3877,6 +3899,10 @@ class Profile_Magic_Rest_API {
 			$defaults[ $action ] = array( 'administrator', 'editor', 'author' );
 		}
 
+		foreach ( $this->get_high_risk_user_account_actions() as $action ) {
+			$defaults[ $action ] = array( 'administrator' );
+		}
+
 		return $defaults;
 	}
 
@@ -3942,8 +3968,8 @@ class Profile_Magic_Rest_API {
 		}
 
 		/*
-		 * Legacy builds used editor+author defaults.
-		 * Upgrade that exact legacy map to include administrator by default.
+		 * Legacy/default builds used permissive role maps for all actions.
+		 * Upgrade those exact shipped defaults to the current hardened defaults.
 		 */
 		if ( $this->is_legacy_endpoint_permissions_default_map( $saved ) ) {
 			update_option( $this->endpoint_permissions_option_name, $defaults );
@@ -3965,9 +3991,12 @@ class Profile_Magic_Rest_API {
 			return false;
 		}
 
-		$legacy_roles = array( 'author', 'editor' );
-		$actions      = $this->get_permission_actions();
-		$has_match    = false;
+		$legacy_maps = array(
+			array( 'author', 'editor' ),
+			array( 'administrator', 'author', 'editor' ),
+		);
+		$actions     = $this->get_permission_actions();
+		$has_match   = false;
 
 		foreach ( $actions as $action ) {
 			if ( ! array_key_exists( $action, $permissions ) ) {
@@ -3978,7 +4007,7 @@ class Profile_Magic_Rest_API {
 			$action_roles = array_values( array_unique( $action_roles ) );
 			sort( $action_roles );
 
-			if ( $action_roles !== $legacy_roles ) {
+			if ( ! in_array( $action_roles, $legacy_maps, true ) ) {
 				return false;
 			}
 
@@ -3986,6 +4015,54 @@ class Profile_Magic_Rest_API {
 		}
 
 		return $has_match;
+	}
+
+	/**
+	 * Returns high-risk account-state actions that must remain administrator-only.
+	 *
+	 * @return array
+	 */
+	protected function get_high_risk_user_account_actions() {
+		return array(
+			'activate_user_account',
+			'deactivate_user_account',
+			'activate_all_user',
+			'deactivate_all_user',
+		);
+	}
+
+	/**
+	 * Enforces administrator-only access for high-risk account-state actions.
+	 *
+	 * @param string $action Action name being executed.
+	 *
+	 * @return true|WP_Error
+	 */
+	protected function enforce_admin_only_user_account_action( $action ) {
+		$action = sanitize_key( $action );
+
+		if ( ! in_array( $action, $this->get_high_risk_user_account_actions(), true ) ) {
+			return true;
+		}
+
+		if ( ! $this->current_user instanceof WP_User ) {
+			return new WP_Error(
+				'pg_rest_forbidden_action',
+				__( 'This action requires an administrator account.', 'profilegrid-user-profiles-groups-and-communities' ),
+				array( 'status' => rest_authorization_required_code() )
+			);
+		}
+
+		$user_roles = $this->get_user_authorization_roles( $this->current_user );
+		if ( in_array( 'administrator', $user_roles, true ) ) {
+			return true;
+		}
+
+		return new WP_Error(
+			'pg_rest_forbidden_action',
+			__( 'This action requires an administrator account.', 'profilegrid-user-profiles-groups-and-communities' ),
+			array( 'status' => rest_authorization_required_code() )
+		);
 	}
 
 	/**

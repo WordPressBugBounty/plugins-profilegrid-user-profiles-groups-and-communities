@@ -81,9 +81,6 @@ if ($rmformid != 0 && class_exists('Registration_Magic')) {
             $errors[] = esc_html__('Failed security check', 'profilegrid-user-profiles-groups-and-communities');
         }
 
-        if (!is_user_logged_in() && !$pmrequests->pg_is_group_open_for_frontend_registration($gid)) {
-            $errors[] = esc_html__('This group is not available for public registration.', 'profilegrid-user-profiles-groups-and-communities');
-        }
         
         // CAPTCHA validation
         if ($pmrequests->profile_magic_show_captcha('pm_enable_recaptcha_in_reg')) {
