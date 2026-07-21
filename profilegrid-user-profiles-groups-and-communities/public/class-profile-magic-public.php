@@ -3664,9 +3664,43 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_get_all_users_from_group() {
-		 $pmrequest   = new PM_request();
+		$view = filter_input( INPUT_POST, 'view' );
+		$gid  = trim( (string) filter_input( INPUT_POST, 'gid' ) );
+
+		if ( 'grid' === $view && $this->pg_can_publicly_view_group_members( $gid ) ) {
+			$pmrequest = new PM_request();
+			$dbhandler = new PM_DBhandler();
+			$search_in = filter_input( INPUT_POST, 'search_in' );
+			$sort_by   = filter_input( INPUT_POST, 'sortby' );
+			$search    = filter_input( INPUT_POST, 'search' );
+			$pagenum   = filter_input( INPUT_POST, 'pagenum' );
+			$limit     = filter_input( INPUT_POST, 'limit' );
+			if ( ! isset( $limit ) || empty( $limit ) ) {
+				$limit = $dbhandler->get_global_option_value( 'pm_number_of_users_on_group_page', '10' );
+			}
+			$current_user = wp_get_current_user();
+			if ( is_user_logged_in() && ! empty( $current_user->ID ) ) {
+				update_user_meta( $current_user->ID, 'pg_member_sort_limit', $limit );
+			}
+			$pmrequest->pm_get_all_users_from_group_grid_view( $gid, $pagenum, $limit, $sort_by, $search_in, $search, $this->profile_magic, $this->version );
+			echo '<script>pg_primary_ajustment_during_ajax();</script>';
+			die;
+		}
+
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( esc_html__( 'Authentication required', 'profilegrid-user-profiles-groups-and-communities' ) );
+			return;
+		}
+
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+		if ( ! wp_verify_nonce( $nonce, 'ajax-nonce' ) ) {
+			wp_send_json_error( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
+			return;
+		}
+
+		$pmrequest   = new PM_request();
 		$dbhandler    = new PM_DBhandler();
-		$gid          = filter_input( INPUT_POST, 'gid' );
+		$gid          = trim( (string) filter_input( INPUT_POST, 'gid' ) );
 		$search_in    = filter_input( INPUT_POST, 'search_in' );
 		$sort_by      = filter_input( INPUT_POST, 'sortby' );
 		$search       = filter_input( INPUT_POST, 'search' );
@@ -3677,7 +3711,13 @@ if ( isset( $_POST['tid'] ) ) {
                     $limit        = $dbhandler->get_global_option_value( 'pm_number_of_users_on_group_page', '10' ); // number of rows in page
                 }
 		$current_user = wp_get_current_user();
-		$view         = filter_input( INPUT_POST, 'view' );
+		$current_user_id = get_current_user_id();
+		$basic_function  = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+		if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) && ! $basic_function->pm_user_is_group_manager( $current_user_id, $gid ) ) {
+			wp_send_json_error( esc_html__( 'Insufficient permissions', 'profilegrid-user-profiles-groups-and-communities' ) );
+			return;
+		}
+
 		if ( is_user_logged_in() && ! empty( $current_user->ID ) ) {
 			update_user_meta( $current_user->ID, 'pg_member_sort_limit', $limit );
 		}
@@ -4001,14 +4041,54 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_get_all_requests_from_group() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( esc_html__( 'Authentication required', 'profilegrid-user-profiles-groups-and-communities' ) );
+			return;
+		}
+
+		$nonce = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+		if ( ! empty( $nonce ) && wp_verify_nonce( $nonce, 'approve_pm_join_request' ) ) {
+		} elseif ( ! empty( $nonce ) && wp_verify_nonce( $nonce, 'decline_pm_join_request' ) ) {
+		} else {
+			check_ajax_referer( 'ajax-nonce', 'nonce', true );
+		}
+
 		$pmrequests = new PM_request();
-		$gid        = filter_input( INPUT_POST, 'gid' );
+		$gid        = trim( (string) filter_input( INPUT_POST, 'gid' ) );
 		$sort_by    = filter_input( INPUT_POST, 'sortby' );
 		$search     = filter_input( INPUT_POST, 'search' );
 		$pagenum    = filter_input( INPUT_POST, 'pagenum' );
+		$current_user_id = get_current_user_id();
+		$basic_function  = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
+		if ( ! current_user_can( 'manage_options' ) && ! is_super_admin( $current_user_id ) && ! $basic_function->pm_user_is_group_manager( $current_user_id, $gid ) ) {
+			wp_send_json_error( esc_html__( 'Insufficient permissions', 'profilegrid-user-profiles-groups-and-communities' ) );
+			return;
+		}
 
 		echo wp_kses_post( $pmrequests->pm_get_all_join_group_requests( $gid, $pagenum, $limit = 10, $sort_by, $search ) );
 		die;
+	}
+
+	private function pg_can_publicly_view_group_members( $gid ) {
+		$gid = absint( $gid );
+		if ( $gid <= 0 ) {
+			return false;
+		}
+
+		$dbhandler  = new PM_DBhandler();
+		$pmrequests = new PM_request();
+		$group      = $dbhandler->get_row( 'GROUPS', $gid );
+
+		if ( empty( $group ) ) {
+			return false;
+		}
+
+		if ( '1' !== (string) $dbhandler->get_global_option_value( 'pm_show_group_members_tab', '1' ) ) {
+			return false;
+		}
+
+
+		return true;
 	}
 
 	public function user_online_status() {

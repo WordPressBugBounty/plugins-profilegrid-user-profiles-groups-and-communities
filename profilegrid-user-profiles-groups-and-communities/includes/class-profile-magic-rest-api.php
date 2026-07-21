@@ -548,12 +548,9 @@ class Profile_Magic_Rest_API {
 			return $enabled;
 		}
 
-		if ( ! $this->current_user || ! $this->user_has_access( $this->current_user ) ) {
-			return new WP_Error(
-				'pg_rest_forbidden',
-				__( 'You are not allowed to create groups.', 'profilegrid-user-profiles-groups-and-communities' ),
-				array( 'status' => rest_authorization_required_code() )
-			);
+		$authorization = $this->enforce_admin_only_action( 'create_group' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
 		}
 
 		$params     = $this->get_request_payload( $request );
@@ -665,12 +662,9 @@ class Profile_Magic_Rest_API {
 			return $enabled;
 		}
 
-		if ( ! $this->current_user || ! $this->user_has_access( $this->current_user ) ) {
-			return new WP_Error(
-				'pg_rest_forbidden',
-				__( 'You are not allowed to manage sections.', 'profilegrid-user-profiles-groups-and-communities' ),
-				array( 'status' => rest_authorization_required_code() )
-			);
+		$authorization = $this->enforce_admin_only_action( 'create_group_section' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
 		}
 
 		$params   = $this->get_request_payload( $request );
@@ -824,6 +818,11 @@ class Profile_Magic_Rest_API {
 			return $enabled;
 		}
 
+		$authorization = $this->enforce_admin_only_action( 'update_group_section' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$params     = $this->get_request_payload( $request );
 		$group_id   = isset( $params['group_id'] ) ? (int) $params['group_id'] : (int) $request->get_param( 'group_id' );
 		$section_id = isset( $params['section_id'] ) ? (int) $params['section_id'] : (int) $request->get_param( 'section_id' );
@@ -936,6 +935,11 @@ class Profile_Magic_Rest_API {
 			return $enabled;
 		}
 
+		$authorization = $this->enforce_admin_only_action( 'delete_section' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$params     = $this->get_request_payload( $request );
 		$group_id   = isset( $params['group_id'] ) ? (int) $params['group_id'] : (int) $request->get_param( 'group_id' );
 		$section_id = isset( $params['section_id'] ) ? (int) $params['section_id'] : (int) $request->get_param( 'section_id' );
@@ -1017,12 +1021,9 @@ class Profile_Magic_Rest_API {
 			return $enabled;
 		}
 
-		if ( ! $this->current_user || ! $this->user_has_access( $this->current_user ) ) {
-			return new WP_Error(
-				'pg_rest_forbidden',
-				__( 'You are not allowed to manage fields.', 'profilegrid-user-profiles-groups-and-communities' ),
-				array( 'status' => rest_authorization_required_code() )
-			);
+		$authorization = $this->enforce_admin_only_action( 'create_group_field' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
 		}
 
 		$params     = $this->get_request_payload( $request );
@@ -1198,6 +1199,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function get_group_members_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_action( 'get_group_members' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$gid = (int) $request->get_param( 'group_id' );
 
 		if ( $gid <= 0 ) {
@@ -1301,6 +1307,11 @@ class Profile_Magic_Rest_API {
 			return $enabled;
 		}
 
+		$authorization = $this->enforce_admin_only_action( 'get_users' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$page    = max( 1, (int) $request->get_param( 'page' ) );
 		$search  = $request->get_param( 'search' );
 		$role    = $request->get_param( 'role' );
@@ -1391,6 +1402,11 @@ class Profile_Magic_Rest_API {
 			return $enabled;
 		}
 
+		$authorization = $this->enforce_admin_only_action( 'get_user_details' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$user_id = (int) $request->get_param( 'user_id' );
 
 		if ( $user_id <= 0 ) {
@@ -1455,6 +1471,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function add_group_members_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_action( 'add_group_members' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$params      = $this->get_request_payload( $request );
 		$gid         = isset( $params['group_id'] ) ? (int) $params['group_id'] : (int) $request->get_param( 'group_id' );
 		$user_ids    = isset( $params['user_ids'] ) ? $this->normalize_id_list( $params['user_ids'] ) : array();
@@ -1551,6 +1572,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function remove_group_member_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_action( 'remove_group_member' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$params = $this->get_request_payload( $request );
 		$gid    = isset( $params['group_id'] ) ? (int) $params['group_id'] : (int) $request->get_param( 'group_id' );
 		$uid    = isset( $params['user_id'] ) ? (int) $params['user_id'] : (int) $request->get_param( 'user_id' );
@@ -1590,6 +1616,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function update_group_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_action( 'update_group' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$params = $this->get_request_payload( $request );
 		$gid    = isset( $params['group_id'] ) ? (int) $params['group_id'] : (int) $request->get_param( 'group_id' );
 
@@ -1644,6 +1675,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function delete_group_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_action( 'delete_group' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$params = $this->get_request_payload( $request );
 		$gid    = isset( $params['group_id'] ) ? (int) $params['group_id'] : (int) $request->get_param( 'group_id' );
 		$force  = isset( $params['force'] ) ? $this->normalize_boolean_flag( $params['force'] ) : $this->normalize_boolean_flag( $request->get_param( 'force' ) );
@@ -1714,6 +1750,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function get_membership_requests_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_action( 'get_membership_requests' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$page    = max( 1, (int) $request->get_param( 'page' ) );
 		$raw_per = $request->get_param( 'per_page' );
 
@@ -1836,6 +1877,11 @@ class Profile_Magic_Rest_API {
 			);
 		}
 
+		$authorization = $this->enforce_admin_or_self_action( 'create_membership_request', $uid );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$pm_request = $this->get_request_helper();
 		if ( $pm_request->profile_magic_check_is_group_member( $gid, $uid ) ) {
 			return new WP_Error(
@@ -1904,6 +1950,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function approve_membership_request_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_action( 'approve_membership_request' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$request_id = (int) $request->get_param( 'request_id' );
 		if ( $request_id <= 0 ) {
 			return new WP_Error(
@@ -1967,6 +2018,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function deny_membership_request_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_action( 'deny_membership_request' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$request_id = (int) $request->get_param( 'request_id' );
 		$reason     = $request->get_param( 'reason' );
 
@@ -2017,6 +2073,11 @@ class Profile_Magic_Rest_API {
 		$enabled = $this->assert_api_enabled();
 		if ( is_wp_error( $enabled ) ) {
 			return $enabled;
+		}
+
+		$authorization = $this->enforce_admin_only_action( 'bulk_deny_all_membership_requests' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
 		}
 
 		$params   = $this->get_request_payload( $request );
@@ -2085,6 +2146,11 @@ class Profile_Magic_Rest_API {
 		$enabled = $this->assert_api_enabled();
 		if ( is_wp_error( $enabled ) ) {
 			return $enabled;
+		}
+
+		$authorization = $this->enforce_admin_only_action( 'bulk_approve_all_membership_requests' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
 		}
 
 		$params   = $this->get_request_payload( $request );
@@ -2397,6 +2463,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function assign_group_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_action( 'assign_group' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$params  = $this->get_request_payload( $request );
 		$gid     = isset( $params['group_id'] ) ? (int) $params['group_id'] : (int) $request->get_param( 'group_id' );
 		$user_id = isset( $params['user_id'] ) ? (int) $params['user_id'] : (int) $request->get_param( 'user_id' );
@@ -2462,6 +2533,11 @@ class Profile_Magic_Rest_API {
 				__( 'User not found.', 'profilegrid-user-profiles-groups-and-communities' ),
 				array( 'status' => 404 )
 			);
+		}
+
+		$authorization = $this->enforce_admin_or_self_action( 'update_user_profile', $user_id );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
 		}
 
 		$raw_fields = isset( $params['fields'] ) ? $params['fields'] : array();
@@ -2538,6 +2614,11 @@ class Profile_Magic_Rest_API {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function remove_from_group_endpoint( WP_REST_Request $request ) {
+		$authorization = $this->enforce_admin_only_action( 'remove_from_group' );
+		if ( is_wp_error( $authorization ) ) {
+			return $authorization;
+		}
+
 		$params  = $this->get_request_payload( $request );
 		$gid     = isset( $params['group_id'] ) ? (int) $params['group_id'] : (int) $request->get_param( 'group_id' );
 		$user_id = isset( $params['user_id'] ) ? (int) $params['user_id'] : (int) $request->get_param( 'user_id' );
@@ -3861,12 +3942,12 @@ class Profile_Magic_Rest_API {
 			'get_single_group'                   => 'Low',
 			'get_group_section'                    => 'Low',
 			'create_membership_request'            => 'Medium',
-			'get_users'                            => 'Medium',
-			'get_user_details'                     => 'Medium',
-			'get_group_members'                    => 'Medium',
-			'get_membership_requests'              => 'Medium',
+			'get_users'                            => 'High',
+			'get_user_details'                     => 'High',
+			'get_group_members'                    => 'High',
+			'get_membership_requests'              => 'High',
 			'create_group'                         => 'High',
-			'update_user_profile'                  => 'High',
+			'update_user_profile'                  => 'Medium',
 			'activate_user_account'                => 'High',
 			'deactivate_user_account'              => 'High',
 			'activate_all_user'                    => 'High',
@@ -3899,7 +3980,7 @@ class Profile_Magic_Rest_API {
 			$defaults[ $action ] = array( 'administrator', 'editor', 'author' );
 		}
 
-		foreach ( $this->get_high_risk_user_account_actions() as $action ) {
+		foreach ( $this->get_high_risk_actions() as $action ) {
 			$defaults[ $action ] = array( 'administrator' );
 		}
 
@@ -4032,6 +4113,89 @@ class Profile_Magic_Rest_API {
 	}
 
 	/**
+	 * Returns all high-risk integration actions.
+	 *
+	 * @return array
+	 */
+	protected function get_high_risk_actions() {
+		$high_risk_actions = array();
+
+		foreach ( $this->get_permission_risk_map() as $action => $risk ) {
+			if ( 'High' === $risk ) {
+				$high_risk_actions[] = $action;
+			}
+		}
+
+		return $high_risk_actions;
+	}
+
+	/**
+	 * Checks whether the authenticated REST user is an administrator-equivalent user.
+	 *
+	 * @return bool
+	 */
+	protected function current_user_is_administrator() {
+		if ( ! $this->current_user instanceof WP_User ) {
+			return false;
+		}
+
+		if ( is_multisite() && is_super_admin( $this->current_user->ID ) ) {
+			return true;
+		}
+
+		$user_roles = $this->get_user_authorization_roles( $this->current_user );
+
+		return in_array( 'administrator', $user_roles, true );
+	}
+
+	/**
+	 * Enforces administrator-only access for a REST action.
+	 *
+	 * @param string $action Action name being executed.
+	 *
+	 * @return true|WP_Error
+	 */
+	protected function enforce_admin_only_action( $action ) {
+		$action = sanitize_key( $action );
+
+		if ( empty( $action ) ) {
+			return new WP_Error(
+				'pg_rest_forbidden_action',
+				__( 'This action requires an administrator account.', 'profilegrid-user-profiles-groups-and-communities' ),
+				array( 'status' => rest_authorization_required_code() )
+			);
+		}
+
+		if ( $this->current_user_is_administrator() ) {
+			return true;
+		}
+
+		return new WP_Error(
+			'pg_rest_forbidden_action',
+			__( 'This action requires an administrator account.', 'profilegrid-user-profiles-groups-and-communities' ),
+			array( 'status' => rest_authorization_required_code() )
+		);
+	}
+
+	/**
+	 * Enforces self-or-administrator access for user-targeted actions.
+	 *
+	 * @param string $action  Action name being executed.
+	 * @param int    $user_id Target user ID.
+	 *
+	 * @return true|WP_Error
+	 */
+	protected function enforce_admin_or_self_action( $action, $user_id ) {
+		$user_id = (int) $user_id;
+
+		if ( $user_id > 0 && $this->current_user instanceof WP_User && (int) $this->current_user->ID === $user_id ) {
+			return true;
+		}
+
+		return $this->enforce_admin_only_action( $action );
+	}
+
+	/**
 	 * Enforces administrator-only access for high-risk account-state actions.
 	 *
 	 * @param string $action Action name being executed.
@@ -4045,24 +4209,7 @@ class Profile_Magic_Rest_API {
 			return true;
 		}
 
-		if ( ! $this->current_user instanceof WP_User ) {
-			return new WP_Error(
-				'pg_rest_forbidden_action',
-				__( 'This action requires an administrator account.', 'profilegrid-user-profiles-groups-and-communities' ),
-				array( 'status' => rest_authorization_required_code() )
-			);
-		}
-
-		$user_roles = $this->get_user_authorization_roles( $this->current_user );
-		if ( in_array( 'administrator', $user_roles, true ) ) {
-			return true;
-		}
-
-		return new WP_Error(
-			'pg_rest_forbidden_action',
-			__( 'This action requires an administrator account.', 'profilegrid-user-profiles-groups-and-communities' ),
-			array( 'status' => rest_authorization_required_code() )
-		);
+		return $this->enforce_admin_only_action( $action );
 	}
 
 	/**

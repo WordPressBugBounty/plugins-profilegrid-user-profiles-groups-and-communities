@@ -500,7 +500,7 @@ function pm_get_all_users_from_group(pagenum)
     var search = jQuery('#member_search').val();
     //var limit = jQuery('#pg_member_sort_limit').val();
     var limit = '10';
-    var data = {action: 'pm_get_all_users_from_group',gid:gid,sortby:sortby,search_in:search_in,search:search,pagenum:pagenum,limit:limit};
+    var data = {action: 'pm_get_all_users_from_group',gid:gid,sortby:sortby,search_in:search_in,search:search,pagenum:pagenum,limit:limit,nonce: pm_ajax_object.nonce};
     jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         jQuery('#pm-edit-group-member-html-container').html(response);
         var pmDomColor = jQuery(".pmagic").find("a").css('color');
@@ -522,7 +522,7 @@ function pm_get_all_users_from_group_advanced_group(pagenum)
         limit = '10';
     }
     
-    var data = {action: 'pm_get_all_users_from_group',gid:gid,sortby:sortby,search_in:search_in,search:search,pagenum:pagenum,limit:limit};
+    var data = {action: 'pm_get_all_users_from_group',gid:gid,sortby:sortby,search_in:search_in,search:search,pagenum:pagenum,limit:limit,nonce: pm_ajax_object.nonce};
     jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         jQuery('#pm-edit-group-member-html-container').html(response);
         var pmDomColor = jQuery(".pmagic").find("a").css('color');
@@ -544,7 +544,7 @@ function pm_get_all_users_from_group_grid_view(pagenum,view)
     var pmDomColor = jQuery(".pmagic").find("a").css('color');
     jQuery(".pm-loader").css('border-top-color', pmDomColor);
     
-    var data = {action: 'pm_get_all_users_from_group',gid:gid,sortby:sortby,search_in:search_in,search:search,pagenum:pagenum,limit:limit,view:view};
+    var data = {action: 'pm_get_all_users_from_group',gid:gid,sortby:sortby,search_in:search_in,search:search,pagenum:pagenum,limit:limit,view:view,nonce: pm_ajax_object.nonce};
     jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         jQuery('#pg_members_grid_view').html(response);
         pg_primary_ajustment_during_ajax();
@@ -799,7 +799,7 @@ function pm_get_all_requests_from_group(pagenum)
     var gid = jQuery('#pg-groupid').val();
     var sortby = jQuery('#request_sort_by').find(":selected").val();
     var search = jQuery('#request_search').val();
-    var data = {action: 'pm_get_all_requests_from_group',gid:gid,sortby:sortby,search:search,pagenum:pagenum};
+    var data = {action: 'pm_get_all_requests_from_group',gid:gid,sortby:sortby,search:search,pagenum:pagenum,nonce: pm_ajax_object.nonce};
     jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
         jQuery('#pm-edit-group-request-html-container').html(response);
         var pmDomColor = jQuery(".pmagic").find("a").css('color');

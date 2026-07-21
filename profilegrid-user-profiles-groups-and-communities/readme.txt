@@ -5,7 +5,7 @@ Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 5.9.9.9
+Stable tag: 6.0.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -664,6 +664,12 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 6.0.0.0: July 21, 2026 =
+* Fixed: Hardened ProfileGrid REST API authorization for high-risk user, group, and membership actions.
+* Fixed: Prevented unauthorized REST access to user, group member, and membership request data.
+* Fixed: Secured group member and join-request AJAX roster endpoints reported by Meher Sudhakar Abbireddi.
+* Improved: Preserved public group member grid functionality while restricting sensitive management roster access.
 
 = 5.9.9.9: July 15, 2026 =
 * Added: Security improvements.
@@ -1622,6 +1628,12 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 6.0.0.0: July 21, 2026 =
+* Fixed: Hardened ProfileGrid REST API authorization for high-risk user, group, and membership actions.
+* Fixed: Prevented unauthorized REST access to user, group member, and membership request data.
+* Fixed: Secured group member and join-request AJAX roster endpoints reported by Meher Sudhakar Abbireddi.
+* Improved: Preserved public group member grid functionality while restricting sensitive management roster access.
 
 = 5.9.9.9: July 15, 2026 =
 * Added: Security improvements.
