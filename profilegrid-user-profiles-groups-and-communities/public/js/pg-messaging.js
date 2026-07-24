@@ -412,7 +412,7 @@ function pg_msg_run_notification_poll() {
 function pm_messenger_notification_extra_data(x){
   //console.log(x);
     //console.log("extra data working");
-    var data = {'action': 'pm_messenger_notification_extra_data', 'ts': Date.now()};
+    var data = {'action': 'pm_messenger_notification_extra_data', 'ts': Date.now(), 'nonce': pg_msg_object.nonce};
 
     return jQuery.get(pg_msg_object.ajax_url, data, function (response)
     {
@@ -501,7 +501,7 @@ jQuery("#receipent_field").autocomplete({
                     }
 
                     var name = jQuery("#receipent_field").val();
-                    var data = {'action': 'pm_autocomplete_user_search', 'name': name};
+                    var data = {'action': 'pm_autocomplete_user_search', 'name': name, 'nonce': pg_msg_object.nonce};
                     autocomplete_request = jQuery.post(pg_msg_object.ajax_url, data, function (resp) {
                             if(resp) 
                             {
@@ -837,7 +837,7 @@ function pg_show_msg_panel(uid,rid,tid)
 
 function pg_activate_new_thread(uid)
 {
-    var data = {action:'pm_activate_new_thread',uid: uid};
+    var data = {action:'pm_activate_new_thread',uid: uid,nonce: pg_msg_object.nonce};
     jQuery.post(pg_msg_object.ajax_url, data, function (resp) 
     {
         //console.log(resp.tid);
@@ -850,7 +850,7 @@ function pg_activate_new_thread(uid)
 
 function pg_activate_last_thread()
 {
-    var data = {action:'pm_activate_last_thread'};
+    var data = {action:'pm_activate_last_thread',nonce: pg_msg_object.nonce};
     jQuery.post(pg_msg_object.ajax_url, data, function (resp) 
     {
         //console.log(resp.tid);
@@ -865,7 +865,7 @@ function pg_activate_last_thread()
 
 function pg_show_all_threads(tid)
 {
-     var data = {action: 'pg_show_all_threads',tid:tid};
+     var data = {action: 'pg_show_all_threads',tid:tid,nonce: pg_msg_object.nonce};
     jQuery.post(pg_msg_object.ajax_url, data, function (resp) {
         jQuery('.pg-msg-list-wrap').html(resp);
         var pmDomColor = jQuery(".pmagic").find("a").css('color');
@@ -879,7 +879,7 @@ function pg_show_all_threads(tid)
 function pg_search_threads(search)
 {
     
-     var data = {action: 'pg_search_threads',search:search};
+     var data = {action: 'pg_search_threads',search:search,nonce: pg_msg_object.nonce};
     jQuery.post(pg_msg_object.ajax_url, data, function (resp) {
         jQuery('.pg-msg-list-wrap').html(resp);
         var pmDomColor = jQuery(".pmagic").find("a").css('color');
@@ -969,7 +969,7 @@ function pg_msg_delete_thread_confirmbox(tid,uid,mid)
         jQuery(".pm-loader").css('border-top-color', pmDomColor);
        
     jQuery('#pm-edit-group-popup, .pm-popup-mask, .pg-blog-dialog-mask').toggle();
-    var data = {action: 'pm_messenger_delete_threads_popup', 'tid':tid,'uid':uid,'mid':mid};
+    var data = {action: 'pm_messenger_delete_threads_popup', 'tid':tid,'uid':uid,'mid':mid,'nonce': pg_msg_object.nonce};
     jQuery.post(pg_msg_object.ajax_url, data, function (response) {
        if(response)
         {
@@ -1000,7 +1000,7 @@ function pg_msg_read_messages(e,tid)
 
 function pg_msg_unread_messages(e,tid)
 {
-    var data = {action: 'pm_messages_mark_as_unread', tid: tid};
+    var data = {action: 'pm_messages_mark_as_unread', tid: tid, nonce: pg_msg_object.nonce};
     jQuery.post(pg_msg_object.ajax_url, data, function (result) {
         if(result)
         {

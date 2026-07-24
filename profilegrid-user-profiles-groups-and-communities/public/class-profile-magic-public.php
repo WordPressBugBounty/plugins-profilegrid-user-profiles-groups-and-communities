@@ -1138,15 +1138,41 @@ class Profile_Magic_Public {
 	}
 
 	public function pm_update_user_profile() {
-            $pm_sanitizer = new PM_sanitizer;
-            $nonce = filter_input( INPUT_POST, 'nonce' );
-            if ( !isset( $nonce ) || ! wp_verify_nonce( wp_unslash($nonce), 'ajax-nonce' ) ) {
-                die(esc_html__('Failed security check','profilegrid-user-profiles-groups-and-communities') );
-            }
-            $post = $pm_sanitizer->sanitize($_POST);
-            $update =  update_user_meta( $post['user_id'], $post['user_meta'], $post['user_meta_value'] );
-            echo esc_html($update);
-            die;
+		$pm_sanitizer = new PM_sanitizer;
+		$nonce        = filter_input( INPUT_POST, 'nonce' );
+		if ( ! isset( $nonce ) || ! wp_verify_nonce( wp_unslash( $nonce ), 'ajax-nonce' ) ) {
+			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
+		}
+
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		$post            = $pm_sanitizer->sanitize( $_POST );
+		$target_user_id  = isset( $post['user_id'] ) ? absint( $post['user_id'] ) : 0;
+		$current_user_id = get_current_user_id();
+		if ( $target_user_id <= 0 || ( $current_user_id !== $target_user_id && ! current_user_can( 'edit_user', $target_user_id ) ) ) {
+			wp_send_json_error( 'Unauthorized', 403 );
+		}
+
+		$allowed_meta_keys = array(
+			'first_name',
+			'last_name',
+			'description',
+			'pm_profile_privacy',
+			'pm_hide_my_profile',
+			'pm_user_avatar',
+			'pm_cover_image',
+		);
+		$meta_key          = isset( $post['user_meta'] ) ? sanitize_key( $post['user_meta'] ) : '';
+		if ( ! in_array( $meta_key, $allowed_meta_keys, true ) ) {
+			wp_send_json_error( 'Invalid field', 400 );
+		}
+
+		$meta_value = isset( $post['user_meta_value'] ) ? $post['user_meta_value'] : '';
+		$update     = update_user_meta( $target_user_id, $meta_key, $meta_value );
+		echo esc_html( $update );
+		die;
 	}
 
 	public function pm_send_change_password_email() {
@@ -1161,6 +1187,14 @@ class Profile_Magic_Public {
 	}
 
 	public function pm_send_change_pass_email() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		$current_user = wp_get_current_user();
 		$userid       = $current_user->ID;
 		$pmrequests   = new PM_request();
@@ -1474,10 +1508,18 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_messenger_notification_extra_data() {
-			$pmmessenger = new ProfileMagic_Chat();
-			$return      = $pmmessenger->pm_messenger_notification_extra_data();
-			echo wp_kses_post( $return );
-			die;
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
+		$pmmessenger = new ProfileMagic_Chat();
+		$return      = $pmmessenger->pm_messenger_notification_extra_data();
+		echo wp_kses_post( $return );
+		die;
 	}
 
 	public function pm_unread_message_summary() {
@@ -1509,6 +1551,14 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_autocomplete_user_search() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		$dbhandler          = new PM_DBhandler();
 		$pmrequests         = new PM_request();
 		$uid                = get_current_user_id();
@@ -2042,6 +2092,14 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_fetch_my_suggestion() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		$pmrequests    = new PM_request();
 		$dbhandler     = new PM_DBhandler();
 			$pmfriends = new PM_Friends_Functions();
@@ -2459,6 +2517,14 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_auto_logout_user() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		 $dbhandler   = new PM_DBhandler();
 		$pmrequests   = new PM_request();
 		$redirect_url = '';
@@ -5092,6 +5158,14 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_activate_new_thread() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		$return      = array();
 		$pmrequests  = new PM_request();
 		$pmmessenger = new ProfileMagic_Chat();
@@ -5110,6 +5184,14 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_activate_last_thread() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		 $pmrequests = new PM_request();
 		$pmmessenger = new ProfileMagic_Chat();
 		$return      = array();
@@ -5140,6 +5222,14 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_get_active_thread_header() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		 $pmrequests = new PM_request();
 		$rid         = filter_input( INPUT_POST, 'uid', FILTER_VALIDATE_INT );
 		$profile_url = $pmrequests->pm_get_user_profile_url( $rid );
@@ -5179,8 +5269,20 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pm_messages_mark_as_unread() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		$pmrequests = new PM_request();
-		$tid        = filter_input( INPUT_POST, 'tid', FILTER_VALIDATE_INT );
+		$tid        = absint( filter_input( INPUT_POST, 'tid', FILTER_VALIDATE_INT ) );
+		$thread     = $this->pg_get_authorized_thread( $tid, get_current_user_id() );
+		if ( false === $thread ) {
+			wp_send_json_error( 'Unauthorized', 403 );
+		}
 		$messages   = $pmrequests->update_message_status_to_unread( $tid );
 		if ( ! empty( $messages ) ) {
 			echo 'success';
@@ -5190,16 +5292,35 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pg_show_all_threads() {
-		$tid        = filter_input( INPUT_POST, 'tid', FILTER_VALIDATE_INT );
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
+		$tid        = absint( filter_input( INPUT_POST, 'tid', FILTER_VALIDATE_INT ) );
 		$pmmessenger = new ProfileMagic_Chat();
                 $pmrequests = new PM_request();
                 $allowed_html = $pmrequests->pg_allowed_html_wp_kses();
+		if ( $tid > 0 && false === $this->pg_get_authorized_thread( $tid, get_current_user_id() ) ) {
+			wp_send_json_error( 'Unauthorized', 403 );
+		}
 		$return      = $pmmessenger->pm_messenger_show_threads( $tid );
 		echo wp_kses( $return,$allowed_html );
 		die;
 	}
 
 	public function pg_search_threads() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		$search      = filter_input( INPUT_POST, 'search' );
                 if(!empty($search))
                 { 
@@ -6574,9 +6695,21 @@ if ( isset( $_POST['tid'] ) ) {
 	}
 
 	public function pg_msg_delete_thread_popup_html() {
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( 'Authentication required', 401 );
+		}
+
+		if ( ! check_ajax_referer( 'ajax-nonce', 'nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce', 403 );
+		}
+
 		 $uid  = filter_input( INPUT_POST, 'uid' );
 		$mid   = filter_input( INPUT_POST, 'mid' );
 		$tid   = filter_input( INPUT_POST, 'tid' );
+		$thread = $this->pg_get_authorized_thread( absint( $tid ), get_current_user_id() );
+		if ( false === $thread ) {
+			wp_send_json_error( 'Unauthorized', 403 );
+		}
 		$path  = plugins_url( 'partials/images/popup-close.png', __FILE__ );
 		$title = esc_html__( 'Confirm', 'profilegrid-user-profiles-groups-and-communities' );
 		?>

@@ -331,7 +331,8 @@ function pm_load_more_suggestion(uid,page,total_page)
 						'action': 'pm_fetch_my_suggestion',
 						'uid' : uid,
 						'pagenum' :page,
-						'pm_u_search':pm_u_search
+						'pm_u_search':pm_u_search,
+						'nonce': pm_ajax_object.nonce
 					};
 	jQuery('#pm_load_more_suggestion').hide();
 	jQuery('.pm-loader-img-suggestion').show();

@@ -341,7 +341,6 @@ class Profile_Magic {
 				$this->loader->add_action( 'wp_ajax_pm_upload_image', $plugin_public, 'pm_upload_image' );
 				$this->loader->add_action( 'wp_ajax_pm_upload_cover_image', $plugin_public, 'pm_upload_cover_image' );
 				$this->loader->add_action( 'wp_ajax_pm_send_change_pass_email', $plugin_public, 'pm_send_change_pass_email' );
-				$this->loader->add_action( 'wp_ajax_nopriv_pm_send_change_pass_email', $plugin_public, 'pm_send_change_pass_email' );
 				$this->loader->add_action( 'wp_ajax_pm_advance_user_search', $plugin_public, 'pm_advance_user_search' );
 				$this->loader->add_action( 'wp_ajax_nopriv_pm_advance_user_search', $plugin_public, 'pm_advance_user_search' );
 				$this->loader->add_action( 'wp_ajax_pm_advance_search_get_search_fields_by_gid', $plugin_public, 'pm_advance_search_get_search_fields_by_gid' );

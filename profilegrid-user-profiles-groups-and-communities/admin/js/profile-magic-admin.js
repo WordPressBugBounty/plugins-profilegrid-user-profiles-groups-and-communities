@@ -1060,7 +1060,8 @@ function pm_ajax_sections_dropdown(gid)
 {
 	  var data = {
 			'action': 'pm_section_dropdown',
-			'gid': gid
+			'gid': gid,
+			'nonce': pm_ajax_object.nonce
 	};
 	  // We can also pass the url value separately from ajaxurl for front end AJAX implementations
     jQuery.post(

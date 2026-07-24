@@ -1105,7 +1105,7 @@ function pm_advance_user_search(pagenum)
 
 function profile_magic_send_email(userid)
 {
-    var data = {'action': 'pm_send_change_pass_email','userid': userid};
+    var data = {'action': 'pm_send_change_pass_email','userid': userid,'nonce': pm_ajax_object.nonce};
 	// We can also pass the url value separately from ajaxurl for front end AJAX implementations
 		jQuery.post(pm_ajax_object.ajax_url, data, function(response) {
                     

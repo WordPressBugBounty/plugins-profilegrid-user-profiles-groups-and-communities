@@ -47,6 +47,10 @@ if(isset($request_obj["action"]) && $request_obj["action"]!='process')
 }
 if(isset($_POST['group_password_form_submit']))
 {
+    $retrieved_nonce = filter_input(INPUT_POST,'_wpnonce');
+    if ( ! wp_verify_nonce( $retrieved_nonce, 'pm_check_group_password_form' ) ) {
+        die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
+    }
     $upass = filter_input(INPUT_POST, 'pm_group_password');
     $cpassword = (isset($pmgroupoption['password']))?$pmgroupoption['password']:'';
     if($upass===$cpassword)

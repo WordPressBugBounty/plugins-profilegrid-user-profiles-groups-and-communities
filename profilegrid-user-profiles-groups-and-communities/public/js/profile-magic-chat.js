@@ -20,7 +20,7 @@ jQuery("#receipent_field").autocomplete({
                         name = name.substr(1);
                     }
 
-                    var data = {'action': 'pm_autocomplete_user_search', 'name': name};
+                    var data = {'action': 'pm_autocomplete_user_search', 'name': name, 'nonce': pm_chat_object.nonce};
                     autocomplete_request = jQuery.post(pm_chat_object.ajax_url, data, function (resp) {
                             if (resp) 
                             {
@@ -195,7 +195,7 @@ function get_active_thread_id() {
 
 function pg_activate_new_thread(uid)
 {
-    var data = {action:'pm_activate_new_thread',uid: uid};
+    var data = {action:'pm_activate_new_thread',uid: uid,nonce: pm_chat_object.nonce};
     jQuery.post(pm_chat_object.ajax_url, data, function (resp) 
     {
         console.log(resp.tid);
@@ -220,7 +220,7 @@ function show_thread_messages(tid,loadnum)
     //console.log("showing thread  message of tid : "+tid);
    var offset = new Date().getTimezoneOffset();
    //console.log("offset is "+offset);
-    var data = {'action': 'pm_messenger_show_messages', 'tid': tid,'loadnum': loadnum,'timezone':offset};
+    var data = {'action': 'pm_messenger_show_messages', 'tid': tid,'loadnum': loadnum,'timezone':offset,'nonce': pm_chat_object.nonce};
    console.log(data);
     jQuery.post(pm_chat_object.ajax_url, data, function (resp) {
        
@@ -276,7 +276,7 @@ function show_message_pane(tid,rid) {
 
 function pm_get_active_thread_header(uid)
 {
-    var data = {action: 'pm_get_active_thread_header', uid: uid};
+    var data = {action: 'pm_get_active_thread_header', uid: uid, nonce: pm_chat_object.nonce};
     jQuery.post(pm_chat_object.ajax_url, data, function (resp) {
         jQuery('#userSection').html(resp);
     });
@@ -285,7 +285,7 @@ function pm_get_active_thread_header(uid)
 function pm_messenger_notification_extra_data(x){
   //console.log(x);
     //console.log("extra data working");
-    var data = {'action': 'pm_messenger_notification_extra_data', 'ts': Date.now()};
+    var data = {'action': 'pm_messenger_notification_extra_data', 'ts': Date.now(), 'nonce': pm_chat_object.nonce};
 
     return jQuery.get(pm_chat_object.ajax_url, data, function (response)
     {
@@ -421,7 +421,7 @@ function pm_chat_mark_thread_read_silent(tid) {
     if (!tid || !window.pm_chat_object || !pm_chat_object.ajax_url) {
         return;
     }
-    jQuery.post(pm_chat_object.ajax_url, { action: 'pm_messages_mark_as_read', tid: tid }, function () {
+    jQuery.post(pm_chat_object.ajax_url, { action: 'pm_messages_mark_as_read', tid: tid, nonce: pm_chat_object.nonce }, function () {
         pm_chat_sync_unread_state();
         pm_messenger_notification_extra_data('');
     });
@@ -602,7 +602,7 @@ function pm_chat_run_notification_poll() {
 
 function pm_messages_mark_as_read(tid)
 {
-    var data = {action: 'pm_messages_mark_as_read', tid: tid};
+    var data = {action: 'pm_messages_mark_as_read', tid: tid, nonce: pm_chat_object.nonce};
     jQuery.post(pm_chat_object.ajax_url, data, function () {
         pm_messenger_notification_extra_data('');
     });
@@ -616,7 +616,7 @@ function pm_messenger_delete_thread(a,tid){
    // console.log("Deleting thread with  tid :" + tid);
    jQuery(a).parent('div').parent('li').remove();
     }
-    var data = {action: 'pm_messenger_delete_threads', 'tid': tid};
+    var data = {action: 'pm_messenger_delete_threads', 'tid': tid, 'nonce': pm_chat_object.nonce};
     jQuery.post(pm_chat_object.ajax_url, data, function (resp) {
         jQuery('.pm-message-thread-section').show();
        // console.log(resp);
@@ -631,7 +631,7 @@ function pm_messenger_delete_thread(a,tid){
 
 function pg_show_all_threads()
 {
-     var data = {action: 'pg_show_all_threads'};
+     var data = {action: 'pg_show_all_threads', nonce: pm_chat_object.nonce};
     jQuery.post(pm_chat_object.ajax_url, data, function (resp) {
         jQuery('#threads_ul').html(resp);
      });

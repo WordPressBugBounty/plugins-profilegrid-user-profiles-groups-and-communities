@@ -1092,6 +1092,14 @@ class Profile_Magic_Admin {
 	}
 
 	public function profile_magic_section_dropdown() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			die( esc_html__( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ) );
+		}
+
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'ajax-nonce' ) ) {
+			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
+		}
+
 		$gid       = absint( filter_input( INPUT_POST, 'gid' ) );
 		$dbhandler = new PM_DBhandler();
 		$sections  = $dbhandler->get_all_result( 'SECTION', array( 'id', 'section_name' ), array( 'gid' => $gid ) );

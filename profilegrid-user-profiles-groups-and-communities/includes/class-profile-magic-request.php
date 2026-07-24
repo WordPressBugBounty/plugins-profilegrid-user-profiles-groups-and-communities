@@ -2097,7 +2097,7 @@ class PM_request {
 			$gid_array = $gid;
 		} else {
 			$gid_array = array( $gid );}
-				$additional = 'associate_group in(' . implode( ',', $gid_array ) . ')';
+				$additional = ' AND associate_group in(' . implode( ',', $gid_array ) . ')';
 		$where              = array( 'display_on_profile' => 1 );
 		if ( $view == 'group' ) {
 			$where['display_on_group']            = 1;
@@ -2111,18 +2111,19 @@ class PM_request {
 		if ( is_user_logged_in() ) {
 			$current_user = wp_get_current_user();
 			if ( ( ! empty( $group_leader ) && in_array( $current_user->ID, $group_leader ) ) || $current_user->ID == $uid ) {
-				$additional = 'AND visibility in(1,2,3)';
+				$additional .= ' AND visibility in(1,2,3)';
 			} else {
-				$additional = 'AND visibility in(1,2)';
+				$additional .= ' AND visibility in(1,2)';
 			}
 		} else {
-			$additional = 'AND visibility = 1';
+			$additional .= ' AND visibility = 1';
 		}
 		if ( $exclude != '' ) {
 			$additional .= ' AND field_type not in(' . $exclude . ')';
 		}
                 $additional = apply_filters('pg_user_privacy_fields_visibility_qry', $additional, $uid, $gid, $group_leader, $view, $section, $exclude);
-		$fields = $dbhandler->get_all_result( 'FIELDS', $column = '*', $where, 'results', 0, false, $sort_by = 'ordering', false, $additional );
+		
+                $fields = $dbhandler->get_all_result( 'FIELDS', $column = '*', $where, 'results', 0, false, $sort_by = 'ordering', false, $additional );
                 
                 return apply_filters( 'pg_user_privacy_fields',$fields, $uid );
 	}

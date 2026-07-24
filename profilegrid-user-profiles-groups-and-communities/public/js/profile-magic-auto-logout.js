@@ -34,7 +34,7 @@ function timerIncrement() {
 
 function pg_auto_logout_redirect()
 {
-     var data ={action:'pm_auto_logout_user'};
+     var data ={action:'pm_auto_logout_user',nonce: pm_ajax_object.nonce};
         jQuery.post(pm_ajax_object.ajax_url, data, function (response)
         {
             

@@ -1,6 +1,23 @@
 <?php
 class PM_Emails {
 
+	private function pg_get_user_email_by_id( $user_id ) {
+		$user = get_userdata( absint( $user_id ) );
+		if ( ! $user || empty( $user->user_email ) || ! is_email( $user->user_email ) ) {
+			return '';
+		}
+
+		return $user->user_email;
+	}
+
+	private function pg_normalize_mail_text( $value, $fallback = '' ) {
+		if ( null === $value || false === $value ) {
+			return (string) $fallback;
+		}
+
+		return is_string( $value ) ? $value : (string) $fallback;
+	}
+
 	public function pm_send_group_based_notification( $gid, $userid, $event = '', $postid = false ) {
                  $dbhandler = new PM_DBhandler();
 		$row                = $dbhandler->get_row( 'GROUPS', $gid );
@@ -258,8 +275,14 @@ class PM_Emails {
 	public function pm_send_unread_message_notification( $sid, $rid ) {
          $pmrequests = new PM_request();
 		$dbhandler   = new PM_DBhandler();
-		$subject     = $dbhandler->get_global_option_value( 'pm_unread_message_email_subject', __( 'New Private Message from {{sender_name}}', 'profilegrid-user-profiles-groups-and-communities' ) );
-		$message     = $dbhandler->get_global_option_value( 'pm_unread_message_email_body', __( 'Hi {{display_name}},<br /><br />You just received a new private message from {{sender_name}}. Visit your profile at {{profile_link}} to make sure you are not missing out on the latest updates.', 'profilegrid-user-profiles-groups-and-communities' ) );
+		$subject     = $this->pg_normalize_mail_text(
+			$dbhandler->get_global_option_value( 'pm_unread_message_email_subject', __( 'New Private Message from {{sender_name}}', 'profilegrid-user-profiles-groups-and-communities' ) ),
+			__( 'New Private Message from {{sender_name}}', 'profilegrid-user-profiles-groups-and-communities' )
+		);
+		$message     = $this->pg_normalize_mail_text(
+			$dbhandler->get_global_option_value( 'pm_unread_message_email_body', __( 'Hi {{display_name}},<br /><br />You just received a new private message from {{sender_name}}. Visit your profile at {{profile_link}} to make sure you are not missing out on the latest updates.', 'profilegrid-user-profiles-groups-and-communities' ) ),
+			__( 'Hi {{display_name}},<br /><br />You just received a new private message from {{sender_name}}. Visit your profile at {{profile_link}} to make sure you are not missing out on the latest updates.', 'profilegrid-user-profiles-groups-and-communities' )
+		);
 
 		$from_email_address = $pmrequests->profile_magic_get_from_email();
 
@@ -268,9 +291,12 @@ class PM_Emails {
 		$headers    = "MIME-Version: 1.0\r\n";
 		$headers   .= "Content-type:text/html;charset=UTF-8\r\n";
 		$headers   .= 'From:' . $from_email_address . "\r\n";
-		$user_info  = get_userdata( $rid );
-		$user_email = $user_info->user_email;
-		wp_mail( $user_email, $subject, $message, $headers );
+		$user_email = $this->pg_get_user_email_by_id( $rid );
+		if ( '' === $user_email ) {
+			return false;
+		}
+
+		return wp_mail( $user_email, $subject, $message, $headers );
 
 	}
 
@@ -278,17 +304,26 @@ class PM_Emails {
 		$pmrequests = new PM_request();
 		$dbhandler  = new PM_DBhandler();
 
-		$subject            = $dbhandler->get_global_option_value( 'pm_send_friend_request_email_subject', __( 'New Friend Request', 'profilegrid-user-profiles-groups-and-communities' ) );
-		$message            = $dbhandler->get_global_option_value( 'pm_send_friend_request_email_content', __( '{{display_name}} send you a friend request.', 'profilegrid-user-profiles-groups-and-communities' ) );
+		$subject            = $this->pg_normalize_mail_text(
+			$dbhandler->get_global_option_value( 'pm_send_friend_request_email_subject', __( 'New Friend Request', 'profilegrid-user-profiles-groups-and-communities' ) ),
+			__( 'New Friend Request', 'profilegrid-user-profiles-groups-and-communities' )
+		);
+		$message            = $this->pg_normalize_mail_text(
+			$dbhandler->get_global_option_value( 'pm_send_friend_request_email_content', __( '{{display_name}} send you a friend request.', 'profilegrid-user-profiles-groups-and-communities' ) ),
+			__( '{{display_name}} send you a friend request.', 'profilegrid-user-profiles-groups-and-communities' )
+		);
 		$from_email_address = $pmrequests->profile_magic_get_from_email();
 		$subject            = $this->pm_filter_email_content( $subject, $sid );
 		$message            = $this->pm_filter_email_content( $message, $sid );
 		$headers            = "MIME-Version: 1.0\r\n";
 		$headers           .= "Content-type:text/html;charset=UTF-8\r\n";
 		$headers           .= 'From:' . $from_email_address . "\r\n";
-		$user_info          = get_userdata( $rid );
-		$user_email         = $user_info->user_email;
-		wp_mail( $user_email, $subject, $message, $headers );
+		$user_email         = $this->pg_get_user_email_by_id( $rid );
+		if ( '' === $user_email ) {
+			return false;
+		}
+
+		return wp_mail( $user_email, $subject, $message, $headers );
 
 	}
 }
