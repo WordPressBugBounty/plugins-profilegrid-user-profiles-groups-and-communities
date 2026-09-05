@@ -1810,8 +1810,6 @@ function pg_init_unread_message_toast() {
     var summaryNoChangeStreak = 0;
     var summaryErrorStreak = 0;
     var summaryLastActivityAt = Date.now();
-    var summaryTransport = 'rest';
-    var summaryTransportLocked = false;
     var dismissStorageKey = 'pgUnreadToastDismissedAt';
     var lastAutoOpenKey = '';
 
@@ -1995,22 +1993,6 @@ function pg_init_unread_message_toast() {
         summaryTimer = setTimeout(runSummaryPoll, delay);
     };
 
-    var fetchSummaryRest = function () {
-        if (!window.pm_ajax_object || !pm_ajax_object.rest_unread_summary_url || !pm_ajax_object.rest_nonce) {
-            return Promise.reject(new Error('rest_not_available'));
-        }
-
-        return fetch(pm_ajax_object.rest_unread_summary_url + '?_wpnonce=' + encodeURIComponent(pm_ajax_object.rest_nonce), {
-            method: 'GET',
-            credentials: 'same-origin',
-            headers: {
-                'X-WP-Nonce': pm_ajax_object.rest_nonce
-            }
-        }).then(function (response) {
-            return response.json();
-        });
-    };
-
     var fetchSummaryAjax = function () {
         if (!window.pm_ajax_object || !pm_ajax_object.ajax_url || !pm_ajax_object.nonce) {
             return Promise.reject(new Error('ajax_not_available'));
@@ -2063,7 +2045,7 @@ function pg_init_unread_message_toast() {
 
         summaryInFlight = true;
 
-        var request = (summaryTransport === 'rest') ? fetchSummaryRest() : fetchSummaryAjax();
+        var request = fetchSummaryAjax();
 
         request.then(function (response) {
             var payload = parseSummaryPayload(response);
@@ -2106,11 +2088,6 @@ function pg_init_unread_message_toast() {
             summaryErrorStreak = 0;
         }).catch(function () {
             summaryErrorStreak++;
-
-            if (!summaryTransportLocked && summaryTransport === 'rest') {
-                summaryTransport = 'ajax';
-                summaryTransportLocked = true;
-            }
         }).then(function () {
             summaryInFlight = false;
             scheduleSummary(computeSummaryInterval(false));

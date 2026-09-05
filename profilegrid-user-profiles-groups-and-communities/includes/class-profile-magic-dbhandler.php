@@ -232,6 +232,8 @@ class PM_DBhandler {
 		if ( $limit===false ) {
             $qry .= '';
         } else {
+            $limit = max( 0, (int) $limit );
+            $offset = max( 0, (int) $offset );
             $qry .= " LIMIT $limit OFFSET $offset";
         }
 

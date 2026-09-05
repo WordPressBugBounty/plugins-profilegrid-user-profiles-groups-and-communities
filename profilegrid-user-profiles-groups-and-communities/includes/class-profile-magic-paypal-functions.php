@@ -5,6 +5,7 @@ class PM_paypal_request {
 		$dbhandler = new PM_DBhandler();
 		$pmrequests = new PM_request();
 		$paypal = new profile_magic_paypal_class();
+		$paypal->sendbox = $dbhandler->get_global_option_value( 'pm_paypal_test_mode', '0' );
 		$paypal->admin_mail = $pmrequests->profile_magic_get_admin_email();
 		$paypal->paypal_mail = $dbhandler->get_global_option_value( 'pm_paypal_email' );
 		$paypal->from_mail = $pmrequests->profile_magic_get_from_email();

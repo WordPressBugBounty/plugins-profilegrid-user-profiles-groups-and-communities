@@ -12,6 +12,34 @@
  * @author ProfileGrid
  */
 class PM_request {
+
+	/** Remove only an attachment ID belonging to a configured file field. */
+	public function pg_remove_profile_attachment( $user_id, $key, $attachment_id ) {
+		$user_id = absint( $user_id );
+		if ( ! is_user_logged_in() || ! $user_id || ( get_current_user_id() !== $user_id && ! current_user_can( 'manage_options' ) ) ) {
+			return new WP_Error( 'pg_attachment_forbidden', 'Unauthorized' );
+		}
+		if ( ! is_string( $key ) || ! is_scalar( $attachment_id ) || ! ctype_digit( (string) $attachment_id ) || (int) $attachment_id < 1 ) {
+			return new WP_Error( 'pg_attachment_invalid', 'Invalid attachment' );
+		}
+		$dbhandler = new PM_DBhandler();
+		$fields = $dbhandler->get_all_result( 'FIELDS', array( 'field_key' ), array( 'field_key' => $key, 'field_type' => 'file' ), 'results', 0, 1 );
+		if ( empty( $fields ) ) {
+			return new WP_Error( 'pg_attachment_invalid_field', 'Invalid attachment field' );
+		}
+		$stored = get_user_meta( $user_id, $key, true );
+		if ( ! is_string( $stored ) || '' === $stored ) {
+			return new WP_Error( 'pg_attachment_not_found', 'Attachment not found' );
+		}
+		$attachments = explode( ',', $stored );
+		$index = array_search( (string) $attachment_id, $attachments, true );
+		if ( false === $index ) {
+			return new WP_Error( 'pg_attachment_not_found', 'Attachment not found' );
+		}
+		unset( $attachments[$index] );
+		return empty( $attachments ) ? delete_user_meta( $user_id, $key ) : update_user_meta( $user_id, $key, implode( ',', $attachments ) );
+	}
+
 	// put your code here
 	public function sanitize_request( $post, $identifier, $exclude = array() ) {
 		$pmsanitizer = new PM_sanitizer();
@@ -220,6 +248,13 @@ class PM_request {
 				$too_small = false;
 			}
 
+			$extension = strtolower( pathinfo( $file['name'], PATHINFO_EXTENSION ) );
+			if ( ! in_array( $extension, $allowed_extensions, true ) ) {
+				return esc_html__( 'This file type is not allowed.', 'profilegrid-user-profiles-groups-and-communities' );
+			}
+			if ( false !== $too_small ) {
+				return $too_small;
+			}
 			if ( $filefield['error'] === 0 ) {
 				if ( ! function_exists( 'wp_handle_upload' ) ) {
 					require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -227,7 +262,10 @@ class PM_request {
 				}
 				$upload_overrides = array( 'test_form' => false );
 				$movefile         = wp_handle_upload( $file, $upload_overrides );
-				if ( $movefile ) {
+				if ( isset( $movefile['error'] ) ) {
+					return $movefile['error'];
+				}
+				if ( ! empty( $movefile['file'] ) ) {
 					// $filename should be the path to a file in the upload directory.
 					$filename = $movefile['file'];
 					// The ID of the post this attachment is for.
@@ -787,8 +825,8 @@ class PM_request {
 						$value = $user_info->user_login;
 					break;
 				case 'user_pass':
-						$pass  = get_user_meta( $userid, 'user_pass', true );
-						$value = $this->pm_encrypt_decrypt_pass( 'decrypt', $pass );
+						// Passwords are never returned as profile data.
+						$value = '';
 					break;
 				case 'user_nicename':
 						$value = $user_info->user_nicename;
@@ -1080,8 +1118,7 @@ class PM_request {
 				$group_type    = $this->profile_magic_get_group_type( $gid );
 				do_action( 'profile_magic_submit_data_before_join_group', $post, $files, $server, $gid, $fields, $user_id, 'profilegrid-user-profiles-groups-and-communities' );
 
-		$newpass = $this->pm_encrypt_decrypt_pass( 'encrypt', $password );
-		update_user_meta( $user_id, 'user_pass', $newpass );
+		delete_user_meta( $user_id, 'user_pass' );
 		update_user_meta( $user_id, 'rm_user_status', '1' );
 		$this->pm_update_user_custom_fields_data( $post, $files, $server, $gid, $fields, $user_id );
 		if ( $is_paid_group == '0' ) {
@@ -1267,7 +1304,7 @@ class PM_request {
 								$minimum_requirement = array();
 							}
 							$attchmentid = $this->make_upload_and_get_attached_id( $file, $allowed_ext, $minimum_requirement );
-							if ( $attchmentid != '' && $attchmentid != null ) {
+							if ( is_numeric( $attchmentid ) && (int) $attchmentid > 0 ) {
 								$attchment_id[] = $attchmentid;
 							}
 						}

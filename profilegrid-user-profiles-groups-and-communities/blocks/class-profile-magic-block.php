@@ -30,47 +30,19 @@ class Profile_Magic_Block {
             $this->version,
 			true
 		);
+		$this->localize_editor_options();
 		wp_localize_script( 'profilegrid-blocks-group-registration', 'pm_ajax_object', array( 'ajax_url' => admin_url( 'admin-ajax.php' ) ) );
 	}
 
-	public function pm_register_rest_route() {
-		register_rest_route(
-			'profilegrid/v1',
-			'/groups',
-			array(
-				'method'              => 'GET',
-				'callback'            => array( $this, 'pm_load_groups' ),
-				'permission_callback' => array( $this, 'pg_get_private_data_permissions_check' ),
-			)
-		);
-		register_rest_route(
-			'profilegrid/v1',
-			'/users',
-			array(
-				'method'              => 'GET',
-				'callback'            => array( $this, 'pm_load_users' ),
-				'permission_callback' => array( $this, 'pg_get_private_data_permissions_check' ),
-			)
-		);
-		register_rest_route(
-			'profilegrid/v1',
-			'/pages',
-			array(
-				'method'              => 'GET',
-				'callback'            => array( $this, 'pm_load_pages' ),
-				'permission_callback' => array( $this, 'pg_get_private_data_permissions_check' ),
-			)
-		);
-	}
-
-	public function pg_get_private_data_permissions_check() {
-		// Restrict endpoint to only users who have the edit_posts capability.
-		if ( ! current_user_can( 'edit_posts' ) ) {
-			return new WP_Error( 'rest_forbidden', esc_html__( 'OMG you can not view private data.', 'profilegrid-user-profiles-groups-and-communities' ), array( 'status' => 401 ) );
+	private function localize_editor_options() {
+		$options = array( 'groups' => array(), 'users' => array(), 'pages' => array() );
+		// Preserve the administrator-only access of the former option endpoints.
+		if ( current_user_can( 'manage_options' ) ) {
+			$options['groups'] = $this->pm_load_groups();
+			$options['users'] = $this->pm_load_users();
+			$options['pages'] = $this->pm_load_pages();
 		}
-
-		// This is a black-listing approach. You could alternatively do this via white-listing, by returning false here and changing the permissions check.
-		return true;
+		wp_localize_script( 'profilegrid-blocks-group-registration', 'pg_block_options', $options );
 	}
 
 	public function pm_default_group() {
@@ -87,6 +59,7 @@ class Profile_Magic_Block {
 	}
 
 	public function pm_load_groups() {
+		$return = array();
 		$dbhandler = new PM_DBhandler();
 		$results   = $dbhandler->get_all_result( 'GROUPS', array( 'id', 'group_name' ), 1, 'results', 0, false, null, false, '', 'ARRAY_A' );
 		foreach ( $results as $res ) {
@@ -101,10 +74,11 @@ class Profile_Magic_Block {
 			unset( $res['group_name'] );
 			$return[] = $res;
 		}
-		return rest_ensure_response( $return );
+		return $return;
 	}
 
 	public function pm_load_users() {
+		$return = array();
 		$dbhandler = new PM_DBhandler();
 		$results   = get_users(array(
 			'fields' => array('ID', 'user_login')
@@ -114,7 +88,7 @@ class Profile_Magic_Block {
 		}, $results);
 
 		foreach ( $results_array as $res ) {
-			if ( $res['id'] ) {
+			if ( $res['ID'] ) {
 				$res['value'] = $res['ID'];
 			}
 			unset( $res['ID'] );
@@ -126,10 +100,11 @@ class Profile_Magic_Block {
 			unset( $res['user_login'] );
 			$return[] = $res;
 		}
-		return rest_ensure_response( $return );
+		return $return;
 	}
 	
 	public function pm_load_pages() {
+		$return = array();
 		$pages = get_pages();
 		$temp = []; 
 		foreach ( $pages as $page ) {
@@ -138,7 +113,7 @@ class Profile_Magic_Block {
 			$return[] = $temp;
 		}
 
-		return rest_ensure_response( $return );
+		return $return;
 	}
 
 	public function profilegrid_add_block_categories ($categories) {
@@ -202,6 +177,7 @@ class Profile_Magic_Block {
 				filemtime( "$dir/$index_js" ),false
 			);
 		}
+			$this->localize_editor_options();
 			wp_localize_script( 'profilegrid-blocks-group-registration', 'pg_groups', array($this->pm_default_group(), get_current_user_id()) );
 
 			wp_register_style( 'pg-gutenberg', plugins_url( 'profile-magic-gutenberg.css', __FILE__ ),array(), $this->version, 'all' );

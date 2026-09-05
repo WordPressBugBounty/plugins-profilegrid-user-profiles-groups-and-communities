@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function() {
-// import apiFetch from '@wordpress/api-fetch';
 const {registerBlockType} = wp.blocks; //Blocks API
 const {createElement,useState} = wp.element; //React.createElement
 const {__} = wp.i18n; //translation functions
@@ -19,20 +18,10 @@ const iconEl = el('svg', { width: 20, height: 20 },
   el('path', { d: "M20.85,11.56l-1.41-1.41c-0.2-0.2-0.51-0.2-0.71,0l-1.06,1.06l2.12,2.12l1.06-1.06C21.05,12.07,21.05,11.76,20.85,11.56z" } )
 );
 
-var Groups = '';
-var Users = '';
-var Pages = '';
-wp.apiFetch( { path: 'profilegrid/v1/groups' } ).then( ( groups ) => {
-    Groups = groups;
-} );
-
-wp.apiFetch( { path: 'profilegrid/v1/users' } ).then( ( users ) => {
-    Users = users;
-} );
-
-wp.apiFetch( { path: 'profilegrid/v1/pages' } ).then( ( pages ) => {
-    Pages = pages;
-} );
+var blockOptions = window.pg_block_options || {};
+var Groups = blockOptions.groups || [];
+var Users = blockOptions.users || [];
+var Pages = blockOptions.pages || [];
 
 var searchRequest = null; 
 function pm_advance_user_search(pagenum)

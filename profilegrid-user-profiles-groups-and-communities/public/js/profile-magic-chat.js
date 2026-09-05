@@ -351,8 +351,6 @@ var pm_chat_poll_pending_activity = '';
 var pm_chat_poll_no_change_streak = 0;
 var pm_chat_poll_error_streak = 0;
 var pm_chat_last_user_activity_at = Date.now();
-var pm_chat_poll_transport = 'rest';
-var pm_chat_poll_transport_locked = false;
 var pm_chat_poll_events_bound = false;
 
 function pm_chat_get_client_config() {
@@ -373,10 +371,6 @@ function pm_chat_clear_active_thread_unread_badge() {
     activeThread.find('.pg-thread-msg').remove();
     activeThread.find('.pg-thread-notification').remove();
     activeThread.find('.pg-msg-conversation-unread').remove();
-}
-function pm_chat_can_use_rest_polling() {
-    var cfg = pm_chat_get_client_config();
-    return !!(cfg.rest_notification_url && cfg.rest_nonce);
 }
 
 function pm_chat_bind_poll_events() {
@@ -481,21 +475,6 @@ function pm_chat_parse_json_if_possible(response) {
 
 function pm_chat_send_notification_request(payload) {
     var cfg = pm_chat_get_client_config();
-    if (pm_chat_poll_transport === 'rest' && pm_chat_can_use_rest_polling()) {
-        return jQuery.ajax({
-            url: cfg.rest_notification_url,
-            type: 'GET',
-            dataType: 'json',
-            cache: false,
-            headers: {'X-WP-Nonce': cfg.rest_nonce},
-            data: {
-                timestamp: payload.timestamp,
-                activity: payload.activity,
-                tid: payload.tid,
-                _wpnonce: cfg.rest_nonce
-            }
-        });
-    }
     return jQuery.get(cfg.ajax_url, {
         action: 'pm_get_messenger_notification',
         timestamp: payload.timestamp,
@@ -587,10 +566,6 @@ function pm_chat_run_notification_poll() {
             return;
         }
         pm_chat_poll_error_streak++;
-        if (!pm_chat_poll_transport_locked && pm_chat_poll_transport === 'rest') {
-            pm_chat_poll_transport = 'ajax';
-            pm_chat_poll_transport_locked = true;
-        }
     }).always(function (jqXHR) {
         pm_chat_poll_in_flight = false;
         if (jqXHR && jqXHR.statusText === 'abort') {

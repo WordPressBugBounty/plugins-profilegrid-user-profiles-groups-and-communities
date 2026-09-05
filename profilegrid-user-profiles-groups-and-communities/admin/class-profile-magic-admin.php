@@ -22,6 +22,16 @@
 
 class Profile_Magic_Admin {
 
+	public function pg_remove_legacy_password_copies() {
+		if ( ! current_user_can( 'manage_options' ) || get_option( 'pg_password_meta_removed' ) ) {
+			return;
+		}
+		// WordPress stores the actual password hashes in the users table.
+		delete_metadata( 'user', 0, 'user_pass', '', true );
+		update_option( 'pg_password_meta_removed', 1, false );
+	}
+
+
 	/**
 	 * The ID of this plugin.
 	 *
@@ -1621,6 +1631,9 @@ class Profile_Magic_Admin {
 	}
 
 	public function pm_load_export_fields_dropdown() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Unauthorized', 403 );
+		}
 		include 'partials/export-fields.php';
 		die;
 	}
@@ -2077,6 +2090,9 @@ class Profile_Magic_Admin {
 
 
 	public function pm_check_associate_email_tmpl() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Unauthorized', 403 );
+		}
 			$pm_sanitizer = new PM_sanitizer();
 
                         $nonce = filter_input( INPUT_POST, 'nonce' );
@@ -2279,6 +2295,9 @@ class Profile_Magic_Admin {
 	}
 
 	public function pm_get_rm_helptext() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Unauthorized', 403 );
+		}
 			$pm_sanitizer = new PM_sanitizer();
 			$nonce        = filter_input( INPUT_POST, 'nonce' );
 		if ( ! isset( $nonce ) || ! wp_verify_nonce( $nonce, 'ajax-nonce' ) ) {
@@ -2477,37 +2496,18 @@ class Profile_Magic_Admin {
 	}
 
 	public function pm_remove_file_attachment() {
-                    // Verify the nonce for security
-                if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'ajax-nonce' ) ) {
-                    echo esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' );
-                    die;
-                }
-                // Get the inputs securely
-                $key    = sanitize_key( wp_unslash( (string) filter_input( INPUT_POST, 'key', FILTER_UNSAFE_RAW ) ) );
-                $value  = sanitize_text_field( wp_unslash( (string) filter_input( INPUT_POST, 'value', FILTER_UNSAFE_RAW ) ) );
-                $userid = absint( filter_input( INPUT_POST, 'uid', FILTER_SANITIZE_NUMBER_INT ) );
-
-                $current_user_id = get_current_user_id();
-                
-                if($current_user_id===$userid || current_user_can('manage_options'))
-                {
-                    $user_attachments = get_user_meta( $userid, $key, true );
-                    if ( $user_attachments != '' ) {
-                             $old_attachments = explode( ',', $user_attachments );
-                             $index           = array_search( $value, $old_attachments, true );
-                             unset( $old_attachments[ $index ] );
-                    }
-                    if ( empty( $old_attachments ) ) {
-                            $val = delete_user_meta( $userid, $key );
-                    } else {
-                            $ids = implode( ',', $old_attachments );
-                            $val = update_user_meta( $userid, $key, $ids );
-
-                    }
-                    echo esc_html( $val );
-                }
+		check_ajax_referer( 'ajax-nonce', 'nonce' );
+		$key = filter_input( INPUT_POST, 'key' );
+		$value = filter_input( INPUT_POST, 'value' );
+		$pmrequests = new PM_request();
+		$result = $pmrequests->pg_remove_profile_attachment( absint( filter_input( INPUT_POST, 'uid', FILTER_VALIDATE_INT ) ), $key, $value );
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( $result->get_error_message(), 403 );
+		}
+		echo esc_html( $result );
 		die;
 	}
+
 
 	public function profile_magic_premium_setting_option() {
 		include 'partials/premium_setting_option.php';
@@ -2628,6 +2628,10 @@ class Profile_Magic_Admin {
 	}
 
 	public function pm_submit_group_wizard_form() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+		}
+
 		 $dbhandler      = new PM_DBhandler();
 		$pm_activator    = new Profile_Magic_Activator();
 		$pmrequests      = new PM_request();
@@ -2656,6 +2660,10 @@ class Profile_Magic_Admin {
 	public function pm_get_groups_details() {
             if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'ajax-nonce' ) ) {
 			die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Unauthorized', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
 		}
                 
 		   $dbhandler   = new PM_DBhandler();
@@ -2785,36 +2793,6 @@ class Profile_Magic_Admin {
         
     }
     
- /*
-    public function pg_dismissible_buddybot_promotion(){
-        
-        $notice_name  = get_option( 'pg_dismissible_buddybot_promotion', '0' );
-        
-        if ( $notice_name == '1' || defined('BUDDYBOT_PLUGIN_VERSION')) {
-                return;
-        }
-         $install_url = wp_nonce_url(
-                    self_admin_url('update.php?action=install-plugin&plugin=buddybot-ai-custom-ai-assistant-and-chat-agent'),
-                    'install-plugin_buddybot-ai-custom-ai-assistant-and-chat-agent' 
-                );
-        ?>
-           <div class="notice notice-info is-dismissible pg-dismissible" id="pg_dismissible_buddybot_promotion">
-                <p>
-                    <span>
-                        <a href="<?php echo esc_url( $install_url ); ?>" 
-                      class="button button-primary thickbox" 
-                      aria-label="<?php esc_attr_e('Install BuddyBot Plugin','profilegrid-user-profiles-groups-and-communitiest'); ?>">
-                       <?php esc_html_e('Click here','profilegrid-user-profiles-groups-and-communities'); ?>
-                   </a>
-                    </span>
-                    <?php esc_html_e(' – to try BuddyBot. Help your visitors find answers fast with an AI chatbot trained on your WordPress content. Built by the ProfileGrid team.', 'profilegrid-user-profiles-groups-and-communities'); ?>
-                 
-                </p>
-
-            </div>
-        <?php
-    }
-    */
     
     public function pg_dismissible_sale_promotion(){
         $notice_name  = get_option( 'pg_dismissible_discount_sale_banner', '0' );

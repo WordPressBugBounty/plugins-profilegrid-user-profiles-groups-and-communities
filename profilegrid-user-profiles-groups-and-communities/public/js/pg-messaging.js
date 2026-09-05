@@ -83,8 +83,6 @@ var pg_msg_poll_pending_activity = '';
 var pg_msg_poll_no_change_streak = 0;
 var pg_msg_poll_error_streak = 0;
 var pg_msg_last_user_activity_at = Date.now();
-var pg_msg_poll_transport = 'rest';
-var pg_msg_poll_transport_locked = false;
 var pg_msg_poll_events_bound = false;
 var pg_msg_deeplink_bootstrap_done = false;
 function pg_msg_bind_poll_events() {
@@ -143,9 +141,6 @@ function pg_msg_mark_thread_read_silent(tid) {
         pg_msg_sync_unread_state();
         pm_messenger_notification_extra_data('');
     });
-}
-function pg_msg_can_use_rest_polling() {
-    return !!(pg_msg_object && pg_msg_object.rest_notification_url && pg_msg_object.rest_nonce);
 }
 
 function pg_msg_get_query_int(name) {
@@ -303,21 +298,6 @@ function pg_msg_handle_notification_response(parsed, tid) {
 }
 
 function pg_msg_send_notification_request(payload) {
-    if (pg_msg_poll_transport === 'rest' && pg_msg_can_use_rest_polling()) {
-        return jQuery.ajax({
-            url: pg_msg_object.rest_notification_url,
-            type: 'GET',
-            dataType: 'json',
-            cache: false,
-            headers: {'X-WP-Nonce': pg_msg_object.rest_nonce},
-            data: {
-                timestamp: payload.timestamp,
-                activity: payload.activity,
-                tid: payload.tid,
-                _wpnonce: pg_msg_object.rest_nonce
-            }
-        });
-    }
     return jQuery.get(pg_msg_object.ajax_url, {
         action: 'pm_get_messenger_notification',
         timestamp: payload.timestamp,
@@ -395,10 +375,6 @@ function pg_msg_run_notification_poll() {
             return;
         }
         pg_msg_poll_error_streak++;
-        if (!pg_msg_poll_transport_locked && pg_msg_poll_transport === 'rest') {
-            pg_msg_poll_transport = 'ajax';
-            pg_msg_poll_transport_locked = true;
-        }
     }).always(function (jqXHR) {
         pg_msg_poll_in_flight = false;
         if (jqXHR && jqXHR.statusText === 'abort') {

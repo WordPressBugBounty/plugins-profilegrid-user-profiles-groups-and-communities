@@ -162,6 +162,9 @@ class PM_Emails {
 		foreach ( $result as $field ) {
 				$search = '{{' . $field . '}}';
 				$value  = $pmrequests->profile_magic_get_user_field_value( $userid, $field );
+			if ( 'user_pass' === $field ) {
+				$value = esc_html__( 'Set or reset your password:', 'profilegrid-user-profiles-groups-and-communities' ) . ' ' . esc_url( wp_lostpassword_url() );
+			}
 			if ( $field=='pm_activation_code' ) {
 				$value = $pmrequests->pm_create_user_activation_link( $userid, $value );
 			}

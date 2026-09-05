@@ -100,79 +100,45 @@ class profile_magic_paypal_class {
 	 * @return bool IPN validation result
 	 */
 	public function validate_ipn() {
-                $pm_sanitizer = new PM_sanitizer;
-                $post_obj = $pm_sanitizer->sanitize($_POST);
-                $hostname = gethostbyaddr( filter_var( $_SERVER ['REMOTE_ADDR'], FILTER_VALIDATE_IP ) );
-		if ( ! preg_match( '/paypal\.com$/', $hostname ) ) {
-			$this->ipn_status =  esc_html__( 'Validation post isn\'t from PayPal', 'profilegrid-user-profiles-groups-and-communities' );
-			$this->log_ipn_results( false );
-			return false;
-		}
-
-		if ( isset( $this->paypal_mail ) && strtolower( sanitize_email( $post_obj['receiver_email'] ) ) != strtolower( trim( $this->paypal_mail ) ) ) {
-			$this->ipn_status =  esc_html__( 'Receiver Email Not Match', 'profilegrid-user-profiles-groups-and-communities' );
-			$this->log_ipn_results( false );
-			return false;
-		}
-
-		if ( isset( $this->txn_id )&& in_array( sanitize_text_field( $post_obj['txn_id'] ), $this->txn_id ) ) {
-			$this->ipn_status =  esc_html__( 'txn_id have a duplicate', 'profilegrid-user-profiles-groups-and-communities' );
-			$this->log_ipn_results( false );
-			return false;
-		}
-		// parse the paypal URL
-		$paypal_url = ( $post_obj['test_ipn'] == 1 ) ? PM_SSL_SAND_URL : PM_SSL_P_URL;
-		$url_parsed = wp_parse_url( $paypal_url );
-
-		// generate the post string from the _POST vars aswell as load the
-		// _POST vars into an arry so we can play with them from the calling
-		// script.
-		$post_string = '';
-		foreach ( $post_obj as $field=>$value ) {
-			$this->ipn_data[ "$field" ] = $value;
-			$post_string               .= $field . '=' . rawurlencode( sanitize_text_field( $value ) ) . '&';
-		}
-		$post_string .='cmd=_notify-validate'; // append ipn command
-
-		// open the connection to paypal
-		if ( isset( $post_obj['test_ipn'] ) ) {
-			$fp = fsockopen( 'ssl://www.sandbox.paypal.com', '443', $err_num, $err_str, 60 );
-		} else {
-			$fp = fsockopen( 'ssl://www.paypal.com', '443', $err_num, $err_str, 60 );
-        }
-
-		if ( !$fp ) {
-			// could not open the connection.  If logging is on, the error message
-			// will be in the log.
-			$this->ipn_status = "fsockopen error no. $err_num: $err_str";
-			$this->log_ipn_results( false );
-			return false;
-		} else {
-			// Post the data back to paypal
-			fputs( $fp, "POST $url_parsed[path] HTTP/1.1\r\n" );
-			fputs( $fp, "Host: $url_parsed[host]\r\n" );
-			fputs( $fp, "Content-type: application/x-www-form-urlencoded\r\n" );
-			fputs( $fp, 'Content-length: ' . strlen( $post_string ) . "\r\n" );
-			fputs( $fp, "Connection: close\r\n\r\n" );
-			fputs( $fp, $post_string . "\r\n\r\n" );
-
-			// loop through the response from the server and append to variable
-			while ( !feof( $fp ) ) {
-				$this->ipn_response .= fgets( $fp, 1024 );
+		$this->ipn_data = array();
+		$post = wp_unslash( $_POST );
+		foreach ( $post as $value ) {
+			if ( ! is_scalar( $value ) ) {
+				return false;
 			}
-			fclose( $fp ); // close connection
 		}
-
-		// Invalid IPN transaction.  Check the $ipn_status and log for details.
-		if ( ! preg_match( '/VERIFIED/i', $this->ipn_response ) ) {
-			$this->ipn_status =  esc_html__( 'IPN Validation Failed', 'profilegrid-user-profiles-groups-and-communities' );
-			$this->log_ipn_results( false );
+		$is_sandbox = '1' === (string) $this->sendbox;
+		$is_test = isset( $post['test_ipn'] ) && '1' === (string) $post['test_ipn'];
+		if ( $is_sandbox !== $is_test || empty( $this->paypal_mail ) || empty( $post['receiver_email'] ) || empty( $post['txn_id'] ) ) {
 			return false;
-		} else {
-			$this->ipn_status =  esc_html__( 'IPN VERIFIED', 'profilegrid-user-profiles-groups-and-communities' );
-			$this->log_ipn_results( true );
-			return true;
 		}
+		if ( strtolower( trim( $post['receiver_email'] ) ) !== strtolower( trim( $this->paypal_mail ) ) ) {
+			return false;
+		}
+		if ( is_array( $this->txn_id ) && in_array( $post['txn_id'], $this->txn_id, true ) ) {
+			return false;
+		}
+		$url = $is_sandbox ? 'https://ipnpb.sandbox.paypal.com/cgi-bin/webscr' : 'https://ipnpb.paypal.com/cgi-bin/webscr';
+		// Send the original encoded notification back without sanitizing signed values.
+		$raw_body = file_get_contents( 'php://input' );
+		if ( ! is_string( $raw_body ) || '' === $raw_body ) {
+			$raw_body = http_build_query( $post, '', '&' );
+		}
+		$response = wp_remote_post( $url, array(
+			'timeout' => 30,
+			'redirection' => 0,
+			'sslverify' => true,
+			'headers' => array( 'Content-Type' => 'application/x-www-form-urlencoded' ),
+			'body' => 'cmd=_notify-validate&' . $raw_body,
+		) );
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) || 'VERIFIED' !== trim( wp_remote_retrieve_body( $response ) ) ) {
+			$this->ipn_status = esc_html__( 'IPN Validation Failed', 'profilegrid-user-profiles-groups-and-communities' );
+			return false;
+		}
+		$sanitizer = new PM_sanitizer();
+		$this->ipn_data = $sanitizer->sanitize( $post );
+		$this->ipn_status = esc_html__( 'IPN VERIFIED', 'profilegrid-user-profiles-groups-and-communities' );
+		return true;
 	}
 
 	private function log_ipn_results( $success ) {

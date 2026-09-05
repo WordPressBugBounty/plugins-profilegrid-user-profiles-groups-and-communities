@@ -1,6 +1,30 @@
 <?php
 class PM_sanitizer {
 
+	public static function safe_unserialize_array( $value ) {
+		if ( ! is_string( $value ) || strlen( $value ) > 1048576 || ! is_serialized( $value ) ) {
+			return array();
+		}
+		$data = @unserialize( $value, array( 'allowed_classes' => false ) );
+		if ( ! is_array( $data ) ) {
+			return array();
+		}
+		$pending = array( $data );
+		$visited = 0;
+		while ( $pending ) {
+			foreach ( array_pop( $pending ) as $item ) {
+				if ( ++$visited > 10000 || is_object( $item ) ) {
+					return array();
+				}
+				if ( is_array( $item ) ) {
+					$pending[] = $item;
+				}
+			}
+		}
+		return $data;
+	}
+
+
 	public function get_sanitized_fields( $identifier, $field, $value ) {
 		if ( is_null( $value ) ) {
 			$value = '';

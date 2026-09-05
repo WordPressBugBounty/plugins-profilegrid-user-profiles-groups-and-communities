@@ -75,7 +75,6 @@ class Profile_Magic {
 				$this->define_global_hooks();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
-		$this->define_rest_api_hooks();
 		$this->define_access_hooks();
 				$this->define_notification_hooks();
 		$this->define_smtp_connection();
@@ -143,7 +142,6 @@ class Profile_Magic {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-profile-magic-admin.php';
 
 				require_once plugin_dir_path( dirname( __FILE__ ) ) . 'blocks/class-profile-magic-block.php';
-				require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-profile-magic-rest-api.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the public-facing
@@ -195,7 +193,6 @@ class Profile_Magic {
 	private function define_gutenberg_block_hooks() {
 		$plugin_block = new Profile_Magic_Block( $this->get_profile_magic(), $this->get_version() );
 		$this->loader->add_action( 'init', $plugin_block, 'profilegrid_block_register' );
-		$this->loader->add_action( 'rest_api_init', $plugin_block, 'pm_register_rest_route' );
 		$this->loader->add_action('block_categories_all',  $plugin_block, 'profilegrid_add_block_categories');
 	}
 
@@ -204,6 +201,7 @@ class Profile_Magic {
 		$plugin_admin = new Profile_Magic_Admin( $this->get_profile_magic(), $this->get_version() );
 				$this->loader->add_action( 'admin_init', $plugin_admin, 'pg_activation_redirect' );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'pg_init_all_groups_page_visibility_defaults' );
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'pg_remove_legacy_password_copies' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'profile_magic_admin_menu' );
@@ -271,7 +269,6 @@ class Profile_Magic {
                                 $this->loader->add_action('pg_customization_extension_html', $plugin_admin, 'pg_customization_extension_html');
 				$this->loader->add_action( 'wp_ajax_pg_activate_license', $plugin_admin, 'profilegrid_activate_license' );
                                 $this->loader->add_action( 'wp_ajax_pg_deactivate_license', $plugin_admin, 'profilegrid_deactivate_license' );
-                                //$this->loader->add_action( 'admin_notices', $plugin_admin, 'pg_dismissible_buddybot_promotion' );
                                 $this->loader->add_action( 'admin_notices', $plugin_admin, 'pg_dismissible_sale_promotion' );
 				//$this->loader->add_action( 'admin_notices', $plugin_admin, 'pg_eventprime_admin_notice' );
 				
@@ -355,8 +352,6 @@ class Profile_Magic {
 				$this->loader->add_action( 'wp_ajax_pm_messenger_delete_threads', $plugin_public, 'pm_messenger_delete_threads' );
 				$this->loader->add_action( 'wp_ajax_pm_messenger_notification_extra_data', $plugin_public, 'pm_messenger_notification_extra_data' );
 				$this->loader->add_action( 'wp_ajax_pm_unread_message_summary', $plugin_public, 'pm_unread_message_summary' );
-				// REST is the default transport for notification polling; AJAX remains backward-compatible fallback.
-				$this->loader->add_action( 'rest_api_init', $plugin_public, 'register_messenger_notification_rest_routes' );
 				$this->loader->add_action( 'init', $plugin_public, 'pg_create_post_type' );
 				$this->loader->add_action( 'wp_ajax_pm_load_pg_blogs', $plugin_public, 'pm_load_pg_blogs' );
 				$this->loader->add_action( 'wp_ajax_pm_load_user_blogs_shortcode_posts', $plugin_public, 'pm_load_user_blogs_shortcode_posts' );
@@ -480,8 +475,6 @@ class Profile_Magic {
 				$this->loader->add_action( 'profile_magic_profile_tab_content_pg-notifications', $plugin_public, 'pm_profile_notification_tab_content', 10, 5 );
 				$this->loader->add_action( 'profile_magic_profile_tab_content_pg-friends', $plugin_public, 'pm_profile_friends_tab_content', 10, 5 );
 				$this->loader->add_action( 'profile_magic_profile_tab_content_pg-settings', $plugin_public, 'pm_profile_settings_tab_content', 10, 5 );
-				$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'pg_merge_all_scripts_header', 99999999999 );
-				$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'pg_merge_all_scripts_footer', 99999999999999 );
 				$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'pg_merge_all_css_footer', 9999999999999999 );
 				$this->loader->add_action( 'profilegrid_payment_complete', $plugin_public, 'pg_log_payment_complete', 10, 2 );
 				$this->loader->add_action( 'woo_wallet_payment_processed', $plugin_public, 'pg_log_woo_wallet_payment', 10, 2 );
@@ -492,12 +485,6 @@ class Profile_Magic {
 
 	}
 	
-		private function define_rest_api_hooks() {
-		$plugin_rest_api = new Profile_Magic_Rest_API( $this->get_profile_magic(), $this->get_version() );
-		$this->loader->add_action( 'rest_api_init', $plugin_rest_api, 'register_routes' );
-		$this->loader->add_action( 'admin_menu', $plugin_rest_api, 'register_settings_page', 20 );
-	}
-
 	/**
 	 * Run the loader to execute all of the hooks with WordPress.
 	 *

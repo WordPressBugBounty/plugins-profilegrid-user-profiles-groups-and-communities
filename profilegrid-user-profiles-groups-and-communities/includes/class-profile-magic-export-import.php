@@ -101,13 +101,12 @@ class PM_Export_Import {
 	}
 
     public function escape_csv( $payload ) {
-		$triggers = array( '=', '+', '-', '@', '|', '%' );
-
-		if ( in_array( mb_substr( $payload, 0, 1 ), $triggers, true ) ) {
-			$payload = "'" . $payload . "'";
+		$payload = (string) $payload;
+		// Protect the quoted cell boundary and spreadsheet formula interpretation.
+		if ( preg_match( '/^[\x00-\x20]*[=+@|%\-]/', $payload ) || preg_match( '/^[\t\r\n]/', $payload ) ) {
+			$payload = "'" . $payload;
 		}
-
-		return $payload;
+		return str_replace( '"', '""', $payload );
     }
 
 	public function pm_get_user_fields( $post, $sep ) {
@@ -118,7 +117,7 @@ class PM_Export_Import {
 		$fields      = $dbhandler->get_all_result( 'FIELDS', '*', 1, 'results', 0, false, null, false, $additional );
 		if ( count( $fields ) >0 ) {
 			foreach ( $fields as $field ) {
-				$csv_output =  $csv_output . $field->field_name . $sep;
+				$csv_output .= '"' . $this->escape_csv( $field->field_name ) . '"' . $sep;
 			}
 		}
 		$csv_output = apply_filters('Profilegrid_customize_export_user_fields', $csv_output);
@@ -257,8 +256,8 @@ class PM_Export_Import {
 				return $log;
 			}
 			if ( is_numeric( $user_id ) ) :
-				$newpass = $pmrequest->pm_encrypt_decrypt_pass( 'encrypt', $password );
-				update_user_meta( $user_id, 'user_pass', $newpass );
+
+				delete_user_meta( $user_id, 'user_pass' );
 				$log['status'] = 1;
 			else :
 				$log['status']  = 0;

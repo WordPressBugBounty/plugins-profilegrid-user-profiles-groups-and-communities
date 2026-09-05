@@ -23,7 +23,7 @@ class Profile_Magic_License {
            );
 
            // Call the custom API.
-           $response = wp_remote_post( $pg_store_url, array( 'timeout' => 15, 'sslverify' => false, 'body' => $api_params ) );
+           $response = wp_remote_post( $pg_store_url, array( 'timeout' => 15, 'sslverify' => true, 'body' => $api_params ) );
            
             // make sure the response came back okay
             if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
@@ -138,7 +138,7 @@ class Profile_Magic_License {
            );
         
          // Call the custom API.
-            $response = wp_remote_post( $pg_store_url, array( 'timeout' => 15, 'sslverify' => false, 'body' => $api_params ) );
+            $response = wp_remote_post( $pg_store_url, array( 'timeout' => 15, 'sslverify' => true, 'body' => $api_params ) );
             
             // make sure the response came back okay
             if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {

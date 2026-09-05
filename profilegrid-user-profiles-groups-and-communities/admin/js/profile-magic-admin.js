@@ -2262,12 +2262,12 @@ function pm_remove_attachment(obj,key,value)
 			'uid':uid,
                         'nonce':pm_ajax_object.nonce
 	};
-	  jQuery( obj ).parent( 'a' ).parent( 'span.pm_frontend_attachment' ).remove();
     jQuery.post(
         pm_ajax_object.ajax_url,
         data,
         function(response) {
-			if (response) {
+			if (String(response).trim() === '1') {
+				jQuery( obj ).parent( 'a' ).parent( 'span.pm_frontend_attachment' ).remove();
 
 			}
 		}

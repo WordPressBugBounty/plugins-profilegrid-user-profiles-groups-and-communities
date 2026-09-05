@@ -46,17 +46,6 @@ if ( filter_input( INPUT_POST, 'submit_settings' ) ) {
       </div>
       
         
-        <div class="uimrow">
-        <div class="uimfield">
-          <?php esc_html_e( 'Combine JS', 'profilegrid-user-profiles-groups-and-communities' ); ?>
-        </div>
-        <div class="uiminput">
-           <input name="pm_combine_js" id="pm_combine_js" type="checkbox" <?php checked( $dbhandler->get_global_option_value( 'pm_combine_js', '0' ), '1' ); ?> class="pm_toggle" value="1" style="display:none;" />
-          <label for="pm_combine_js"></label>
-        </div>
-        <div class="uimnote"><?php esc_html_e( 'Turning this option on will combine most Javascript files being used by ProfileGrid. This may improve the performance by minimizing the number of script files being loaded.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
-      </div>
-        
          <div class="uimrow">
         <div class="uimfield">
           <?php esc_html_e( 'Combine CSS', 'profilegrid-user-profiles-groups-and-communities' ); ?>

@@ -13,7 +13,7 @@ $pm_sanitizer    = new PM_sanitizer;
 $get             = $pm_sanitizer->sanitize( $_GET );
 
 if ( isset( $get['profile'] ) ) {
-    $value = maybe_unserialize( $get['profile'] );
+    $value = PM_sanitizer::safe_unserialize_array( $get['profile'] );
     if ( is_user_logged_in() ) {
         if ( ! isset( $value['user_email'] ) || '' === $value['user_email'] ) {
             $userinfo            = get_user_by( 'ID', $current_user_id );

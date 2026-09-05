@@ -339,6 +339,8 @@ function parseDate(dateString, isMax) {
     
     $('#photoimg').on('change', function()
     { 
+		$('#cropimage').find('input[name="nonce"]').remove();
+		$('#cropimage').append($('<input>', { type: 'hidden', name: 'nonce', value: pm_ajax_object.nonce }));
         $("#preview-avatar-profile").html('');
         $("#preview-avatar-profile").html('<div><div class="pm-loader"></div></div>');
         var pmDomColor = $(".pmagic").find("a").css('color');
@@ -397,6 +399,7 @@ function parseDate(dateString, isMax) {
 	    var params = {
 	            targetUrl: pm_ajax_object.ajax_url,
                     action: 'pm_upload_image',
+				nonce: pm_ajax_object.nonce,
 	            status: 'save',
 	            x: $('#x').val(),
 	            y : $('#y').val(),
@@ -425,6 +428,7 @@ function parseDate(dateString, isMax) {
 	    var params = {
 	            targetUrl: pm_ajax_object.ajax_url,
                     action: 'pm_upload_image',
+				nonce: pm_ajax_object.nonce,
 	            status: 'cancel',
 	            x: $('#x').val(),
 	            y : $('#y').val(),
@@ -458,6 +462,8 @@ function parseDate(dateString, isMax) {
     
     $('#coverimg').on('change', function()
     { 
+		$('#cropcoverimage').find('input[name="nonce"]').remove();
+		$('#cropcoverimage').append($('<input>', { type: 'hidden', name: 'nonce', value: pm_ajax_object.nonce }));
         $("#preview-cover-image").html('');
         $("#preview-cover-image").html('<div><div class="pm-loader"></div></div>');
         var pmDomColor = $(".pmagic").find("a").css('color');
@@ -514,6 +520,7 @@ function parseDate(dateString, isMax) {
 	    var params = {
 	            targetUrl: pm_ajax_object.ajax_url,
                     action: 'pm_upload_cover_image',
+				nonce: pm_ajax_object.nonce,
 	            cover_status: 'save',
 	            x: $('#cx').val(),
 	            y : $('#cy').val(),
@@ -540,6 +547,7 @@ function parseDate(dateString, isMax) {
 	   var params = {
 	            targetUrl: pm_ajax_object.ajax_url,
                     action: 'pm_upload_cover_image',
+				nonce: pm_ajax_object.nonce,
 	            cover_status: 'cancel',
 	            x: $('#cx').val(),
 	            y : $('#cy').val(),

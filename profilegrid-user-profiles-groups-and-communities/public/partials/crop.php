@@ -4,6 +4,11 @@ $pmrequests = new PM_request;
 $current_user = wp_get_current_user();
 $uploads =  wp_upload_dir();
 $pm_sanitizer = new PM_sanitizer();
+$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+if ( ! wp_verify_nonce( $nonce, 'ajax-nonce' ) ) {
+    wp_send_json_error( array( 'message' => 'Failed security check.' ), 403 );
+    exit;
+}
 $post      = $pm_sanitizer->sanitize( $_POST );
 $target_user_id = isset( $post['user_id'] ) ? intval( $post['user_id'] ) : 0;
 // Only the profile owner or an admin/super admin can change profile images.
@@ -28,6 +33,12 @@ $jpeg_quality = intval($dbhandler->get_global_option_value('pg_image_quality','9
   case 'save' :
     if ( ! $is_authorized ) {
         wp_send_json_error( array( 'message' => 'Unauthorized request.' ) );
+        exit;
+    }
+    $attachment_id = isset( $post['attachment_id'] ) ? absint( $post['attachment_id'] ) : 0;
+    $attachment_owner = $attachment_id > 0 ? (int) get_post_field( 'post_author', $attachment_id ) : 0;
+    if ( $attachment_id <= 0 || ( $attachment_owner !== (int) $current_user->ID && ! current_user_can( 'manage_options' ) && ! is_super_admin() ) ) {
+        wp_send_json_error( array( 'message' => 'Unauthorized attachment.' ), 403 );
         exit;
     }
     if(isset($post['fullpath'])){
