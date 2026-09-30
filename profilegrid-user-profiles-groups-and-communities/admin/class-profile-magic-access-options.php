@@ -112,23 +112,36 @@ class Profile_Magic_access_options {
 		}
 	}
 
-	public function profile_magic_check_content_access( $content ) {
-        $id                 = get_the_ID();
-                $dbhandler  = new PM_DBhandler();
-                $author_id  =  get_the_author_meta( 'ID' );
-                $pmfriends  = new PM_Friends_Functions();
-                $pmrequests = new PM_request();
+	/** Shared visibility decision for full content and ProfileGrid listings. */
+	public function pm_can_view_post( $post_id ) {
+		return $this->pm_content_access_error( $post_id ) === '';
+	}
 
-                $admin_note = get_post_meta( $id, 'pm_admin_note_content', true );
-		if ( trim( $admin_note )!='' ) {
-			$note          = '<div class="pg-admin-note">' . wp_kses_post( $admin_note ) . '</div>';
-			$note_position = get_post_meta( $id, 'pm_admin_note_position', true );
-			if ( $note_position=='top' ) {
-				$content = $note . $content;
-			} else {
-				$content = $content . $note;
-			}
+	public function profile_magic_check_content_access( $content ) {
+		$id = get_the_ID();
+		$error = $this->pm_content_access_error( $id );
+		if ( $error !== '' ) {
+			return $this->profile_magic_content_access_message( $error );
 		}
+		$admin_note = get_post_meta( $id, 'pm_admin_note_content', true );
+		if ( trim( $admin_note ) !== '' ) {
+			$note = '<div class="pg-admin-note">' . wp_kses_post( $admin_note ) . '</div>';
+			$content = get_post_meta( $id, 'pm_admin_note_position', true ) === 'top' ? $note . $content : $content . $note;
+		}
+		return $content;
+	}
+
+	/** An empty error means access is allowed; retain the existing denial messages. */
+	private function pm_content_access_error( $post_id ) {
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return esc_html__( 'This content is unavailable.', 'profilegrid-user-profiles-groups-and-communities' );
+		}
+		$id = $post->ID;
+		$author_id = (int) $post->post_author;
+		$dbhandler = new PM_DBhandler();
+		$pmfriends = new PM_Friends_Functions();
+		$pmrequests = new PM_request();
 
 		if ( get_post_meta( $id, 'pm_enable_custom_access', true )==1 ) {
 			if ( get_post_meta( $id, 'pm_content_access', true )==2 ) {
@@ -156,12 +169,12 @@ class Profile_Magic_access_options {
 							// translators: 1: group page URL, 2: group name.
 							$err          = __( 'Only members of <a href="%1$s" target="_blank">%2$s</a> group can view this page.', 'profilegrid-user-profiles-groups-and-communities' );
 								 $error   =  sprintf( $err, $group_page_link, $group_name );
-								 $content = $this->profile_magic_content_access_message( $error );
+								 return $error;
 						}
 					}
 				} else {
 					$error   = $pmrequests->profile_magic_get_error_message( 'loginrequired', 'profilegrid-user-profiles-groups-and-communities' );
-					$content = $this->profile_magic_content_access_message( $error );
+					return $error;
 				}
 			}
 
@@ -177,12 +190,12 @@ class Profile_Magic_access_options {
 							// translators: 1: profile URL, 2: display name.
 							$err                = __( 'Only those members who are friends of <a href="%1$s" target="_blank">%2$s</a> can view this page.', 'profilegrid-user-profiles-groups-and-communities' );
 							$error              =  sprintf( $err, $author_profile_url, $author_name );
-							$content            = $this->profile_magic_content_access_message( $error );
+							return $error;
 						}
 					}
 				} else {
 					  $error   = $pmrequests->profile_magic_get_error_message( 'loginrequired', 'profilegrid-user-profiles-groups-and-communities' );
-					  $content = $this->profile_magic_content_access_message( $error );
+					  return $error;
 				}
 			}
 
@@ -196,20 +209,20 @@ class Profile_Magic_access_options {
                                             // translators: 1: profile URL, 2: display name.
                                             $err                = __( 'This content is restricted. Please contact <a href="%1$s" target="_blank">%2$s</a> for more details.', 'profilegrid-user-profiles-groups-and-communities' );
                                             $error              =  sprintf( $err, $author_profile_url, $author_name );
-                                            $content            = $this->profile_magic_content_access_message( $error );
+                                            return $error;
 
 					}
 				} else {
 					  $error   = $pmrequests->profile_magic_get_error_message( 'loginrequired', 'profilegrid-user-profiles-groups-and-communities' );
-					  $content = $this->profile_magic_content_access_message( $error );
+					  return $error;
 				}
 			}
 
 			if ( get_post_meta( $id, 'pm_content_access', true )==5 ) {
 				if ( is_user_logged_in() ) {
                                         $uid = get_current_user_id();
-					$author_groups           = get_user_meta( $author_id, 'pm_group', true );
-					$user_group              = get_user_meta( $uid, 'pm_group', true );
+					$author_groups           = $pmrequests->pg_filter_users_group_ids( get_user_meta( $author_id, 'pm_group', true ) );
+					$user_group              = $pmrequests->pg_filter_users_group_ids( get_user_meta( $uid, 'pm_group', true ) );
 					if ( !empty( $user_group ) ) {
 						if ( !is_array( $user_group ) ) {
 							$user_group =array( $user_group );
@@ -243,11 +256,11 @@ class Profile_Magic_access_options {
 									$err    = __( 'Only members of %s group(s) can view this page.', 'profilegrid-user-profiles-groups-and-communities' );
 									$string = rtrim( $string, ', ' );
 									$error  =  sprintf( $err, $string );
-							 $content       = $this->profile_magic_content_access_message( $error );
+							 return $error;
 					}
 				} else {
 					$error   = $pmrequests->profile_magic_get_error_message( 'loginrequired', 'profilegrid-user-profiles-groups-and-communities' );
-					$content = $this->profile_magic_content_access_message( $error );
+					return $error;
 				}
 			}
                         
@@ -272,21 +285,21 @@ class Profile_Magic_access_options {
                                                         if($leader==false)
                                                         {
                                                             $error              = __( 'Only group managers can view this page.', 'profilegrid-user-profiles-groups-and-communities' );
-                                                            $content            = $this->profile_magic_content_access_message( $error );
+                                                            return $error;
                                                         }
                                                         
                                                         
                                                         
 				} else {
                                         $error   = $pmrequests->profile_magic_get_error_message( 'loginrequired', 'profilegrid-user-profiles-groups-and-communities' );
-                                        $content = $this->profile_magic_content_access_message( $error );
+                                        return $error;
 				}
 			}
                         
                         
 		}
 
-		return $content;
+		return '';
 	}
 
 	public function profile_magic_content_access_message( $error ) {

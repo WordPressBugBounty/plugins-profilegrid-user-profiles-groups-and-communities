@@ -14,7 +14,7 @@ if ( $user_info != false ) {
 	$gids         = $pmrequests->profile_magic_get_user_field_value( $id, 'pm_group' );
 	$gid          = $pmrequests->pg_filter_users_group_ids( $gids );
 	if ( ! empty( $gid ) ) {
-		$gid_in = 'gid in(' . implode( ',', $gid ) . ')';
+		$gid_in = 'gid in(' . implode( ',', array_map( 'absint', (array) $gid ) ) . ')';
 	} else {
 		$gid_in = '';
 	}

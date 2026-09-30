@@ -114,7 +114,8 @@ function pm_confirm_request_from_notification(user1,user2,button,id){
 }
 function pm_confirm_request(user1,user2,button)
 {
-	var data = {'action': 'pm_confirm_friend_request','user1' : user1,'user2' :user2,'nonce': pm_ajax_object.nonce};
+	// UI arguments are recipient, sender; the endpoint uses the stored row order.
+	var data = {'action': 'pm_confirm_friend_request','user1' : user2,'user2' :user1,'nonce': pm_ajax_object.nonce};
 	jQuery("#pg-friend-requests").html('<div><div class="pm-loader"></div></div>');
         var pmDomColor = jQuery(".pmagic").children("a").css('color');
         jQuery(".pm-loader").css('border-top-color', pmDomColor);
@@ -133,7 +134,8 @@ function pm_confirm_request(user1,user2,button)
 
 function pm_confirm_request_right_side(user1,user2,button)
 {
-	var data = {'action': 'pm_confirm_friend_request','user1' : user1,'user2' :user2,'nonce': pm_ajax_object.nonce};
+	// UI arguments are recipient, sender; the endpoint uses the stored row order.
+	var data = {'action': 'pm_confirm_friend_request','user1' : user2,'user2' :user1,'nonce': pm_ajax_object.nonce};
         var selector = jQuery(button).parent('div');
 	jQuery(selector).html('<div><div class="pm-loader"></div></div>');
         var pmDomColor = jQuery(".pmagic").children("a").css('color');

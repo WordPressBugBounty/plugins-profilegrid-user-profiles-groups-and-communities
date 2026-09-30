@@ -1923,12 +1923,12 @@ if ( isset( $_POST['tid'] ) ) {
 	public function pm_load_pg_blogs() {
             $pm_sanitizer = new PM_sanitizer;
             
-             if ( !isset( $_POST['nonce'] ) || ! wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'ajax-nonce' ) ) {
+             if ( !isset( $_POST['nonce'] ) || ! is_string( $_POST['nonce'] ) || ! wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'ajax-nonce' ) ) {
                 die(esc_html__('Failed security check','profilegrid-user-profiles-groups-and-communities') );
             }
             $post = $pm_sanitizer->sanitize($_POST);
 		$pmhtmlcreator = new PM_HTML_Creator( $this->profile_magic, $this->version );
-		$pmhtmlcreator->pm_get_user_blog_posts($post['uid'],$post['page'] );
+		$pmhtmlcreator->pm_get_user_blog_posts( isset( $post['uid'] ) ? $post['uid'] : 0, isset( $post['page'] ) && is_scalar( $post['page'] ) ? absint( $post['page'] ) : 1 );
 		die;
 	}
 
@@ -2110,31 +2110,22 @@ if ( isset( $_POST['tid'] ) ) {
 
 	public function pm_confirm_friend_request() {
 		$this->pm_validate_ajax_nonce_or_403( 'pm_confirm_friend_request' );
-		$pmrequests         = new PM_request();
-		$dbhandler          = new PM_DBhandler();
-			$pmfriends      = new PM_Friends_Functions();
-			$pmnotification = new Profile_Magic_Notification();
-		$identifier         = 'FRIENDS';
-		$user1              = filter_input( INPUT_POST, 'user1' );
-		$user2              = filter_input( INPUT_POST, 'user2' );
-		$u1                 = $pmrequests->pm_encrypt_decrypt_pass( 'decrypt', $user1 );
-		$u2                 = $pmrequests->pm_encrypt_decrypt_pass( 'decrypt', $user2 );
-                $current_user       = get_current_user_id();
-                if($u1 != $current_user || $u2 == $current_user ){
-                    die;
-                }
-		$data               = array();
-		// $data['user1'] = $u1;
-		// $data['user2'] = $u2;
-		$date = gmdate( 'Y-m-d h:i:s' );
-		// $data['created_date'] = $date;
-		$data['action_date'] = $date;
-		$data['status']      = 2;
-		$requests            = $pmfriends->profile_magic_is_exist_in_table( $u1, $u2 );
-			$pmnotification->pm_friend_added_notification( $u2, $u1 );
-		$dbhandler->update_row( $identifier, 'id', $requests->id, $data, array( '%s', '%d' ), '%d' );
-		do_action( 'pm_friend_request_accepted', $u2, $u1 );
-			echo '<b>' . esc_html__( 'Request Accepted!', 'profilegrid-user-profiles-groups-and-communities' ) . '</b><br />' . esc_html__( 'You are now friends', 'profilegrid-user-profiles-groups-and-communities' );
+		$pmrequests = new PM_request();
+		$pmfriends = new PM_Friends_Functions();
+		$user1 = isset( $_POST['user1'] ) && is_string( $_POST['user1'] ) ? wp_unslash( $_POST['user1'] ) : '';
+		$user2 = isset( $_POST['user2'] ) && is_string( $_POST['user2'] ) ? wp_unslash( $_POST['user2'] ) : '';
+		$u1 = $pmrequests->pm_encrypt_decrypt_pass( 'decrypt', $user1 );
+		$u2 = $pmrequests->pm_encrypt_decrypt_pass( 'decrypt', $user2 );
+		if ( ! $pmfriends->pm_accept_friend_request( $u1, $u2 ) ) {
+			wp_send_json_error( esc_html__( 'No pending friend request can be accepted.', 'profilegrid-user-profiles-groups-and-communities' ), 403 );
+			return;
+		}
+		$u1 = (int) $u1;
+		$u2 = (int) $u2;
+		$pmnotification = new Profile_Magic_Notification();
+		$pmnotification->pm_friend_added_notification( $u1, $u2 );
+		do_action( 'pm_friend_request_accepted', $u1, $u2 );
+		echo '<b>' . esc_html__( 'Request Accepted!', 'profilegrid-user-profiles-groups-and-communities' ) . '</b><br />' . esc_html__( 'You are now friends', 'profilegrid-user-profiles-groups-and-communities' );
 		die;
 	}
 
@@ -4705,19 +4696,23 @@ if ( isset( $_POST['tid'] ) ) {
 	public function pm_load_user_blogs_shortcode_posts() {
             $pm_sanitizer = new PM_sanitizer;
                 
-            if ( !isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field(wp_unslash($_POST['nonce'])), 'ajax-nonce' ) ) {
+            if ( !isset( $_POST['nonce'] ) || ! is_string( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field(wp_unslash($_POST['nonce'])), 'ajax-nonce' ) ) {
                 die(esc_html__('Failed security check','profilegrid-user-profiles-groups-and-communities') );
             }
                 $post = $pm_sanitizer->sanitize($_POST);
 		$pmhtmlcreator = new PM_HTML_Creator( $this->profile_magic, $this->version );
-		if ( $post['authors'] != '' ) {
+		if ( ( isset( $post['authors'] ) && ! is_string( $post['authors'] ) ) || ! isset( $post['posttypes'] ) || ! is_string( $post['posttypes'] ) ) {
+			wp_send_json_error( esc_html__( 'Invalid blog listing request.', 'profilegrid-user-profiles-groups-and-communities' ), 400 );
+			return;
+		}
+		if ( ! empty( $post['authors'] ) ) {
 			$author = explode( ',',$post['authors']);
 		} else {
 			$author = array();
 		}
 		 $post_type = explode( ',',$post['posttypes']);
 		 
-			$pmhtmlcreator->pm_get_user_blogs_shortcode_posts( $author, $post_type,$post['page']);
+			$pmhtmlcreator->pm_get_user_blogs_shortcode_posts( $author, $post_type, isset( $post['page'] ) && is_scalar( $post['page'] ) ? absint( $post['page'] ) : 1 );
 			die;
 	}
 
@@ -4851,7 +4846,7 @@ if ( isset( $_POST['tid'] ) ) {
 		endif;
 		$current_user = wp_get_current_user();
 		if ( ! empty( $gid ) ) {
-			$gid_in   = 'gid in(' . implode( ',', $gid ) . ')';
+			$gid_in   = 'gid in(' . implode( ',', array_map( 'absint', (array) $gid ) ) . ')';
 			$sections = $dbhandler->get_all_result( 'SECTION', array( 'id', 'section_name' ), 1, 'results', 0, false, 'gid,ordering', false, $gid_in );
 		}
 		?>

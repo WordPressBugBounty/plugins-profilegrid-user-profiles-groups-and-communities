@@ -14,7 +14,7 @@ else
     $gid_array = array($gid);
 }
 if(!empty($gid)):
-$additional = "id in(".implode(',',$gid).") ";
+$additional = "id in(".implode( ',', array_map( 'absint', (array) $gid ) ).") ";
 $pagenum = filter_input(INPUT_GET, 'pagenum');
 $pagenum = isset($pagenum) ? absint($pagenum) : 1;
 $limit = 10; // number of rows in page

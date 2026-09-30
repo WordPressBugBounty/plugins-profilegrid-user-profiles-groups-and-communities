@@ -1249,9 +1249,9 @@ class Profile_Magic_Admin {
 		$fields = array();
 		if ( ! empty( $gid ) ) :
 			if ( current_user_can( 'manage_options' ) ) {
-				$exclude = 'associate_group in(' . implode( ',', $gid ) . ") and field_type not in('first_name','last_name','user_name','user_email','user_url','user_pass','confirm_pass','description','user_avatar','heading','paragraph')";
+				$exclude = 'associate_group in(' . implode( ',', array_map( 'absint', (array) $gid ) ) . ") and field_type not in('first_name','last_name','user_name','user_email','user_url','user_pass','confirm_pass','description','user_avatar','heading','paragraph')";
 			} else {
-				$exclude = 'associate_group in(' . implode( ',', $gid ) . ") and field_type not in('first_name','last_name','user_name','user_email','user_url','user_pass','confirm_pass','description','user_avatar','heading','paragraph','read_only')";
+				$exclude = 'associate_group in(' . implode( ',', array_map( 'absint', (array) $gid ) ) . ") and field_type not in('first_name','last_name','user_name','user_email','user_url','user_pass','confirm_pass','description','user_avatar','heading','paragraph','read_only')";
 			}
 			$section_field_filters = 'AND ' . $exclude;
 
@@ -1535,7 +1535,7 @@ class Profile_Magic_Admin {
 						$gids = $pmrequests->profile_magic_get_user_field_value( $user_id, 'pm_group' );
 						$gid  = $pmrequests->pg_filter_users_group_ids( $gids );
 				if ( ! empty( $gid ) ) {
-							$exclude = 'associate_group in(' . implode( ',', $gid ) . ") and field_type not in('first_name','last_name','user_name','user_email','user_url','user_pass','confirm_pass','description','user_avatar','heading','paragraph')";
+							$exclude = 'associate_group in(' . implode( ',', array_map( 'absint', (array) $gid ) ) . ") and field_type not in('first_name','last_name','user_name','user_email','user_url','user_pass','confirm_pass','description','user_avatar','heading','paragraph')";
 							$fields  = $dbhandler->get_all_result( 'FIELDS', '*', 1, 'results', 0, false, 'ordering', false, $exclude );
 				} else {
 					$fields = array();

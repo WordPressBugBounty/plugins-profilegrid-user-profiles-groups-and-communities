@@ -9,7 +9,7 @@ $edit_uid = $pmrequests->pm_get_uid_from_profile_slug($edit_uid);
 if(is_array($gid)){$gid_array = $gid;} else{$gid_array = array($gid);}
 if(!empty($gid_array))
 {
-    $exclude = "associate_group in(".implode(',',$gid_array).") and field_type not in('user_name','user_email','user_avatar','user_pass','confirm_pass','paragraph','heading','term_checkbox','read_only')";
+    $exclude = "associate_group in(".implode( ',', array_map( 'absint', (array) $gid_array ) ).") and field_type not in('user_name','user_email','user_avatar','user_pass','confirm_pass','paragraph','heading','term_checkbox','read_only')";
 
     $exclude = apply_filters('pm_exclude_heading_paragraph_field', $exclude, $gid_array);
     $is_field =  $dbhandler->get_all_result('FIELDS', $column = '*',1,'results',0,false, $sort_by = 'ordering',false,$exclude);
@@ -22,15 +22,7 @@ $rd = filter_input(INPUT_GET, 'rd');
     <?php if(isset($is_field) && !empty($is_field)):?>  
       
     <form class="pmagic-form pm-dbfl" method="post" action="" id="pm_edit_form" name="pm_edit_form"  enctype="multipart/form-data">
-        <?php 
-        // Use object method instead of direct function call
-        if ( class_exists( 'Profile_Magic_Basic_Functions' ) ) {
-            $basic_function = new Profile_Magic_Basic_Functions( $this->profile_magic, $this->version );
-            if ( method_exists( $basic_function, 'pm_render_nonce_field' ) ) {
-                $basic_function->pm_render_nonce_field( 'pm_profile_action', 'pm_profile_nonce' );
-            }
-        }
-        ?>
+        <?php wp_nonce_field( 'pm_profile_action', 'pm_profile_nonce' ); ?>
         <input type="hidden" name="gid" id="gid" value="<?php echo esc_attr($group_id); ?>" />
         <input type="hidden" name="euid" id="euid" value="<?php echo esc_attr($edit_uid); ?>" />
         <?php if(isset($rd) && $rd!=''):?>

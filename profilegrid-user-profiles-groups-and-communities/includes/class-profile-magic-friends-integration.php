@@ -1,6 +1,31 @@
 <?php
 class PM_Friends_Functions {
 
+	/** Only the recipient may atomically accept an existing, directed pending request. */
+	public function pm_accept_friend_request( $sender, $recipient ) {
+		global $wpdb;
+		foreach ( array( $sender, $recipient ) as $id ) {
+			if ( ( ! is_int( $id ) && ! is_string( $id ) ) || ! preg_match( '/^[1-9][0-9]*$/D', (string) $id ) || false === filter_var( $id, FILTER_VALIDATE_INT ) ) {
+				return false;
+			}
+		}
+		$sender = (int) $sender;
+		$recipient = (int) $recipient;
+		if ( ! is_user_logged_in() || $recipient !== get_current_user_id() || $sender === $recipient ) {
+			return false;
+		}
+		$dbhandler = new PM_DBhandler();
+		$where = array( 'user1' => $sender, 'user2' => $recipient, 'status' => 1 );
+		$request = $dbhandler->get_all_result( 'FRIENDS', '*', $where, 'row', 0, 1 );
+		if ( ! $request ) {
+			return false;
+		}
+		$where['id'] = (int) $request->id;
+		$table = ( new Profile_Magic_Activator() )->get_db_table_name( 'FRIENDS' );
+		$updated = $wpdb->update( $table, array( 'action_date' => gmdate( 'Y-m-d h:i:s' ), 'status' => 2 ), $where, array( '%s', '%d' ), array( '%d', '%d', '%d', '%d' ) );
+		return $updated === 1;
+	}
+
     public function profile_magic_my_friends( $uid ) {
 		$dbhandler   = new PM_DBhandler();
 		$identifier  = 'FRIENDS';

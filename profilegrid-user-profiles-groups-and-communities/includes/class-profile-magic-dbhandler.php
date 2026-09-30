@@ -205,7 +205,7 @@ class PM_DBhandler {
 					$i++;
             }
 			if ( $additional!='' ) {
-                             $additional = $this->pm_filter_addtional_query_parameter($identifier, $table, $additional);
+                             $additional = $this->pm_filter_addtional_query_parameter($identifier, $table, $additional, $args);
                 if ( $additional === '' ) {
                     return null;
                 }
@@ -213,7 +213,7 @@ class PM_DBhandler {
 			}
         } elseif ( $where == 1 ) {
             if ( $additional!='' ) {
-                $additional = $this->pm_filter_addtional_query_parameter($identifier, $table, $additional);
+                $additional = $this->pm_filter_addtional_query_parameter($identifier, $table, $additional, $args);
                 if ( $additional === '' ) {
                     return null;
                 }
@@ -669,57 +669,84 @@ class PM_DBhandler {
         return implode( ',', $validated_columns );
     }
 
-    private function pm_strip_sql_literals( $sql ) {
-        $sql = preg_replace( "/'[^'\\\\]*(?:\\\\.[^'\\\\]*)*'/", "''", $sql );
-        $sql = preg_replace( '/"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"/', '""', $sql );
-        $sql = preg_replace( '/\\b\\d+\\b/', '0', $sql );
+    /** Compile legacy conditions in one pass, binding every literal as a value. */
+    public function pm_filter_addtional_query_parameter( $identifier, $table, $additional, &$args = null ) {
+        global $wpdb;
+        if ( ! is_string( $additional ) || trim( $additional ) === '' ) {
+            return '';
+        }
+        $sql = '';
+        $values = array();
+        $length = strlen( $additional );
+        $keywords = array( 'AND', 'OR', 'IN', 'NOT', 'LIKE', 'IS', 'NULL', 'ASC', 'DESC' );
+        for ( $i = 0; $i < $length; ) {
+            $char = $additional[$i];
+            if ( ctype_space( $char ) ) {
+                $sql .= ' ';
+                ++$i;
+            } elseif ( $char === "'" || $char === '"' ) {
+                $quote = $char;
+                $value = '';
+                $closed = false;
+                ++$i;
+                while ( $i < $length ) {
+                    $char = $additional[$i++];
+                    if ( $char === $quote ) {
+                        if ( $i < $length && $additional[$i] === $quote ) {
+                            $value .= $quote;
+                            ++$i;
+                        } else {
+                            $closed = true;
+                            break;
+                        }
+                    } elseif ( $char === chr( 92 ) ) {
+                        if ( $i >= $length ) {
+                            return '';
+                        }
+                        $escaped = $additional[$i++];
+                        $escapes = array( '0' => chr( 0 ), 'b' => chr( 8 ), 'n' => "\n", 'r' => "\r", 't' => "\t", 'Z' => chr( 26 ) );
+                        $value .= isset( $escapes[$escaped] ) ? $escapes[$escaped] : ( in_array( $escaped, array( '%', '_' ), true ) ? chr( 92 ) . $escaped : $escaped );
+                    } else {
+                        $value .= $char;
+                    }
+                }
+                if ( ! $closed ) {
+                    return '';
+                }
+                $sql .= '%s';
+                $values[] = $value;
+            } elseif ( preg_match( '/\G[0-9]+(?:\.[0-9]+)?/', $additional, $match, 0, $i ) ) {
+                // Bind numeric text without overflowing integers or losing decimal precision.
+                $sql .= '%s';
+                $values[] = $match[0];
+                $i += strlen( $match[0] );
+            } elseif ( preg_match( '/\G(?:`[A-Za-z_][A-Za-z0-9_]*`|[A-Za-z_][A-Za-z0-9_]*)/', $additional, $match, 0, $i ) ) {
+                $token = trim( $match[0], '`' );
+                $upper = strtoupper( $token );
+                $i += strlen( $match[0] );
+                if ( $match[0][0] !== '`' && in_array( $upper, $keywords, true ) ) {
+                    $sql .= $upper;
+                } elseif ( $this->pm_is_allowed_identifier( $identifier, $table, $token ) ) {
+                    // Columns cannot be invoked as functions or used as qualifiers.
+                    if ( preg_match( '/^\s*[(.]/', substr( $additional, $i ) ) ) {
+                        return '';
+                    }
+                    $sql .= '`' . $token . '`';
+                } else {
+                    return '';
+                }
+            } elseif ( strpos( '(),=<>!', $char ) !== false ) {
+                $sql .= $char;
+                ++$i;
+            } else {
+                return ''; // Reject comments, statement separators and unknown syntax.
+            }
+        }
+        if ( $args === null ) {
+            return $values ? $wpdb->prepare( $sql, $values ) : $sql;
+        }
+        $args = array_merge( $args, $values );
         return $sql;
     }
-
-    public function pm_filter_addtional_query_parameter( $identifier, $table, $additional ) {
-        $additional = trim( (string) $additional );
-        if ( $additional === '' ) {
-            return '';
-        }
-
-        if ( preg_match( '/\\b(UNION|SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|EXEC|EXECUTE|DECLARE|SLEEP|BENCHMARK|INTO\\s+OUTFILE|LOAD_FILE)\\b/i', $additional ) ) {
-            return '';
-        }
-
-        $normalized = $this->pm_strip_sql_literals( $additional );
-        // Keep quoted literals allowed after normalization so safe clauses like NOT IN ('read_only') still validate.
-        if ( preg_match( '/[;#]/', $normalized ) || strpos( $normalized, '--' ) !== false ) {
-            return '';
-        }
-        if ( preg_match( '/[^A-Za-z0-9_\\s(),.=<>!%`\'"]/', $normalized ) ) {
-            return '';
-        }
-
-        preg_match_all( '/[A-Za-z_][A-Za-z0-9_]*/', $normalized, $matches );
-        $allowed_keywords = array(
-            'AND',
-            'OR',
-            'IN',
-            'NOT',
-            'LIKE',
-            'IS',
-            'NULL',
-            'ASC',
-            'DESC',
-        );
-
-        foreach ( $matches[0] as $token ) {
-            if ( in_array( strtoupper( $token ), $allowed_keywords, true ) ) {
-                continue;
-            }
-
-            if ( ! $this->pm_is_allowed_identifier( $identifier, $table, $token ) ) {
-                return '';
-            }
-        }
-
-        return $additional;
-    }
-
 
 }

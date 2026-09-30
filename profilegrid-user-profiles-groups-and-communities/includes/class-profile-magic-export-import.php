@@ -13,11 +13,13 @@ class PM_Export_Import {
 
         //Getting the text generated to download
         $generatedDate = gmdate( 'd-m-Y His' );
-        header( 'Content-Type: text/csv' );
+        header( 'Content-Type: text/csv; charset=UTF-8' );
         header( 'Content-Disposition: attachment; filename="' . $filename . '-' . $generatedDate . '.csv"' );
         header( 'Pragma: no-cache' );
         header( 'Expires: 0' );
-        echo wp_kses_post($csvFile);                                              //Whatever is echoed here will be in the csv file
+        // CSV cells are escaped by the serializer. HTML filtering here can undo
+        // quote escaping or remove a prefix and expose a spreadsheet formula.
+        echo $csvFile; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- CSV, not HTML.
         exit;
 	}
 
@@ -38,11 +40,8 @@ class PM_Export_Import {
 	public function pm_generate_user_csv( $post ) {
          $csv_output = '';
 
-		if ( isset( $post['pm_separator'] ) ) {
-			$seprator = $post['pm_separator'];
-		} else {
-			$seprator = ',';
-		}
+		$seprator = $this->pm_csv_separator( isset( $post['pm_separator'] ) ? $post['pm_separator'] : ',' );
+		$post['pm_separator'] = $seprator;
 
         $csv_output .= $this->pm_get_user_fields( $post, $seprator );
 		$csv_output .= $this->pm_get_user_fields_value( $post, $seprator );
@@ -78,6 +77,7 @@ class PM_Export_Import {
 	}
 
 	public function pm_get_csv_single_user_row( $uid, $fids, $sep ) {
+		$sep = $this->pm_csv_separator( $sep );
 		$dbhandler  = new PM_DBhandler();
 		$pmrequests = new PM_request();
 		$csv_output = '';
@@ -103,16 +103,26 @@ class PM_Export_Import {
     public function escape_csv( $payload ) {
 		$payload = (string) $payload;
 		// Protect the quoted cell boundary and spreadsheet formula interpretation.
-		if ( preg_match( '/^[\x00-\x20]*[=+@|%\-]/', $payload ) || preg_match( '/^[\t\r\n]/', $payload ) ) {
+		// Also cover Unicode whitespace/formatting prefixes and full-width operators.
+		if ( preg_match( '/^[\x00-\x20]*[=+@|%\-]/', $payload ) || preg_match( '/^[\t\r\n]/', $payload ) || preg_match( '/^[\p{Z}\p{C}\s]*[=+@|%\x{FF1D}\x{FF0B}\x{FF0D}\x{FF20}\-]/u', $payload ) ) {
 			$payload = "'" . $payload;
 		}
 		return str_replace( '"', '""', $payload );
     }
 
+    /** A CSV delimiter is one printable ASCII byte (or a tab), never a quote. */
+    private function pm_csv_separator( $separator ) {
+        if ( ! is_string( $separator ) || strlen( $separator ) !== 1 || $separator === '"' || $separator === '\\' ) {
+            return ',';
+        }
+        return $separator === "\t" || ( ord( $separator ) >= 32 && ord( $separator ) <= 126 ) ? $separator : ',';
+    }
+
 	public function pm_get_user_fields( $post, $sep ) {
+		$sep = $this->pm_csv_separator( $sep );
          $csv_output = '';
 		$dbhandler   = new PM_DBhandler();
-		$ids         = implode( ',', $post['pm_fields'] );
+		$ids         = implode( ',', array_map( 'absint', (array) $post['pm_fields'] ) );
 		$additional  = "field_id in($ids)";
 		$fields      = $dbhandler->get_all_result( 'FIELDS', '*', 1, 'results', 0, false, null, false, $additional );
 		if ( count( $fields ) >0 ) {

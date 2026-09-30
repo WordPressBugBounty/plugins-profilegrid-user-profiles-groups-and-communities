@@ -153,11 +153,19 @@ if(isset($_POST['edit_group']))
         }
 }
 
+// Both join steps act only for the logged-in user and require request intent.
+if ( isset( $_POST['pg_join_group'] ) || isset( $_POST['pg_join_paid_group'] ) ) {
+    $pg_join_gid = $pmrequests->pg_positive_group_id( isset( $_POST['pg_join_gid'] ) ? wp_unslash( $_POST['pg_join_gid'] ) : null );
+    $join_nonce = isset( $_POST['pg_join_group_nonce'] ) && is_string( $_POST['pg_join_group_nonce'] ) ? wp_unslash( $_POST['pg_join_group_nonce'] ) : '';
+    if ( ! is_user_logged_in() || ! wp_verify_nonce( $join_nonce, 'pg_join_group_action' ) || ! $pg_join_gid || ! $dbhandler->get_row( 'GROUPS', $pg_join_gid ) ) {
+        wp_die( esc_html__( 'Invalid group join request.', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+    }
+}
+
 if(isset($_POST['pg_join_group']))
 {
     /*$pg_uid = filter_input(INPUT_POST, 'pg_uid');*/
     $pg_uid = get_current_user_id();
-    $pg_join_gid = filter_input(INPUT_POST, 'pg_join_gid');
     $group_type = $pmrequests->profile_magic_get_group_type($pg_join_gid);
     $is_paid_group = $pmrequests->profile_magic_check_paid_group($pg_join_gid);
     if($is_paid_group>0)
@@ -190,7 +198,6 @@ if(isset($_POST['pg_join_paid_group']))
 {
     /*$pg_uid = filter_input(INPUT_POST, 'pg_uid');*/
     $pg_uid = get_current_user_id();
-    $pg_join_gid = filter_input(INPUT_POST, 'pg_join_gid');
     do_action('profile_magic_join_group_registration_process',$_POST,$pg_join_gid,$pg_uid);
     do_action('profile_magic_join_paid_group_process',$_POST,$pg_join_gid,$pg_uid);
 }

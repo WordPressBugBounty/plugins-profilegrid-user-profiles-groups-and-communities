@@ -177,7 +177,7 @@ class PM_request {
 			$gid = array();
 		}
 
-				$gid_in = 'associate_group in(' . implode( ',', $gid ) . ')';
+				$gid_in = 'associate_group in(' . implode( ',', array_map( 'absint', (array) $gid ) ) . ')';
 		$data           = array();
 		if ( $gid != '' && $gid != false && ! empty( $gid_in ) ) {
 			if ( $visibility == false ) {
@@ -1232,6 +1232,37 @@ class PM_request {
 		return $minimum_require;
 	}
 
+	/** Validate frontend profile form intent and the target before any writes/hooks. */
+	public function pm_validate_profile_form_request( $post, $operation ) {
+		if ( ! is_user_logged_in() || ! is_array( $post ) || ! in_array( $operation, array( 'edit_profile', 'upload_image', 'remove_image' ), true ) ) {
+			return false;
+		}
+		$action = $operation === 'edit_profile' ? 'pm_profile_action' : 'pm_profile_update_action';
+		$valid_nonce = false;
+		foreach ( array( 'pm_profile_nonce' => $action, '_wpnonce' => 'pm_edit_profile' ) as $key => $nonce_action ) {
+			if ( isset( $post[$key] ) && is_string( $post[$key] ) && wp_verify_nonce( wp_unslash( $post[$key] ), $nonce_action ) ) {
+				$valid_nonce = true;
+				break;
+			}
+		}
+		if ( ! $valid_nonce ) {
+			return false;
+		}
+		$key = $operation === 'edit_profile' ? 'euid' : 'user_id';
+		$id = isset( $post[$key] ) ? $post[$key] : null;
+		if ( ( ! is_int( $id ) && ! is_string( $id ) ) || ! preg_match( '/^[1-9][0-9]*$/D', (string) $id ) || false === filter_var( $id, FILTER_VALIDATE_INT ) ) {
+			return false;
+		}
+		$allowed_id = get_current_user_id();
+		if ( $operation === 'edit_profile' ) {
+			// Preserve the existing trusted extension hook for delegated profile edits.
+			$allowed_id = apply_filters( 'pg_edit_user_profile_user_id', $allowed_id, ( new PM_sanitizer() )->sanitize( $post ) );
+		} elseif ( ! isset( $post['user_meta'] ) || ! in_array( $post['user_meta'], array( 'pm_user_avatar', 'pm_cover_image' ), true ) ) {
+			return false;
+		}
+		return (int) $id === (int) $allowed_id && (int) $allowed_id > 0;
+	}
+
 	public function pm_update_user_custom_fields_data( $post, $files, $server, $gid, $fields, $user_id ) {
 			  $dbhandler     = new PM_DBhandler();
                           
@@ -1270,7 +1301,8 @@ class PM_request {
                     
 			foreach ( $fields as $field ) {
 
-				if ( $field->field_type == 'user_pass' || $field->field_type == 'confirm_pass' || $field->field_type == 'user_url' ) {
+				// Account email is managed by registration and the nonce/option-protected account settings flow.
+				if ( $field->field_type == 'user_email' || $field->field_key === 'user_email' || $field->field_type == 'user_pass' || $field->field_type == 'confirm_pass' || $field->field_type == 'user_url' ) {
 					continue;
 				}
 				$value         = '';
@@ -1340,15 +1372,6 @@ class PM_request {
 							'user_url' => '',
 						)
 					);
-                                    }
-				} elseif ( $field->field_type == 'user_email' ) {
-                                    if ( $value != '' ) {
-							wp_update_user(
-								array(
-									'ID'         => $user_id,
-									'user_email' => $value,
-								)
-							);
                                     }
 				} else {
 					if ( $field->field_type == 'file' ) {
@@ -2134,7 +2157,7 @@ class PM_request {
 			$gid_array = $gid;
 		} else {
 			$gid_array = array( $gid );}
-				$additional = ' AND associate_group in(' . implode( ',', $gid_array ) . ')';
+				$additional = ' AND associate_group in(' . implode( ',', array_map( 'absint', (array) $gid_array ) ) . ')';
 		$where              = array( 'display_on_profile' => 1 );
 		if ( $view == 'group' ) {
 			$where['display_on_group']            = 1;
@@ -2172,7 +2195,7 @@ class PM_request {
 			$gid_array = $gid;
 		} else {
 			$gid_array = array( $gid );}
-				$additional = 'associate_group in(' . implode( ',', $gid_array ) . ')';
+				$additional = 'associate_group in(' . implode( ',', array_map( 'absint', (array) $gid_array ) ) . ')';
 		$where              = array();
 		if ( $section != '' ) {
 			$where['associate_section'] = $section;
@@ -5075,8 +5098,16 @@ class PM_request {
 	}
 
 	public function profile_magic_join_group_fun( $uid, $gid, $type ) {
+		$gid = $this->pg_positive_group_id( $gid );
+		if ( ! $gid || ! get_userdata( absint( $uid ) ) ) {
+			return false;
+		}
+		$uid = absint( $uid );
+		$dbhandler = new PM_DBhandler();
+		if ( ! $dbhandler->get_row( 'GROUPS', $gid ) ) {
+			return false;
+		}
 		 $pmemails    = new PM_Emails();
-		$dbhandler    = new PM_DBhandler();
 		$notification = new Profile_Magic_Notification();
                 $is_group_limit = $dbhandler->get_value('GROUPS','is_group_limit',$gid);
                 if($is_group_limit==1)
@@ -5119,7 +5150,9 @@ class PM_request {
 				$gid_array = array_merge( $gid_array, array( $gid ) );
 			}
 			$update     = update_user_meta( $uid, 'pm_joining_date', $joining_dates );
-			$update     = update_user_meta( $uid, 'pm_group', $gid_array );
+			// Membership queries match serialized strings. Persist canonical decimal
+			// strings after integer validation so joins remain visible to exports/lists.
+			$update     = update_user_meta( $uid, 'pm_group', array_map( 'strval', $gid_array ) );
 			$where      = array(
 				'gid' => $gid,
 				'uid' => $uid,
@@ -5473,27 +5506,31 @@ class PM_request {
 		return $online;
 	}
 
+	/** Accept decimal positive IDs only; never coerce an SQL fragment to an ID. */
+	public function pg_positive_group_id( $value ) {
+		if ( ! is_int( $value ) && ! is_string( $value ) ) {
+			return 0;
+		}
+		if ( ! preg_match( '/^[1-9][0-9]*$/D', (string) $value ) || false === filter_var( $value, FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1 ) ) ) ) {
+			return 0;
+		}
+		return absint( $value );
+	}
+
 	public function pg_filter_users_group_ids( $gids ) {
 		$dbhandler = new PM_DBhandler();
 		$groups    = array();
-		if ( isset( $gids ) && ! empty( $gids ) ) {
-			if ( is_array( $gids ) ) {
-				$usergroup = array_unique( $gids );
-				foreach ( $usergroup as $gid ) {
-					$groupinfo = $dbhandler->get_row( 'GROUPS', $gid );
-					if ( isset( $groupinfo ) && ! empty( $groupinfo ) ) {
-						$groups[] = $gid;
-					}
-				}
-			} elseif ( is_numeric( $gids ) ) {
-				$groupinfo = $dbhandler->get_row( 'GROUPS', $gids );
-				if ( isset( $groupinfo ) && ! empty( $groupinfo ) ) {
-					$groups[] = $gids;
-				}
+		foreach ( is_array( $gids ) ? $gids : array( $gids ) as $value ) {
+			$gid = $this->pg_positive_group_id( $value );
+			if ( ! $gid ) {
+				continue;
+			}
+			$groupinfo = $dbhandler->get_row( 'GROUPS', $gid );
+			if ( ! empty( $groupinfo->id ) ) {
+				$groups[] = (int) $groupinfo->id;
 			}
 		}
-
-		return $groups;
+		return array_values( array_unique( $groups ) );
 	}
 
 	public function pg_get_rm_installation_plugin_url() {

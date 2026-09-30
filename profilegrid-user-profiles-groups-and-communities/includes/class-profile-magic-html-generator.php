@@ -483,7 +483,28 @@ class PM_HTML_Creator {
 		<?php
 	}
 
+	/** Filter published candidates before callers count or paginate them. */
+	public function pm_get_visible_blog_posts( $args ) {
+		$access = new Profile_Magic_access_options( $this->profile_magic, $this->version );
+		$viewable_types = array_values( array_filter( get_post_types(), 'is_post_type_viewable' ) );
+		$requested_types = isset( $args['post_type'] ) ? (array) $args['post_type'] : array( 'post' );
+		$args['post_type'] = in_array( 'any', $requested_types, true ) ? $viewable_types : array_values( array_intersect( $requested_types, $viewable_types ) );
+		if ( empty( $args['post_type'] ) ) {
+			return array();
+		}
+		$args['post_status'] = 'publish';
+		$args['posts_per_page'] = -1;
+		unset( $args['offset'], $args['paged'] );
+		return array_values( array_filter( get_posts( $args ), function ( $post ) use ( $access ) {
+			return $access->pm_can_view_post( $post->ID );
+		} ) );
+	}
+
 	public function pm_get_user_blog_posts( $uid, $pagenum = 1, $limit = 10 ) {
+		$uid = ( new PM_request() )->pg_positive_group_id( $uid );
+		if ( ! $uid ) { return; }
+		$pagenum = max( 1, absint( $pagenum ) );
+		$limit = max( 1, absint( $limit ) );
           $dbhandler = new PM_DBhandler();
 		 $pmrequests = new PM_request();
 		 $post_type  = $dbhandler->get_global_option_value( 'pm_blog_post_from', 'profilegrid_blogs' );
@@ -499,11 +520,13 @@ class PM_HTML_Creator {
 			 'post_status'    => 'publish',
 			 'posts_per_page' => -1,
 		 );
-		 $total_posts = count( get_posts( $args ) );
+		 $visible_posts = $this->pm_get_visible_blog_posts( $args );
+		$total_posts = count( $visible_posts );
+		$args['post__in'] = array_merge( array( 0 ), wp_list_pluck( $visible_posts, 'ID' ) );
 
 		 $args['posts_per_page'] = $limit;
 		 $args['offset']         = $offset;
-		 $posts_array            = get_posts( $args );
+
 
 		 $num_of_pages = ceil( $total_posts/$limit );
 
@@ -2690,6 +2713,7 @@ class PM_HTML_Creator {
                 <input type="hidden" name="pg_uid" id="pg_uid" value="<?php echo esc_attr( $uid ); ?>" />
                 <input type="hidden" name="pg_join_gid" id="pg_join_gid" value="<?php echo esc_attr( $gid ); ?>" />
                 <input type="hidden" name="pg_join_paid_group" id="pg_join_paid_group" value="1" />
+                <?php wp_nonce_field( 'pg_join_group_action', 'pg_join_group_nonce' ); ?>
                 <input type="hidden" name="action" value="process" />
                 <input type="hidden" name="cmd" value="_cart" /> 
                 <input type="hidden" name="invoice" value="<?php echo esc_attr( gmdate( 'His' ) . wp_rand( 1234, 9632 ) ); ?>" />
@@ -2813,7 +2837,9 @@ class PM_HTML_Creator {
 	public function pm_get_user_blogs_shortcode_posts( $author, $post_type, $pagenum = 1, $limit = 10 ) {
 		$dbhandler  = new PM_DBhandler();
 		$pmrequests = new PM_request();
-                $limit = apply_filters('pg_blogs_limit_per_page', $limit);
+                $limit = max( 1, absint( apply_filters( 'pg_blogs_limit_per_page', $limit ) ) );
+                $pagenum = max( 1, absint( $pagenum ) );
+                $author = array_values( array_filter( array_map( array( $pmrequests, 'pg_positive_group_id' ), (array) $author ) ) );
                 $show_thumbnail = apply_filters('pg_blog_list_true_thumbnail', true);
                 $show_date_comments = apply_filters('pg_blog_list_show_date_comments', true);
                 $show_left_section = apply_filters('pg_blog_list_show_left_sections', true);
@@ -2836,7 +2862,9 @@ class PM_HTML_Creator {
 			$posttypes = $post_type;
 		}
 
-		$total_posts = count( get_posts( $args ) );
+		$visible_posts = $this->pm_get_visible_blog_posts( $args );
+		$total_posts = count( $visible_posts );
+		$args['post__in'] = array_merge( array( 0 ), wp_list_pluck( $visible_posts, 'ID' ) );
 
 		$args['posts_per_page'] = $limit;
 		$args['offset']         = $offset;

@@ -6,16 +6,17 @@ $path =  plugin_dir_url(__FILE__);
 $current_user = wp_get_current_user();
 $pm_error = '';
 
+// Check every profile form mutation before invoking update hooks or handling uploads.
+foreach ( array( 'edit_profile', 'upload_image', 'remove_image' ) as $profile_operation ) {
+    if ( isset( $_POST[$profile_operation] ) && ! $pmrequests->pm_validate_profile_form_request( $_POST, $profile_operation ) ) {
+        wp_die( esc_html__( 'Invalid profile update request.', 'profilegrid-user-profiles-groups-and-communities' ), '', array( 'response' => 403 ) );
+    }
+}
 do_action('pg_update_user_status');
 $pm_sanitizer = new PM_sanitizer;
 
 if(isset($_POST['upload_image']))
 {
-    
-        $retrieved_nonce = filter_input( INPUT_POST, '_wpnonce' );
-        if ( ! wp_verify_nonce( $retrieved_nonce, 'pm_edit_profile' ) ) {
-                die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
-        }
         $post = $pm_sanitizer->sanitize($_POST);
 	$filefield = $_FILES['user_image'];
 	$allowed_ext ='jpg|jpeg|png|gif|webp|avif';
@@ -31,10 +32,6 @@ if(isset($_POST['upload_image']))
 
 if(isset($_POST['remove_image']))
 {
-    $retrieved_nonce = filter_input( INPUT_POST, '_wpnonce' );
-        if ( ! wp_verify_nonce( $retrieved_nonce, 'pm_edit_profile' ) ) {
-                die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
-        }
         $post = $pm_sanitizer->sanitize($_POST);
         
 	if($post['user_id']==$current_user->ID)
@@ -57,43 +54,36 @@ if(isset($_POST['remove_image']))
 
 if(isset($_POST['edit_profile']))
 {
-        $retrieved_nonce = filter_input( INPUT_POST, '_wpnonce' );
-        if ( ! wp_verify_nonce( $retrieved_nonce, 'pm_edit_profile' ) ) {
-                die( esc_html__( 'Failed security check', 'profilegrid-user-profiles-groups-and-communities' ) );
-        }
         $post = $pm_sanitizer->sanitize($_POST);
         
-        $allowed_user_id = apply_filters('pg_edit_user_profile_user_id',$current_user->ID,$post);
-        
-        if($post['euid']==$allowed_user_id)
+        // Email is not an editable field on this form, including approval/extension hooks.
+        unset( $post['user_email'] );
+        $post['euid'] = (int) $post['euid'];
+        $gids = $pmrequests->profile_magic_get_user_field_value($post['euid'],'pm_group');
+        $gid = $pmrequests->pg_filter_users_group_ids($gids);
+        if(is_array($gid)){$gid_array = $gid;} else{$gid_array = array($gid);}
+        if(!empty($gid_array))
         {
-            $gids = $pmrequests->profile_magic_get_user_field_value($post['euid'],'pm_group');
-            $gid = $pmrequests->pg_filter_users_group_ids($gids);
-            if(is_array($gid)){$gid_array = $gid;} else{$gid_array = array($gid);}
-            if(!empty($gid_array))
+            $exclude = "associate_group in(".implode( ',', array_map( 'absint', (array) $gid_array ) ).") and field_type not in('user_name','user_email','user_avatar','user_pass','confirm_pass','paragraph','heading','term_checkbox','read_only')";
+            $fields =  $dbhandler->get_all_result('FIELDS', $column = '*',1,'results',0,false, $sort_by = 'ordering',false,$exclude);
+        }
+        else
+        {
+            $fields = array();
+        }
+
+        if(empty($errors))
+        {
+            if($dbhandler->get_global_option_value('pm_admin_approval_require_before_update','0')=='1')
             {
-                $exclude = "associate_group in(".implode(',',$gid_array).") and field_type not in('user_name','user_avatar','user_pass','confirm_pass','paragraph','heading','term_checkbox','read_only')";
-                $fields =  $dbhandler->get_all_result('FIELDS', $column = '*',1,'results',0,false, $sort_by = 'ordering',false,$exclude);
+                do_action('profile_magic_send_updated_data_for_approval',$post,$_FILES,$_SERVER,$gid,$fields,$post['euid'],$textdomain);
             }
             else
             {
-                $fields = array();
-            }
-
-            if(empty($errors))
-            {
-                if($dbhandler->get_global_option_value('pm_admin_approval_require_before_update','0')=='1')
-                {
-                    do_action('profile_magic_send_updated_data_for_approval',$post,$_FILES,$_SERVER,$gid,$fields,$post['euid'],$textdomain);
-                }
-                else
-                {
-                    $pmrequests->pm_update_user_custom_fields_data($post,$_FILES,$_SERVER,$gid,$fields,$post['euid']);
-                    do_action('profile_magic_update_user_meta',$post,$_FILES,$_SERVER,$gid,$fields,$post['euid'],$textdomain);
-                }
+                $pmrequests->pm_update_user_custom_fields_data($post,$_FILES,$_SERVER,$gid,$fields,$post['euid']);
+                do_action('profile_magic_update_user_meta',$post,$_FILES,$_SERVER,$gid,$fields,$post['euid'],$textdomain);
             }
         }
-        
         if(isset($post['pg_rd']))
         {
             $redirect_url = $pmrequests->profile_magic_get_frontend_url('pm_group_page','',$post['gid']);
@@ -128,7 +118,7 @@ if(is_user_logged_in())
 	
         if(!empty($gid))
         {
-            $gid_in = "gid in(".implode(',',$gid).")";
+            $gid_in = "gid in(".implode( ',', array_map( 'absint', (array) $gid ) ).")";
             $sections =  $dbhandler->get_all_result('SECTION',array('id','section_name'),1,'results',0,false,'gid,ordering',false,$gid_in);
         }
         $filter_user_id = $pmrequests->pm_get_profile_slug_by_id($current_user->ID);
@@ -138,7 +128,7 @@ if(is_user_logged_in())
 
         if(!empty($gid))
         {
-            $gid_in = "gid in(".implode(',',$gid).")";
+            $gid_in = "gid in(".implode( ',', array_map( 'absint', (array) $gid ) ).")";
             $sections =  $dbhandler->get_all_result('SECTION',array('id','section_name'),1,'results',0,false,'gid,ordering',false,$gid_in);
         }
         if(!isset($sections))
