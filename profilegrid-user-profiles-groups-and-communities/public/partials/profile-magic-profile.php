@@ -70,6 +70,8 @@ if(isset($post['edit_profile']))
             $fields = array();
         }
 
+        $post = $pmrequests->pm_normalize_dropdown_post_values( $post, $_POST, $fields );
+
         if(empty($errors))
         {
             if($dbhandler->get_global_option_value('pm_admin_approval_require_before_update','0')=='1')

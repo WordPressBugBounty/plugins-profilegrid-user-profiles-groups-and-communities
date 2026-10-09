@@ -5,7 +5,7 @@ Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 6.0.0.3
+Stable tag: 6.0.0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -664,6 +664,12 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 6.0.0.4: October 09, 2026 =
+* Fixed: Group member searches now find members by first name, last name, display name, username, and email when no field is selected.
+* Fixed: First-name and last-name sorting now uses complete, deterministic name ordering across paginated group member lists.
+* Fixed: Single-select dropdown values containing plus or percent characters, or configured with spaces after commas, are preserved when user profiles are edited.
+* Improved: Legacy URL-encoded dropdown values continue to match their configured options.
 
 = 6.0.0.3: September 30, 2026 =
 * Added: Security improvements.
@@ -1637,6 +1643,9 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 6.0.0.4: October 09, 2026 =
+Fixes group member search and name sorting, and prevents special-character or comma-spaced dropdown values from changing during profile edits.
 
 = 6.0.0.3: September 30, 2026 =
 * Added: Security improvements.

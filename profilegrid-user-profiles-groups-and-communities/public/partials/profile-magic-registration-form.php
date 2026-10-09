@@ -71,6 +71,8 @@ if ($rmformid != 0 && class_exists('Registration_Magic')) {
         false, 
         $exclude
     );
+
+    $post_obj = $pmrequests->pm_normalize_dropdown_post_values($post_obj, $_POST, $fields);
     
     // Check if form was submitted
     if (isset($post_obj['reg_form_submit']) || isset($post_obj['pm_payment_method'])) {

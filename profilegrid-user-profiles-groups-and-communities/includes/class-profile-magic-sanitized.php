@@ -1,6 +1,55 @@
 <?php
 class PM_sanitizer {
 
+	/**
+	 * Return the canonical values from a comma-separated dropdown option list.
+	 *
+	 * Administrators commonly enter options as "Yes, No". Treat whitespace
+	 * around the separator as formatting rather than as part of either value.
+	 */
+	public static function get_dropdown_options( $option_list ) {
+		if ( ! is_scalar( $option_list ) ) {
+			return array();
+		}
+
+		return array_map( 'trim', explode( ',', (string) $option_list ) );
+	}
+
+	/**
+	 * Match a submitted or stored scalar against configured dropdown options.
+	 *
+	 * Exact values take precedence so literal plus and percent characters are
+	 * preserved. Trimming supports historic comma-space option lists, while URL
+	 * decoding is retained only as a final compatibility fallback.
+	 */
+	public static function get_dropdown_value( $value, $dropdown_options ) {
+		if ( ! is_scalar( $value ) || ! is_array( $dropdown_options ) ) {
+			return '';
+		}
+
+		$value = (string) $value;
+		$decoded_value = urldecode( $value );
+		if ( preg_match( '/[oc]:\d+:\{?.*?\}?/i', stripslashes( $decoded_value ) ) || is_serialized( $decoded_value ) ) {
+			return '';
+		}
+
+		if ( in_array( $value, $dropdown_options, true ) ) {
+			return $value;
+		}
+
+		$trimmed_value = trim( $value );
+		if ( in_array( $trimmed_value, $dropdown_options, true ) ) {
+			return $trimmed_value;
+		}
+
+		$legacy_value = urldecode( $trimmed_value );
+		if ( $legacy_value !== $trimmed_value && in_array( $legacy_value, $dropdown_options, true ) ) {
+			return $legacy_value;
+		}
+
+		return '';
+	}
+
 	public static function safe_unserialize_array( $value ) {
 		if ( ! is_string( $value ) || strlen( $value ) > 1048576 || ! is_serialized( $value ) ) {
 			return array();

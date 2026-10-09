@@ -371,9 +371,11 @@ class PM_DBhandler {
 			 'count_total' => true,
 		 );
 
-		 if ( $orderby=='first_name' || $orderby=='last_name' ) {
-			 $args['orderby']  = 'meta_value';
-			 $args['meta_key'] = $orderby;
+		 $name_orderby = in_array( $orderby, array( 'first_name', 'last_name' ), true ) ? $orderby : '';
+		 if ( $name_orderby ) {
+			 // Name ordering is applied after WP_User_Query builds its SQL so that
+			 // users without one of the name meta values are not excluded.
+			 $args['orderby'] = 'ID';
 		 }
 		 if ( $offset!='' ) {
 			 $args['offset'] = $offset; }
@@ -404,7 +406,7 @@ class PM_DBhandler {
 		 if ( !empty( $datequery ) ) {
 			 $args['date_query'] = $datequery; }
 
-		 $user_query = new WP_User_Query( $args );
+		 $user_query = $this->pm_run_user_query( $args, $name_orderby, $order );
 
 		 return $user_query;
     }
@@ -416,9 +418,9 @@ class PM_DBhandler {
 			'count_total' => true,
 		);
 
-		if ( $orderby=='first_name' || $orderby=='last_name' ) {
-			$args['orderby']  = 'meta_value';
-			$args['meta_key'] = $orderby;
+		$name_orderby = in_array( $orderby, array( 'first_name', 'last_name' ), true ) ? $orderby : '';
+		if ( $name_orderby ) {
+			$args['orderby'] = 'ID';
 		}
 
 		if ( $offset!='' ) {
@@ -450,9 +452,108 @@ class PM_DBhandler {
 			$args['include'] = $include; }
 		if ( !empty( $datequery ) ) {
 			$args['date_query'] = $datequery; }
-		$users = get_users( $args );
+		if ( $name_orderby ) {
+			// Match get_users(), which disables total counting before it creates
+			// the underlying WP_User_Query instance.
+			$args['count_total'] = false;
+			$user_query          = $this->pm_run_user_query( $args, $name_orderby, $order );
+			$users               = $user_query->get_results();
+		} else {
+			$users = get_users( $args );
+		}
 
 		return $users;
+	}
+
+	/**
+	 * Find users by the identifying fields exposed by the group member search.
+	 *
+	 * The returned IDs are used as an inclusion constraint on the final group
+	 * query, ensuring that membership, status, visibility, and pagination rules
+	 * remain in force.
+	 *
+	 * @param string $search Search term.
+	 * @return int[]
+	 */
+	public function pm_get_user_ids_by_member_search( $search ) {
+		$search = trim( sanitize_text_field( (string) $search ) );
+		if ( '' === $search ) {
+			return array();
+		}
+
+		$core_query = new WP_User_Query(
+			array(
+				'fields'         => 'ID',
+				'count_total'    => false,
+				'search'         => '*' . $search . '*',
+				'search_columns' => array( 'user_login', 'user_email', 'display_name' ),
+			)
+		);
+
+		$name_query = new WP_User_Query(
+			array(
+				'fields'      => 'ID',
+				'count_total' => false,
+				'meta_query'  => array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'first_name',
+						'value'   => $search,
+						'compare' => 'LIKE',
+					),
+					array(
+						'key'     => 'last_name',
+						'value'   => $search,
+						'compare' => 'LIKE',
+					),
+				),
+			)
+		);
+
+		$user_ids = array_merge( $core_query->get_results(), $name_query->get_results() );
+		return array_values( array_unique( array_map( 'absint', $user_ids ) ) );
+	}
+
+	/**
+	 * Run a user query with deterministic first/last-name ordering.
+	 *
+	 * @param array  $args         WP_User_Query arguments.
+	 * @param string $name_orderby first_name, last_name, or an empty string.
+	 * @param string $order        ASC or DESC.
+	 * @return WP_User_Query
+	 */
+	private function pm_run_user_query( $args, $name_orderby = '', $order = 'ASC' ) {
+		if ( ! in_array( $name_orderby, array( 'first_name', 'last_name' ), true ) ) {
+			return new WP_User_Query( $args );
+		}
+
+		$order         = 'DESC' === strtoupper( (string) $order ) ? 'DESC' : 'ASC';
+		$secondary_key = 'first_name' === $name_orderby ? 'last_name' : 'first_name';
+		$args['pm_name_orderby'] = $name_orderby;
+		$order_filter  = function( $query ) use ( $name_orderby, $secondary_key, $order ) {
+			global $wpdb;
+			if ( ! isset( $query->query_vars['pm_name_orderby'] ) || $name_orderby !== $query->query_vars['pm_name_orderby'] ) {
+				return;
+			}
+
+			$primary_value = $wpdb->prepare(
+				"(SELECT pm_primary_name.meta_value FROM {$wpdb->usermeta} AS pm_primary_name WHERE pm_primary_name.user_id = {$wpdb->users}.ID AND pm_primary_name.meta_key = %s ORDER BY pm_primary_name.umeta_id ASC LIMIT 1)",
+				$name_orderby
+			);
+			$secondary_value = $wpdb->prepare(
+				"(SELECT pm_secondary_name.meta_value FROM {$wpdb->usermeta} AS pm_secondary_name WHERE pm_secondary_name.user_id = {$wpdb->users}.ID AND pm_secondary_name.meta_key = %s ORDER BY pm_secondary_name.umeta_id ASC LIMIT 1)",
+				$secondary_key
+			);
+
+			$query->query_orderby = "ORDER BY COALESCE({$primary_value}, '') {$order}, COALESCE({$secondary_value}, '') {$order}, {$wpdb->users}.display_name {$order}, {$wpdb->users}.ID ASC";
+		};
+
+		add_action( 'pre_user_query', $order_filter );
+		try {
+			return new WP_User_Query( $args );
+		} finally {
+			remove_action( 'pre_user_query', $order_filter );
+		}
 	}
 
 	public function pm_get_pagination( $num_of_pages, $pagenum, $base = '' ) {

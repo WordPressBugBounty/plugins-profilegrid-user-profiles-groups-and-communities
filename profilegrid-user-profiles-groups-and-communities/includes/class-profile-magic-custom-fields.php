@@ -30,11 +30,12 @@ class PM_Custom_Fields {
 //        // Step 4: Ensure all values are plain data (avoid objects)
 
 
-       // Step 1: Decode URL encoding only if the value is a string
-        $value = is_string($value) ? urldecode($value) : $value;
+       // Step 1: Inspect a decoded copy for encoded serialized objects, but preserve
+        // the stored value for renderers that need exact option matching.
+        $decoded_value = is_string($value) ? urldecode($value) : $value;
 
         // Step 2: Strong Serialized Object Injection Protection (handles escaped characters too)
-        if (is_string($value) && preg_match('/[oc]:\d+:\{?.*?\}?/i', stripslashes($value))) {
+        if (is_string($decoded_value) && preg_match('/[oc]:\d+:\{?.*?\}?/i', stripslashes($decoded_value))) {
             $value = ''; // 🚫 Block PHP Object Injection before unserialization
             
         }
@@ -430,6 +431,12 @@ class PM_Custom_Fields {
             $field_options = maybe_unserialize($row->field_options);
         if($value == '' && !empty($field_options) && isset($field_options['default_value']))
             $value = $field_options['default_value'];
+
+        $dropdown_values = array();
+        if (!empty($field_options) && isset($field_options['dropdown_option_value'])) {
+            $dropdown_values = PM_sanitizer::get_dropdown_options($field_options['dropdown_option_value']);
+        }
+        $selected_value = PM_sanitizer::get_dropdown_value($value, $dropdown_values);
         ?>        
         <div class="pm-col">
             <div class="pm-field-lable">
@@ -443,10 +450,9 @@ class PM_Custom_Fields {
                         if ($field_options['first_option'] != '') {
                             echo '<option value="">' . esc_html($field_options['first_option']) . '</option>';
                         }
-                        $arr = explode(',', $field_options['dropdown_option_value']);
-                        foreach ($arr as $ar) {
+                        foreach ($dropdown_values as $ar) {
                             ?>
-                            <option value="<?php echo esc_attr($ar); ?>" <?php if ($ar == $value) echo 'selected'; ?>><?php echo esc_html($ar); ?></option>
+                            <option value="<?php echo esc_attr($ar); ?>" <?php if ($ar === $selected_value) echo 'selected="selected"'; ?>><?php echo esc_html($ar); ?></option>
                             <?php
                         }
                     }
@@ -1042,7 +1048,7 @@ class PM_Custom_Fields {
                         if ($field_options['first_option'] != '') {
                             echo '<option value="">' . esc_html($field_options['first_option']) . '</option>';
                         }
-                        $arr = explode(',', $field_options['dropdown_option_value']);
+                        $arr = PM_sanitizer::get_dropdown_options($field_options['dropdown_option_value']);
                         foreach ($arr as $ar) {
                              $selected = '';
                             if (!empty($array_value) && is_array($array_value))

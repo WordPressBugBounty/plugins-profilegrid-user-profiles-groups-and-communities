@@ -1263,11 +1263,45 @@ class PM_request {
 		return (int) $id === (int) $allowed_id && (int) $allowed_id > 0;
 	}
 
+	/**
+	 * Restore canonical single-dropdown values from an unsanitized request.
+	 *
+	 * WordPress text sanitization trims option whitespace and removes percent-
+	 * encoded-looking sequences. Matching against the field's configured values
+	 * provides stricter validation without changing legitimate option data.
+	 */
+	public function pm_normalize_dropdown_post_values( $post, $raw_post, $fields ) {
+		if ( ! is_array( $post ) || ! is_array( $raw_post ) || empty( $fields ) ) {
+			return $post;
+		}
+
+		foreach ( $fields as $field ) {
+			if ( 'select' !== $field->field_type || ! array_key_exists( $field->field_key, $raw_post ) ) {
+				continue;
+			}
+
+			$field_options = maybe_unserialize( $field->field_options );
+			$option_list   = is_array( $field_options ) && isset( $field_options['dropdown_option_value'] ) ? $field_options['dropdown_option_value'] : '';
+			$options       = PM_sanitizer::get_dropdown_options( $option_list );
+			$raw_value     = is_scalar( $raw_post[ $field->field_key ] ) ? (string) $raw_post[ $field->field_key ] : '';
+			$matched_value = PM_sanitizer::get_dropdown_value( $raw_value, $options );
+			$unslashed     = wp_unslash( $raw_value );
+			if ( '' === $matched_value && $unslashed !== $raw_value ) {
+				$matched_value = PM_sanitizer::get_dropdown_value( $unslashed, $options );
+			}
+			$post[ $field->field_key ] = $matched_value;
+		}
+
+		return $post;
+	}
+
 	public function pm_update_user_custom_fields_data( $post, $files, $server, $gid, $fields, $user_id ) {
 			  $dbhandler     = new PM_DBhandler();
                           
 				$pmsanitizer = new PM_sanitizer();
-                                $post = $pmsanitizer->sanitize($post);
+				$raw_post    = $post;
+				$post        = $pmsanitizer->sanitize($post);
+				$post        = $this->pm_normalize_dropdown_post_values( $post, $raw_post, $fields );
 				if(isset($post['pg_group']) && !empty($post['pg_group']))
                 {
 					update_user_meta( $user_id,'pg_select_user_group', sanitize_text_field($post['pg_group']) );
@@ -1350,6 +1384,9 @@ class PM_request {
 						if ( is_array( $post[ $field_key ] ) ) {
 							
 												$value = maybe_serialize($pmsanitizer->sanitize( $pmsanitizer->remove_magic_quotes($post[ $field_key ]) ));
+						} elseif ( $field->field_type == 'select' ) {
+							// Already validated against the configured option list above.
+							$value = $post[ $field_key ];
 						} else {
 							$value = $pmsanitizer->get_sanitized_frontend_field( $field->field_type, $post[ $field_key ] );
 						}
@@ -4382,16 +4419,21 @@ class PM_request {
 		}
 	}
 
-	public function pm_get_all_users_from_group( $gid, $pagenum = 1, $limit = 10, $sort_by = 'first_name_asc', $search_in = 'user_login', $search = '' ) {
+	public function pm_get_all_users_from_group( $gid, $pagenum = 1, $limit = 10, $sort_by = 'first_name_asc', $search_in = '', $search = '' ) {
 		$dbhandler = new PM_DBhandler();
 		$offset    = ( $pagenum - 1 ) * $limit;
-		if ( empty( $search_in ) ) {
-			$search_in = 'user_login';
-		}
 		$get       = array( 'gid' => $gid );
+		$include   = array();
 		if ( trim( $search ) != '' ) {
-			$get['match_field'] = $search_in;
-			$get['field_value'] = $search;
+			if ( empty( $search_in ) ) {
+				$include = $dbhandler->pm_get_user_ids_by_member_search( $search );
+				if ( empty( $include ) ) {
+					$include = array( 0 );
+				}
+			} else {
+				$get['match_field'] = $search_in;
+				$get['field_value'] = $search;
+			}
 			$search             = '';
 			$is_search          = 1;
 		}
@@ -4444,7 +4486,7 @@ class PM_request {
 
 		$meta_query_array = $this->pm_get_user_meta_query( $get );
 
-		$user_query   = $dbhandler->pm_get_all_users_ajax( $search, $meta_query_array, '', $offset, $limit, $order, $sortby, array( $current_user->ID ) );
+		$user_query   = $dbhandler->pm_get_all_users_ajax( $search, $meta_query_array, '', $offset, $limit, $order, $sortby, array( $current_user->ID ), array(), $include );
 		$total_users  = $user_query->get_total();
 		$users        = $user_query->get_results();
 		$num_of_pages = ceil( $total_users / $limit );
@@ -4557,7 +4599,7 @@ class PM_request {
 	}
 
 
-	public function pm_get_all_users_from_group_grid_view( $gid, $pagenum = 1, $limit = 10, $sort_by = 'first_name_asc', $search_in = 'user_login', $search = '', $profile_magic = 'profilegrid-user-profiles-groups-and-communities', $pg_version = '5.1.3' ) {
+	public function pm_get_all_users_from_group_grid_view( $gid, $pagenum = 1, $limit = 10, $sort_by = 'first_name_asc', $search_in = '', $search = '', $profile_magic = 'profilegrid-user-profiles-groups-and-communities', $pg_version = '5.1.3' ) {
 		$dbhandler     = new PM_DBhandler();
 		$pmhtmlcreator = new PM_HTML_Creator( $profile_magic, $pg_version );
 		$leaders       = array();
@@ -4571,16 +4613,21 @@ class PM_request {
 		}
 
 		$offset = ( $pagenum - 1 ) * $limit;
-		if ( empty( $search_in ) ) {
-			$search_in = 'user_login';
-		}
 		$get    = array(
 			'gid'    => $gid,
 			'status' => '0',
 		);
+		$include = array();
 		if ( trim( $search ) != '' ) {
-			$get['match_field'] = $search_in;
-			$get['field_value'] = $search;
+			if ( empty( $search_in ) ) {
+				$include = $dbhandler->pm_get_user_ids_by_member_search( $search );
+				if ( empty( $include ) ) {
+					$include = array( 0 );
+				}
+			} else {
+				$get['match_field'] = $search_in;
+				$get['field_value'] = $search;
+			}
 			$search             = '';
 			$is_search          = 1;
 		}
@@ -4633,7 +4680,7 @@ class PM_request {
 		$meta_query_array = $this->pm_get_user_meta_query( $get );
 
 		$hide_users   = $this->pm_get_hide_users_array();
-		$user_query   = $dbhandler->pm_get_all_users_ajax( $search, $meta_query_array, '', $offset, $limit, $order, $sortby, $hide_users );
+		$user_query   = $dbhandler->pm_get_all_users_ajax( $search, $meta_query_array, '', $offset, $limit, $order, $sortby, $hide_users, array(), $include );
 		$total_users  = $user_query->get_total();
 		$users        = $user_query->get_results();
 		$num_of_pages = ceil( $total_users / $limit );
