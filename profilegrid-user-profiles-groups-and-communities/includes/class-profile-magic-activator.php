@@ -392,7 +392,7 @@ class Profile_Magic_Activator {
 		}
 
 		if ( is_string( $raw_groups ) ) {
-			$unserialized = maybe_unserialize( $raw_groups );
+			$unserialized = PM_sanitizer::safe_unserialize_user_meta_value( $raw_groups );
 			if ( $unserialized !== $raw_groups ) {
 				return $this->pm_convert_legacy_gid_to_string_groups( $unserialized, $is_legacy );
 			}

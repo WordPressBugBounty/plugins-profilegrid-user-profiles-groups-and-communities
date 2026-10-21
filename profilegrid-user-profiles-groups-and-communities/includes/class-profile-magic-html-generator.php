@@ -271,25 +271,7 @@ class PM_HTML_Creator {
                               continue;
 					}
 
-                            //$field_value = maybe_unserialize( $field_value );
-                            if (is_string($field_value) && preg_match('/[oc]:\d+:/i', $field_value)) {
-                                $field_value = ''; // Block PHP Object Injection attempt
-                            } else {
-                                // Step 2: Safely unserialize
-                                $field_value = maybe_unserialize($field_value);
-                            }
-                            // Prevent PHP Object Injection
-                            if (is_object($field_value) || is_resource($field_value)) {
-                                $field_value = ''; // Block unsafe objects
-                            }
-
-                            // Ensure `$field_value` is either a string or an array
-                            if (!is_string($field_value) && !is_array($field_value)) {
-                                $field_value = ''; // Block unexpected types
-                            }
-                            
-                            // Step 4: Convert unserialized data to JSON and back to ensure safety
-                            $field_value = json_decode(json_encode($field_value), true);
+							$field_value = PM_sanitizer::safe_unserialize_user_meta_value( $field_value );
                             
 					if ( $field->field_type=='checkbox' || $field->field_type=='repeatable_text' ) {
 						if ( !is_array( $field_value ) ) {
@@ -2807,7 +2789,7 @@ class PM_HTML_Creator {
 	public function pg_get_profile_sections_tab_header( $uid, $group_leader = array() ) {
         $dbhandler   = new PM_DBhandler();
 		$pm_request  = new PM_request();
-		$gids        = maybe_unserialize( $pm_request->profile_magic_get_user_field_value( $uid, 'pm_group' ) );
+		$gids        = $pm_request->profile_magic_get_user_field_value( $uid, 'pm_group' );
 		$user_groups = $pm_request->pg_filter_users_group_ids( $gids );
 
 		if ( !empty( $user_groups ) ) {

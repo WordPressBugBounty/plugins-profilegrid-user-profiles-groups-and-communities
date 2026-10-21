@@ -142,7 +142,7 @@ if ( is_user_logged_in()) :
     $current_user = wp_get_current_user();
     $uid = $current_user->ID;
     $user_info = get_userdata($current_user->ID);
-    $gids = maybe_unserialize($pmrequests->profile_magic_get_user_field_value($uid,'pm_group'));
+    $gids = $pmrequests->profile_magic_get_user_field_value($uid,'pm_group');
     $gid = $pmrequests->pg_filter_users_group_ids($gids);
     $group_page_link = $pmrequests->profile_magic_get_frontend_url('pm_group_page','');
     if(!empty($gid))

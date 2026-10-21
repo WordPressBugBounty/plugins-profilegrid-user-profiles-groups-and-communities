@@ -859,7 +859,7 @@ class Profile_Magic_Public {
 				$ugid           = $pmrequests->pg_filter_users_group_ids( $gids );
 				$gid            = $pmrequests->pg_get_primary_group_id( $ugid );
 				$payment_status = get_user_meta( $user->ID, 'pm_user_payment_status', true );
-                                $group_payment_array = maybe_unserialize(get_user_meta($user->ID,'pm_group_payment_status', true));
+				$group_payment_array = PM_sanitizer::safe_unserialize_array( get_user_meta( $user->ID, 'pm_group_payment_status', true ) );
                                 if(!empty($group_payment_array))
                                 foreach ($group_payment_array as $key=>$status)
                                 {
@@ -4518,7 +4518,7 @@ if ( isset( $_POST['tid'] ) ) {
 		}
 
 		$processor     = 'paypal';
-		$group_status  = maybe_unserialize( get_user_meta( $uid, 'pm_group_payment_status', true ) );
+		$group_status  = PM_sanitizer::safe_unserialize_array( get_user_meta( $uid, 'pm_group_payment_status', true ) );
 		if ( is_array( $group_status ) && isset( $group_status[ $gid ] ) ) {
 			if ( 'succeeded' === $group_status[ $gid ] || 'stripe' === $group_status[ $gid ] ) {
 				$processor = 'stripe';
@@ -5440,7 +5440,7 @@ if ( isset( $_POST['tid'] ) ) {
 		$attributes         = shortcode_atts( $default_attributes, $content );
 		 $user_exists       = $pmrequests->pm_check_user_exist_by_id( $attributes['uid'] );
 		if ( $attributes['uid'] !== 0 && is_object( $user_exists ) ) :
-			$gids        = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' ) );
+			$gids        = $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' );
 			$gid         = $pmrequests->pg_filter_users_group_ids( $gids );
 			$primary_gid = $pmrequests->pg_get_primary_group_id( $gid );
 			echo '<div class="pmagic"><div class="pm-group-view pg-shortcode-content">';
@@ -5460,7 +5460,7 @@ if ( isset( $_POST['tid'] ) ) {
 		$default_attributes = array( 'uid' => $current_user->ID );
 		$attributes         = shortcode_atts( $default_attributes, $content );
 		 $user_exists       = $pmrequests->pm_check_user_exist_by_id( $attributes['uid'] );        if ( $attributes['uid'] !== 0 && is_object( $user_exists ) ) :
-			$gids        = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' ) );
+			$gids        = $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' );
 			$gid         = $pmrequests->pg_filter_users_group_ids( $gids );
 			$primary_gid = $pmrequests->pg_get_primary_group_id( $gid );
 			echo '<div class="pmagic"><div class="pm-group-view pg-shortcode-content">';
@@ -5481,7 +5481,7 @@ if ( isset( $_POST['tid'] ) ) {
 		$attributes         = shortcode_atts( $default_attributes, $content );
 		 $user_exists       = $pmrequests->pm_check_user_exist_by_id( $attributes['uid'] );
 		if ( $attributes['uid'] !== 0 && is_object( $user_exists ) ) :
-			$gids        = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' ) );
+			$gids        = $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' );
 			$gid         = $pmrequests->pg_filter_users_group_ids( $gids );
 			$primary_gid = $pmrequests->pg_get_primary_group_id( $gid );
 			echo '<div class="pmagic"><div class="pm-group-view pg-shortcode-content">';
@@ -5502,7 +5502,7 @@ if ( isset( $_POST['tid'] ) ) {
 		$attributes         = shortcode_atts( $default_attributes, $content );
 		 $user_exists       = $pmrequests->pm_check_user_exist_by_id( $attributes['uid'] );
 		if ( $attributes['uid'] !== 0 && is_object( $user_exists ) ) :
-			$gids        = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' ) );
+			$gids        = $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' );
 			$gid         = $pmrequests->pg_filter_users_group_ids( $gids );
 			$primary_gid = $pmrequests->pg_get_primary_group_id( $gid );
 			echo '<div class="pmagic"><div class="pm-group-view pg-shortcode-content">';
@@ -5523,7 +5523,7 @@ if ( isset( $_POST['tid'] ) ) {
 		$attributes         = shortcode_atts( $default_attributes, $content );
 		 $user_exists       = $pmrequests->pm_check_user_exist_by_id( $attributes['uid'] );
 		if ( $attributes['uid'] !== 0 && is_object( $user_exists ) ) :
-			$gids        = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' ) );
+			$gids        = $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' );
 			$gid         = $pmrequests->pg_filter_users_group_ids( $gids );
 			$primary_gid = $pmrequests->pg_get_primary_group_id( $gid );
 			echo '<div class="pmagic"><div class="pm-group-view pg-shortcode-content">';
@@ -5544,7 +5544,7 @@ if ( isset( $_POST['tid'] ) ) {
 		$attributes         = shortcode_atts( $default_attributes, $content );
 		 $user_exists       = $pmrequests->pm_check_user_exist_by_id( $attributes['uid'] );
 		if ( $attributes['uid'] !== 0 && is_object( $user_exists ) ) :
-			$gids        = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' ) );
+			$gids        = $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' );
 			$gid         = $pmrequests->pg_filter_users_group_ids( $gids );
 			$primary_gid = $pmrequests->pg_get_primary_group_id( $gid );
 
@@ -5567,7 +5567,7 @@ if ( isset( $_POST['tid'] ) ) {
 		$attributes         = shortcode_atts( $default_attributes, $content );
 		 $user_exists       = $pmrequests->pm_check_user_exist_by_id( $attributes['uid'] );
 		if ( $attributes['uid'] !== 0 && is_object( $user_exists ) && is_user_logged_in() ) :
-			$gids        = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' ) );
+			$gids        = $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' );
 			$gid         = $pmrequests->pg_filter_users_group_ids( $gids );
 			$primary_gid = $pmrequests->pg_get_primary_group_id( $gid );
 			echo '<div class="pmagic"><div class="pm-group-view pg-shortcode-content">';
@@ -5636,7 +5636,7 @@ if ( isset( $_POST['tid'] ) ) {
 
 			}
 
-			$gids        = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' ) );
+			$gids        = $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' );
 			$gid         = $pmrequests->pg_filter_users_group_ids( $gids );
 			$primary_gid = $pmrequests->pg_get_primary_group_id( $gid );
 			?>
@@ -5665,7 +5665,7 @@ if ( isset( $_POST['tid'] ) ) {
 		 $user_exists       = $pmrequests->pm_check_user_exist_by_id( $attributes['uid'] );
 		if ( $attributes['uid'] !== 0 && is_object( $user_exists ) && is_user_logged_in() ) {
 			$uid         = $attributes['uid'];
-			$gids        = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' ) );
+			$gids        = $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' );
 			$gid         = $pmrequests->pg_filter_users_group_ids( $gids );
 			$primary_gid = $pmrequests->pg_get_primary_group_id( $gid );
 			?>
@@ -5707,7 +5707,7 @@ if ( isset( $_POST['tid'] ) ) {
 				
 			}
 			$uid         = $current_user->ID;
-			$gids        = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' ) );
+			$gids        = $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' );
 			$gid         = $pmrequests->pg_filter_users_group_ids( $gids );
 			$primary_gid = $pmrequests->pg_get_primary_group_id( $gid );
 			?>
@@ -5776,7 +5776,7 @@ if ( isset( $_POST['tid'] ) ) {
 					 exit;
 				}
 			}
-			$gids        = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' ) );
+			$gids        = $pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'pm_group' );
 			$gid         = $pmrequests->pg_filter_users_group_ids( $gids );
 			$primary_gid = $pmrequests->pg_get_primary_group_id( $gid );
 			?>
@@ -6205,7 +6205,7 @@ if ( isset( $_POST['tid'] ) ) {
 		$attributes         = shortcode_atts( $default_attributes, $args );
 
 		$gids  = explode( ',', $attributes['gid'] );
-		$ugid  = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $current_user->ID, 'pm_group' ) );
+		$ugid  = $pmrequests->profile_magic_get_user_field_value( $current_user->ID, 'pm_group' );
 		$gid   = $pmrequests->pg_filter_users_group_ids( $ugid );
 		$check = array_intersect( $gids, $gid );
 		if ( ! empty( $check ) && is_user_logged_in() ) {
@@ -6269,7 +6269,7 @@ if ( isset( $_POST['tid'] ) ) {
 		$attributes         = shortcode_atts( $default_attributes, $args );
 
 		$gids  = explode( ',', $attributes['gid'] );
-		$ugid  = maybe_unserialize( $pmrequests->profile_magic_get_user_field_value( $current_user->ID, 'pm_group' ) );
+		$ugid  = $pmrequests->profile_magic_get_user_field_value( $current_user->ID, 'pm_group' );
 		$gid   = $pmrequests->pg_filter_users_group_ids( $ugid );
 		$check = array_intersect( $gids, $gid );
 		if ( ! empty( $check ) && is_user_logged_in() ) {

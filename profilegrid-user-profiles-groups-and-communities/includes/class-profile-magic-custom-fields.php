@@ -40,7 +40,9 @@ class PM_Custom_Fields {
             
         }
         
-        if($value!=''){$value = maybe_unserialize($value);}
+		if ( $value != '' ) {
+			$value = PM_sanitizer::safe_unserialize_user_meta_value( $value );
+		}
         if(is_object($value))
         {
             $value ='';

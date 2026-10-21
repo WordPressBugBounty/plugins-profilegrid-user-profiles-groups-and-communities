@@ -86,7 +86,7 @@ class PM_Export_Import {
 			foreach ( $fids as $fid ) {
 				$key         = $dbhandler->get_value( 'FIELDS', 'field_key', $fid );
 				$field_value = $pmrequests->profile_magic_get_user_field_value( $uid, $key );
-				$field_value = maybe_unserialize( $field_value );
+				$field_value = PM_sanitizer::safe_unserialize_user_meta_value( $field_value );
 				if ( is_array( $field_value ) ) {
 					$value = implode( ',', $field_value );
 				} else {

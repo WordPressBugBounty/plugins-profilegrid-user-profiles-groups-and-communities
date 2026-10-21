@@ -148,7 +148,7 @@ class Profile_Magic_access_options {
 				if ( is_user_logged_in() ) {
 									  $uid = get_current_user_id();
 					if ( get_post_meta( $id, 'pm_content_access_group', true )!='all' ) {
-						$gids                               = maybe_unserialize( get_user_meta( $uid, 'pm_group', true ) );
+						$gids                               = PM_sanitizer::safe_unserialize_array( get_user_meta( $uid, 'pm_group', true ) );
                                                 $user_group = $pmrequests->pg_filter_users_group_ids( $gids );
 						if ( !empty( $user_group ) ) {
 							if ( !is_array( $user_group ) ) {

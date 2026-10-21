@@ -905,6 +905,7 @@ class PM_request {
 					break;
 				default:
 						$value      = get_user_meta( $userid, $field, true );
+						$value      = PM_sanitizer::safe_unserialize_user_meta_value( $value );
                                                 if ($value == "Female"){
 							$value = esc_html__("Female", 'profilegrid-user-profiles-groups-and-communities');
 						}
@@ -922,7 +923,7 @@ class PM_request {
                                             $value = esc_html__('Yes','profilegrid-user-profiles-groups-and-communities');
                                         }
                                                 
-						$additional = maybe_unserialize( $value );
+						$additional = is_array( $value ) ? $value : array();
 					if ( is_array( $additional ) && isset( $additional['rm_file_field'] ) ) {
 						unset( $additional['rm_file_field'] );
 						$additional_value = implode( ',', $additional );
@@ -1455,7 +1456,7 @@ class PM_request {
 	public function pm_get_repayment_url( $uid ) {
 		$gids     = get_user_meta( $uid, 'pm_group', true );
 		$gid      = $this->pg_filter_users_group_ids( $gids );
-                $group_payment_array = maybe_unserialize(get_user_meta($uid,'pm_group_payment_status', true));
+				$group_payment_array = PM_sanitizer::safe_unserialize_array( get_user_meta( $uid, 'pm_group_payment_status', true ) );
                 if(!empty($group_payment_array))
                 foreach ($group_payment_array as $key=>$status)
                 {
@@ -5043,13 +5044,7 @@ class PM_request {
 							?>
 							<div class="pm-group-signup">
                             <?php 
-                                $basic_function = class_exists( 'Profile_Magic_Functions' ) ? new Profile_Magic_Functions($this->profile_magic, $this->version) : null;
-                                $nonce_field    = '';
-                                if ( $basic_function && method_exists( $basic_function, 'pm_render_nonce_field' ) ) {
-                                    ob_start();
-                                    $basic_function->pm_render_nonce_field( 'pg_join_group_action', 'pg_join_group_nonce' );
-                                    $nonce_field = ob_get_clean();
-                                }
+                                $nonce_field = wp_nonce_field( 'pg_join_group_action', 'pg_join_group_nonce', false, false );
                                 $form_html = '<form method="post" ' . wp_kses_post($action) . '>
                                 <input type="hidden" name="pg_uid" id="pg_uid" value="' . esc_attr($current_user->ID) . '" />
                                 <input type="hidden" name="pg_join_gid" id="pg_join_gid" value="' . esc_attr($gid) . '" />
@@ -5076,13 +5071,7 @@ class PM_request {
 						?>
 						<div class="pm-group-signup">
                         <?php 
-                            $basic_function = class_exists( 'Profile_Magic_Functions' ) ? new Profile_Magic_Functions($this->profile_magic, $this->version) : null;
-                            $nonce_field    = '';
-                            if ( $basic_function && method_exists( $basic_function, 'pm_render_nonce_field' ) ) {
-                                ob_start();
-                                $basic_function->pm_render_nonce_field( 'pg_join_group_action', 'pg_join_group_nonce' );
-                                $nonce_field = ob_get_clean();
-                            }
+                            $nonce_field = wp_nonce_field( 'pg_join_group_action', 'pg_join_group_nonce', false, false );
                             $form_html = '<form method="post" ' . wp_kses_post($action) . '>
                             <input type="hidden" name="pg_uid" id="pg_uid" value="' . esc_attr($current_user->ID) . '" />
                             <input type="hidden" name="pg_join_gid" id="pg_join_gid" value="' . esc_attr($gid) . '" />
@@ -5172,7 +5161,7 @@ class PM_request {
                         }
                 }
 		if ( $type == 'open' ) {
-			$user_group    = maybe_unserialize( $this->profile_magic_get_user_field_value( $uid, 'pm_group' ) );
+			$user_group    = $this->profile_magic_get_user_field_value( $uid, 'pm_group' );
 			$user_groups   = $this->pg_filter_users_group_ids( $user_group );
 			$joining_dates = $this->profile_magic_get_user_field_value( $uid, 'pm_joining_date' );
 
@@ -6730,7 +6719,7 @@ class PM_request {
 
 					
 
-                            $field_value = maybe_unserialize( $field_value );
+							$field_value = PM_sanitizer::safe_unserialize_user_meta_value( $field_value );
 					if ( $field->field_type=='checkbox' || $field->field_type=='repeatable_text' ) {
 						if ( !is_array( $field_value ) ) {
 							$field_value = explode( ',', $field_value );

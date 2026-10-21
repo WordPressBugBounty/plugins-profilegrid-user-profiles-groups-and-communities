@@ -171,7 +171,7 @@ if ( $user_info == false ) {
 					?>
 					<?php
 					$field_value = $pmrequests->profile_magic_get_user_field_value( $id, $field->field_key, $field->field_type );
-					$field_value = maybe_unserialize( $field_value );
+					$field_value = PM_sanitizer::safe_unserialize_user_meta_value( $field_value );
 					$value       = '';
 
 					if ( is_array( $field_value ) ) :

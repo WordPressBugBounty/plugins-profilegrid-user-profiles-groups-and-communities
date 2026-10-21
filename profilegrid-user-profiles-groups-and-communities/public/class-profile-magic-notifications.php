@@ -305,7 +305,7 @@ class Profile_Magic_Notification {
 			// $meta_query_array = array();
 			// $meta_query_array['relation'] = 'AND';
 			// $gids = get_user_meta($author,'pm_group',true);
-			$gids = maybe_unserialize( get_post_meta( $post_id, 'pm_accessible_groups', true ) );
+			$gids = PM_sanitizer::safe_unserialize_array( get_post_meta( $post_id, 'pm_accessible_groups', true ) );
 			// print_r($gids);die;
 			$uids = array();
                         if(isset($gids) && is_array($gids) && !empty($gids)){
@@ -1153,7 +1153,7 @@ class Profile_Magic_Notification {
 
 			$meta    = maybe_unserialize( $notif->meta );
 			$post_id = $meta['post_id'];
-			$gids    = maybe_unserialize( get_post_meta( $post_id, 'pm_accessible_groups', true ) );
+			$gids    = PM_sanitizer::safe_unserialize_array( get_post_meta( $post_id, 'pm_accessible_groups', true ) );
 		if ( ! empty( $gids ) && is_array( $gids ) ) {
 			$gid = $gids[0];
 		} else {
@@ -1240,7 +1240,7 @@ class Profile_Magic_Notification {
 
 			$permalink = get_permalink( $post_id );
 
-			$gids = maybe_unserialize( get_post_meta( $post_id, 'pm_accessible_groups', true ) );
+			$gids = PM_sanitizer::safe_unserialize_array( get_post_meta( $post_id, 'pm_accessible_groups', true ) );
 		if ( ! empty( $gids ) && is_array( $gids ) ) {
 			$gid = $gids[0];
 		} else {

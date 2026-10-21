@@ -50,20 +50,46 @@ class PM_sanitizer {
 		return '';
 	}
 
-	public static function safe_unserialize_array( $value ) {
-		if ( ! is_string( $value ) || strlen( $value ) > 1048576 || ! is_serialized( $value ) ) {
-			return array();
+	/**
+	 * Decode a legacy serialized metadata value without allowing PHP objects.
+	 *
+	 * WordPress metadata APIs already remove their serialization layer. Some
+	 * historic ProfileGrid values contain an additional serialized array, so
+	 * those values need one compatibility decode. Objects and resources are
+	 * never valid profile metadata.
+	 *
+	 * @param mixed $value Metadata value returned by a WordPress metadata API.
+	 * @return mixed Plain scalar/array data, or an empty string when invalid.
+	 */
+	public static function safe_unserialize_user_meta_value( $value ) {
+		if ( is_object( $value ) || is_resource( $value ) ) {
+			return '';
 		}
-		$data = @unserialize( $value, array( 'allowed_classes' => false ) );
+
+		$data = $value;
+		if ( is_string( $value ) ) {
+			if ( strlen( $value ) > 1048576 ) {
+				return '';
+			}
+			if ( is_serialized( $value ) ) {
+				$data = @unserialize( $value, array( 'allowed_classes' => false ) );
+			}
+		}
+
+		if ( is_object( $data ) || is_resource( $data ) ) {
+			return '';
+		}
+
 		if ( ! is_array( $data ) ) {
-			return array();
+			return $data;
 		}
+
 		$pending = array( $data );
 		$visited = 0;
 		while ( $pending ) {
 			foreach ( array_pop( $pending ) as $item ) {
-				if ( ++$visited > 10000 || is_object( $item ) ) {
-					return array();
+				if ( ++$visited > 10000 || is_object( $item ) || is_resource( $item ) ) {
+					return '';
 				}
 				if ( is_array( $item ) ) {
 					$pending[] = $item;
@@ -71,6 +97,11 @@ class PM_sanitizer {
 			}
 		}
 		return $data;
+	}
+
+	public static function safe_unserialize_array( $value ) {
+		$data = self::safe_unserialize_user_meta_value( $value );
+		return is_array( $data ) ? $data : array();
 	}
 
 

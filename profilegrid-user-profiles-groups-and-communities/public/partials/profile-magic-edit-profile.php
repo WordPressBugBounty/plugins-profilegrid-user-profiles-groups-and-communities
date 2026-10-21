@@ -125,7 +125,7 @@ if(is_user_logged_in())
         }
         $filter_user_id = $pmrequests->pm_get_profile_slug_by_id($current_user->ID);
         $edit_uid = $uid;
-        $gids = maybe_unserialize($pmrequests->profile_magic_get_user_field_value($edit_uid,'pm_group'));
+        $gids = $pmrequests->profile_magic_get_user_field_value($edit_uid,'pm_group');
         $gid = $pmrequests->pg_filter_users_group_ids($gids);
 
         if(!empty($gid))

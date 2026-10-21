@@ -155,7 +155,7 @@ if(isset($uid) && !empty($uid))
 	$avatar = get_avatar($user_info->user_email, 274,'',false,array('class'=>'pm-user','force_display'=>true));
 	$userrole = $pmrequests->get_userrole_name($uid);
 	
-	$gids = maybe_unserialize($pmrequests->profile_magic_get_user_field_value($uid,'pm_group'));
+	$gids = $pmrequests->profile_magic_get_user_field_value($uid,'pm_group');
         $gid = $pmrequests->pg_filter_users_group_ids($gids);
 	
         if(!empty($gid))
@@ -168,7 +168,7 @@ if(isset($uid) && !empty($uid))
         {
             $edit_uid = filter_input(INPUT_GET, 'user_id');
             $edit_uid = $pmrequests->pm_get_uid_from_profile_slug($edit_uid);
-            $gids = maybe_unserialize($pmrequests->profile_magic_get_user_field_value($edit_uid,'pm_group'));
+            $gids = $pmrequests->profile_magic_get_user_field_value($edit_uid,'pm_group');
             $gid = $pmrequests->pg_filter_users_group_ids($gids);
             $gid = apply_filters('pg_edit_profile_user_gids', $gid);
             if(!empty($gid))

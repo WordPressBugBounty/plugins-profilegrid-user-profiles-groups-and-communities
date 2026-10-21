@@ -45,7 +45,7 @@ class PM_paypal_request {
 		$p->from_mail       = $pmrequests->profile_magic_get_from_email();
 		$group_name         = $dbhandler->get_value( 'GROUPS', 'group_name', $gid, 'id' );
                 $type       = $pmrequests->profile_magic_get_group_type( $gid );
-                $group_payment_array = maybe_unserialize(get_user_meta($user_id,'pm_group_payment_status', true));
+		$group_payment_array = PM_sanitizer::safe_unserialize_array( get_user_meta( $user_id, 'pm_group_payment_status', true ) );
                 if(empty($group_payment_array))
                 {
                     $group_payment_array = array();
@@ -86,7 +86,7 @@ class PM_paypal_request {
 		switch ( $action ) {
 			case 'process':
                                 
-                                $group_payment_array = maybe_unserialize(get_user_meta($user_id,'pm_group_payment_status', true));
+				$group_payment_array = PM_sanitizer::safe_unserialize_array( get_user_meta( $user_id, 'pm_group_payment_status', true ) );
                                 if(empty($group_payment_array))
                                 {
                                     $group_payment_array = array();
@@ -173,7 +173,7 @@ class PM_paypal_request {
 				$paypal_log_id = $dbhandler->get_value( 'PAYPAL_LOG', 'id', $trasaction_id, 'txn_id' );
 				if ( $payment_status=='completed' && $this->pg_validate_completed_ipn( $post, $gid, $trasaction_id ) ) { // validate the IPN, do the others stuffs here as per your app logic
                                     
-                                        $group_payment_array = maybe_unserialize(get_user_meta($user_id,'pm_group_payment_status', true));
+					$group_payment_array = PM_sanitizer::safe_unserialize_array( get_user_meta( $user_id, 'pm_group_payment_status', true ) );
                                         if(empty($group_payment_array))
                                         {
                                             $group_payment_array = array();
@@ -228,7 +228,7 @@ class PM_paypal_request {
 
 		switch ( $action ) {
 			case 'process':
-                                $group_payment_array = maybe_unserialize(get_user_meta($user_id,'pm_group_payment_status', true));
+				$group_payment_array = PM_sanitizer::safe_unserialize_array( get_user_meta( $user_id, 'pm_group_payment_status', true ) );
                                 if(empty($group_payment_array))
                                 {
                                     $group_payment_array = array();
@@ -300,7 +300,7 @@ class PM_paypal_request {
 				} // Save and update the logs array
 				$paypal_log_id = $dbhandler->get_value( 'PAYPAL_LOG', 'id', $trasaction_id, 'txn_id' );
 				if ( $payment_status=='completed' && $this->pg_validate_completed_ipn( $post, $gid, $trasaction_id ) ) { // validate the IPN, do the others stuffs here as per your app logic
-                                        $group_payment_array = maybe_unserialize(get_user_meta($user_id,'pm_group_payment_status', true));
+					$group_payment_array = PM_sanitizer::safe_unserialize_array( get_user_meta( $user_id, 'pm_group_payment_status', true ) );
                                         if(empty($group_payment_array))
                                         {
                                             $group_payment_array = array();
