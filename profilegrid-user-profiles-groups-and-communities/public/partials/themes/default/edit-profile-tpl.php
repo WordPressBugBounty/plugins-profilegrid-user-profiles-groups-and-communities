@@ -22,7 +22,6 @@ $rd = filter_input(INPUT_GET, 'rd');
     <?php if(isset($is_field) && !empty($is_field)):?>  
       
     <form class="pmagic-form pm-dbfl" method="post" action="" id="pm_edit_form" name="pm_edit_form"  enctype="multipart/form-data">
-        <?php wp_nonce_field( 'pm_profile_action', 'pm_profile_nonce' ); ?>
         <input type="hidden" name="gid" id="gid" value="<?php echo esc_attr($group_id); ?>" />
         <input type="hidden" name="euid" id="euid" value="<?php echo esc_attr($edit_uid); ?>" />
         <?php if(isset($rd) && $rd!=''):?>

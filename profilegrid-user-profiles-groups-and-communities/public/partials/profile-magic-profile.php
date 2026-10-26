@@ -163,11 +163,11 @@ if(isset($uid) && !empty($uid))
             $gid_in = "gid in(".implode( ',', array_map( 'absint', (array) $gid ) ).")";
             $sections =  $dbhandler->get_all_result('SECTION',array('id','section_name'),1,'results',0,false,'gid,ordering',false,$gid_in);
         }
-        if(is_user_logged_in())$filter_user_id = $pmrequests->pm_get_profile_slug_by_id($current_user->ID);
-        if(filter_input(INPUT_GET, 'user_id') && (is_super_admin($current_user->ID ) || filter_input(INPUT_GET, 'user_id')==$filter_user_id || $pmrequests->pg_check_in_single_group_is_user_group_leader($current_user->ID,filter_input(INPUT_GET, 'gid'))))
+        $requested_user = filter_input(INPUT_GET, 'user_id');
+        $edit_uid = $requested_user ? $pmrequests->pm_get_uid_from_profile_slug($requested_user) : 0;
+        $edit_gid = filter_input(INPUT_GET, 'gid');
+        if($requested_user && $pmrequests->pg_can_edit_user_profile($current_user->ID, $edit_uid, $edit_gid))
         {
-            $edit_uid = filter_input(INPUT_GET, 'user_id');
-            $edit_uid = $pmrequests->pm_get_uid_from_profile_slug($edit_uid);
             $gids = $pmrequests->profile_magic_get_user_field_value($edit_uid,'pm_group');
             $gid = $pmrequests->pg_filter_users_group_ids($gids);
             $gid = apply_filters('pg_edit_profile_user_gids', $gid);

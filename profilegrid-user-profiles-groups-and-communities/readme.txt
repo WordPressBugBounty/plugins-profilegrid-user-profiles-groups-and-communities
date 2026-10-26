@@ -5,7 +5,7 @@ Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 6.0.0.5
+Stable tag: 6.0.0.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -664,6 +664,10 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 6.0.0.6: October 26, 2026 =
+* Fixed: Restored frontend profile updates by super administrators and group managers for members they are authorized to manage.
+* Improved: Profile edit nonces are rendered through the standard edit-field hook for compatibility with older theme overrides. Overrides that removed this hook or nonce markup must be refreshed.
 
 = 6.0.0.5: October 21, 2026 =
 * Fixed: Logged-in users can join groups without receiving an invalid group join request error.
@@ -1647,6 +1651,9 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 6.0.0.6: October 26, 2026 =
+Restores delegated frontend profile editing and nonce compatibility for theme overrides that retain the standard edit-field hook.
 
 = 6.0.0.5: October 21, 2026 =
 Fixes group joining for logged-in users and prevents PHP object injection when rendering serialized user metadata.

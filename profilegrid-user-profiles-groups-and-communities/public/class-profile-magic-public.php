@@ -56,6 +56,15 @@ class Profile_Magic_Public {
 
 	}
 
+	/**
+	 * Render the profile-edit nonce through the legacy template hook.
+	 *
+	 * @param int $edit_uid Profile being edited; retained for hook compatibility.
+	 */
+	public function pm_render_profile_edit_nonce( $edit_uid = 0 ) {
+		wp_nonce_field( 'pm_profile_action', 'pm_profile_nonce' );
+	}
+
 		/**
 		 * Register the stylesheets for the public-facing side of the site.
 		 *

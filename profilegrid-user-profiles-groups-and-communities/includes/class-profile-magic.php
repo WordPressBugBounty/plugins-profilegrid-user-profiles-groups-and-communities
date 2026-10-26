@@ -307,6 +307,7 @@ class Profile_Magic {
 		$plugin_public = new Profile_Magic_Public( $this->get_profile_magic(), $this->get_version() );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
+		$this->loader->add_action( 'profilegrid_edit_user_field_html', $plugin_public, 'pm_render_profile_edit_nonce' );
 		$this->loader->add_action( 'init', $plugin_public, 'register_shortcodes' );
 		// $this->loader->add_action( 'wp_ajax_nopriv_pm_captcha_verification', $plugin_public, 'profile_magic_captcha_verification' );
 		$this->loader->add_action( 'wp_login', $plugin_public, 'profile_magic_check_login_status', 10, 2 );

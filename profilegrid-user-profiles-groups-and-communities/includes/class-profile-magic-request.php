@@ -923,7 +923,7 @@ class PM_request {
                                             $value = esc_html__('Yes','profilegrid-user-profiles-groups-and-communities');
                                         }
                                                 
-						$additional = is_array( $value ) ? $value : array();
+						$additional = $value;
 					if ( is_array( $additional ) && isset( $additional['rm_file_field'] ) ) {
 						unset( $additional['rm_file_field'] );
 						$additional_value = implode( ',', $additional );
@@ -1233,6 +1233,40 @@ class PM_request {
 		return $minimum_require;
 	}
 
+	/**
+	 * Determine whether the current user may edit a target profile.
+	 *
+	 * @param int|string $editor_id Current user's ID.
+	 * @param int|string $target_id Profile owner's ID.
+	 * @param int|string $gid       Group through which delegated access is requested.
+	 * @return bool
+	 */
+	public function pg_can_edit_user_profile( $editor_id, $target_id, $gid = 0 ) {
+		foreach ( array( $editor_id, $target_id ) as $user_id ) {
+			if ( ( ! is_int( $user_id ) && ! is_string( $user_id ) ) || ! preg_match( '/^[1-9][0-9]*$/D', (string) $user_id ) || false === filter_var( $user_id, FILTER_VALIDATE_INT ) ) {
+				return false;
+			}
+		}
+
+		$editor_id = (int) $editor_id;
+		$target_id = (int) $target_id;
+		if ( ! is_user_logged_in() || get_current_user_id() !== $editor_id || ! get_userdata( $target_id ) ) {
+			return false;
+		}
+		if ( $editor_id === $target_id || is_super_admin( $editor_id ) ) {
+			return true;
+		}
+
+		$gid = $this->pg_positive_group_id( $gid );
+		if ( ! $gid || ! $this->pg_check_in_single_group_is_user_group_leader( $editor_id, $gid ) ) {
+			return false;
+		}
+
+		$target_groups = PM_sanitizer::safe_unserialize_user_meta_value( get_user_meta( $target_id, 'pm_group', true ) );
+		$target_groups = $this->pg_filter_users_group_ids( $target_groups );
+		return in_array( $gid, $target_groups, true );
+	}
+
 	/** Validate frontend profile form intent and the target before any writes/hooks. */
 	public function pm_validate_profile_form_request( $post, $operation ) {
 		if ( ! is_user_logged_in() || ! is_array( $post ) || ! in_array( $operation, array( 'edit_profile', 'upload_image', 'remove_image' ), true ) ) {
@@ -1254,10 +1288,18 @@ class PM_request {
 		if ( ( ! is_int( $id ) && ! is_string( $id ) ) || ! preg_match( '/^[1-9][0-9]*$/D', (string) $id ) || false === filter_var( $id, FILTER_VALIDATE_INT ) ) {
 			return false;
 		}
+		if ( ! get_userdata( (int) $id ) ) {
+			return false;
+		}
 		$allowed_id = get_current_user_id();
 		if ( $operation === 'edit_profile' ) {
+			$sanitized_post = ( new PM_sanitizer() )->sanitize( $post );
+			$gid            = isset( $sanitized_post['gid'] ) ? $sanitized_post['gid'] : 0;
+			if ( $this->pg_can_edit_user_profile( $allowed_id, (int) $id, $gid ) ) {
+				return true;
+			}
 			// Preserve the existing trusted extension hook for delegated profile edits.
-			$allowed_id = apply_filters( 'pg_edit_user_profile_user_id', $allowed_id, ( new PM_sanitizer() )->sanitize( $post ) );
+			$allowed_id = apply_filters( 'pg_edit_user_profile_user_id', $allowed_id, $sanitized_post );
 		} elseif ( ! isset( $post['user_meta'] ) || ! in_array( $post['user_meta'], array( 'pm_user_avatar', 'pm_cover_image' ), true ) ) {
 			return false;
 		}
