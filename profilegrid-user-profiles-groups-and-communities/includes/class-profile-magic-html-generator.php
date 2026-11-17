@@ -2904,7 +2904,8 @@ class PM_HTML_Creator {
                     <div class="pg-load-more-container pm-dbfl">
                         <div class="pm-loader" style="display:none;"></div>
                         <input type="hidden" id="pg_next_blog_page" value="<?php echo esc_attr( $pagenum + 1 ); ?>" />
-                        <input type="submit" class="pm-load-more-blogs" onclick ="load_more_user_blogs_shortcode_posts('<?php echo esc_attr( $authors ); ?>','<?php echo esc_attr( $posttypes ); ?>')" value="<?php esc_attr_e( 'Load More', 'profilegrid-user-profiles-groups-and-communities' ); ?>" />
+                        <input type="button" class="pm-load-more-blogs" onclick ="load_more_user_blogs_shortcode_posts('<?php echo esc_attr( $authors ); ?>','<?php echo esc_attr( $posttypes ); ?>',this)" value="<?php esc_attr_e( 'Load More', 'profilegrid-user-profiles-groups-and-communities' ); ?>" />
+                        <div class="pm-user-blogs-load-error pg-alert-warning pg-alert-info" role="status" aria-live="polite" style="display:none;"></div>
                     </div>
                 <?php
                 endif;

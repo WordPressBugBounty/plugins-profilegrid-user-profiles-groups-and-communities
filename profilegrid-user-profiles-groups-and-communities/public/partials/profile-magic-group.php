@@ -32,9 +32,10 @@ if(!isset($gid) || empty($gid))
     }
     
 }
+$gid = $pmrequests->pg_positive_group_id( $gid );
 $current_user = wp_get_current_user();
 $row = $dbhandler->get_row('GROUPS',$gid);
-$pmgroupoption = isset($row->group_options) ? maybe_unserialize($row->group_options) : array();
+$pmgroupoption = isset($row->group_options) ? pg_safe_unserialize_group_options($row->group_options) : array();
 $is_require_admin_approval = $dbhandler->get_global_option_value('pm_group_update_require_admin_approval',0);
 $request_obj = $pm_sanitizer->sanitize($_REQUEST);
 if(isset($request_obj["action"]) && $request_obj["action"]!='process')
@@ -116,33 +117,32 @@ if(isset($_POST['edit_group']))
             
             $exclude = array("_wpnonce","_wp_http_referer","edit_group","group_id");
             $post = $pmrequests->sanitize_request($_POST,$identifier,$exclude);
+            $allowed_fields = array( 'group_name', 'group_desc' );
+            $post = is_array( $post ) ? array_intersect_key( $post, array_flip( $allowed_fields ) ) : array();
+            $data = array();
+            $arg = array();
             if(isset($_FILES['group_icon'])){
                 $filefield = $_FILES['group_icon'];
                 $allowed_ext ='jpg|jpeg|png|gif|webp|avif';
                 if(isset($filefield) && !empty($filefield))
                 {
                         $attachment_id = $pmrequests->make_upload_and_get_attached_id($filefield,$allowed_ext);
-                        $post['group_icon'] = $attachment_id;
+                        if ( is_numeric( $attachment_id ) && (int) $attachment_id > 0 ) {
+                            $post['group_icon'] = (int) $attachment_id;
+                        }
                 }
             }
-            if($post!=false)
+            foreach($post as $key=>$value)
             {
-                    foreach($post as $key=>$value)
-                    {
-                      $data[$key] = $value;
-                      $arg[] = $pm_activator->get_db_table_field_type($identifier,$key);
-                    }
-                    if(isset($data['associate_role']))
-                    {
-                        unset($data['associate_role']);
-                    }
+              $data[$key] = $value;
+              $arg[] = $pm_activator->get_db_table_field_type($identifier,$key);
             }
-            if($groupid!=0 && $is_require_admin_approval==0)
+            if($groupid!=0 && $is_require_admin_approval==0 && ! empty( $data ))
             {
                 $dbhandler->update_row($identifier,'id',$groupid,$data,$arg,'%d');
                 do_action('profilegrid_group_update',$data,$row,$groupid);
             }
-            else
+            elseif ( ! empty( $data ) )
             {
                 do_action('profilegrid_group_update_approval',$data,$row,$groupid);
             }

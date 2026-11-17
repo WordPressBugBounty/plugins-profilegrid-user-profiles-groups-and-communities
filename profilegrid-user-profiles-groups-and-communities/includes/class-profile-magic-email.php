@@ -24,7 +24,7 @@ class PM_Emails {
 		$tmpl_id            = '';
 
 		if ( !empty( $row ) ) {
-			$group_options = maybe_unserialize( $row->group_options );
+			$group_options = pg_safe_unserialize_group_options( $row->group_options );
 		}
 		if ( isset( $group_options['enable_notification'] ) && $group_options['enable_notification']==1 && $group_options[ $event ]!='' && $event!='on_admin_removal' && $event!='on_admin_assignment' ) {
 			$tmpl_id = $group_options[ $event ];
@@ -50,7 +50,7 @@ class PM_Emails {
 		$tmpl_id       = '';
 
 		if ( !empty( $row ) ) {
-			$group_options = maybe_unserialize( $row->group_options );
+			$group_options = pg_safe_unserialize_group_options( $row->group_options );
 		}
 		if ( isset( $group_options['enable_group_admin_notification'] ) && $group_options['enable_group_admin_notification']==1 && $group_options[ $event ]!='' ) {
 			$tmpl_id = $group_options[ $event ];

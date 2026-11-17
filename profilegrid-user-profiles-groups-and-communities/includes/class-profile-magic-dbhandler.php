@@ -17,11 +17,24 @@ class PM_DBhandler {
     public function update_row( $identifier, $unique_field, $unique_field_value, $data, $format = null, $where_format = null ) {
         global $wpdb;
         $pm_activator = new Profile_Magic_Activator();
-        $table        = esc_sql( $pm_activator->get_db_table_name( $identifier ) );
+        $table        = $pm_activator->get_db_table_name( $identifier );
+        if ( ! is_string( $table ) || ! preg_match( '/^[A-Za-z0-9_]+$/D', $table ) || ! is_array( $data ) || empty( $data ) ) {
+            return false;
+        }
+
         if ( $unique_field === false ) {
             $unique_field = $pm_activator->get_db_table_unique_field_name( $identifier );
         }
-        $unique_field = esc_sql( $unique_field );
+
+        if ( ! $this->pm_is_allowed_write_identifier( $identifier, $table, $unique_field ) ) {
+            return false;
+        }
+
+        foreach ( array_keys( $data ) as $field ) {
+            if ( ! $this->pm_is_allowed_write_identifier( $identifier, $table, $field ) ) {
+                return false;
+            }
+        }
 
         if ( is_numeric( $unique_field_value ) ) {
             $unique_field_value = (int) $unique_field_value;
@@ -711,6 +724,15 @@ class PM_DBhandler {
         }
 
         return in_array( strtolower( $identifier_name ), $this->pm_get_table_columns( $identifier, $table ), true );
+    }
+
+    /** Validate a bare table column before passing it to a wpdb write method. */
+    private function pm_is_allowed_write_identifier( $identifier, $table, $identifier_name ) {
+        if ( ! is_string( $identifier_name ) || ! preg_match( '/^[A-Za-z_][A-Za-z0-9_]*$/D', $identifier_name ) ) {
+            return false;
+        }
+
+        return $this->pm_is_allowed_identifier( $identifier, $table, $identifier_name );
     }
 
     private function pm_validate_query_columns( $identifier, $table, $column ) {

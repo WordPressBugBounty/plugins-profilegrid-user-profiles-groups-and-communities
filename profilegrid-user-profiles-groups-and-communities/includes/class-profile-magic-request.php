@@ -1,5 +1,53 @@
 <?php
 
+/**
+ * Decode group options without allowing PHP objects to be instantiated.
+ *
+ * Group options are expected to be serialized arrays containing only plain
+ * scalar values and nested arrays. Any other value is treated as invalid.
+ *
+ * @param mixed $value Stored group options.
+ * @return array
+ */
+function pg_safe_unserialize_group_options( $value ) {
+	if ( is_array( $value ) ) {
+		$options = $value;
+	} elseif ( is_string( $value ) && '' !== $value && is_serialized( $value ) ) {
+		$options = @unserialize( // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
+			trim( $value ),
+			array(
+				'allowed_classes' => false,
+				'max_depth'       => 64,
+			)
+		);
+	} else {
+		return array();
+	}
+
+	if ( ! is_array( $options ) ) {
+		return array();
+	}
+
+	$pending = array( $options );
+	$nodes   = 0;
+	while ( ! empty( $pending ) ) {
+		$current = array_pop( $pending );
+		foreach ( $current as $item ) {
+			$nodes++;
+			if ( $nodes > 10000 ) {
+				return array();
+			}
+			if ( is_array( $item ) ) {
+				$pending[] = $item;
+			} elseif ( ! is_scalar( $item ) && null !== $item ) {
+				return array();
+			}
+		}
+	}
+
+	return $options;
+}
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -653,7 +701,7 @@ class PM_request {
 
 	public function profile_magic_check_paid_group( $gid ) {
 				$dbhandler = new PM_DBhandler();
-		$options           = maybe_unserialize( $dbhandler->get_value( 'GROUPS', 'group_options', $gid, 'id' ) );
+		$options           = pg_safe_unserialize_group_options( $dbhandler->get_value( 'GROUPS', 'group_options', $gid, 'id' ) );
 
 		if ( ! empty( $options ) && isset( $options['is_paid_group'] ) && $options['is_paid_group'] == 1 ) {
 			$price = $options['group_price'];
@@ -711,8 +759,16 @@ class PM_request {
 				$message = esc_html__( 'Account disabled.', 'profilegrid-user-profiles-groups-and-communities' );
 				break;
 			case 'payment_pending':
-				$url     = wp_kses_post( "Your account has been deactivated due to a pending payment. <a href='%s'>Do you wish to pay now?</a>", 'profilegrid-user-profiles-groups-and-communities' );
-				$message = sprintf( $url, $this->pm_get_repayment_url(sanitize_text_field(wp_unslash($_REQUEST['id']) )) );
+				$uid             = filter_input( INPUT_GET, 'id', FILTER_UNSAFE_RAW );
+				$repayment_token = filter_input( INPUT_GET, 'pm_repayment_token', FILTER_UNSAFE_RAW );
+				$repayment_url   = $this->pm_get_repayment_url( $uid, is_string( $repayment_token ) ? sanitize_text_field( wp_unslash( $repayment_token ) ) : '' );
+				if ( $repayment_url ) {
+					/* translators: %s: Secure payment retry URL. */
+					$url     = wp_kses_post( __( "Your account has been deactivated due to a pending payment. <a href='%s'>Do you wish to pay now?</a>", 'profilegrid-user-profiles-groups-and-communities' ) );
+					$message = sprintf( $url, esc_url( $repayment_url ) );
+				} else {
+					$message = esc_html__( 'Your payment retry link is invalid or has expired. Please log in again to request a new link.', 'profilegrid-user-profiles-groups-and-communities' );
+				}
 				break;
 
 			case 'invalid_email':
@@ -897,7 +953,7 @@ class PM_request {
 						$gid = $this->pg_get_primary_group_id( $gid );}
 						$groupinfo = $dbhandler->get_row( 'GROUPS', $gid );
 					if ( isset( $groupinfo ) ) {
-						$group_options = maybe_unserialize( $groupinfo->group_options );}
+						$group_options = pg_safe_unserialize_group_options( $groupinfo->group_options );}
 					if ( isset( $group_options['admin_label'] ) ) {
 						$value = $group_options['admin_label'];
 					} else {
@@ -1495,30 +1551,138 @@ class PM_request {
 		return $avatar;
 	}
 
-	public function pm_get_repayment_url( $uid ) {
-		$gids     = get_user_meta( $uid, 'pm_group', true );
-		$gid      = $this->pg_filter_users_group_ids( $gids );
-				$group_payment_array = PM_sanitizer::safe_unserialize_array( get_user_meta( $uid, 'pm_group_payment_status', true ) );
-                if(!empty($group_payment_array))
-                foreach ($group_payment_array as $key=>$status)
-                {
-                    if($status=='pending')
-                    {
-                        $gid = $key;
-                        break;
-                    }
-                }               
-		$registration_url = $this->profile_magic_get_frontend_url( 'pm_registration_page', '' );
-		$registration_url = add_query_arg( 'gid', $gid, $registration_url );
-		$registration_url = add_query_arg( 'uid', $uid, $registration_url );
-		$registration_url = add_query_arg( 'action', 're_process', $registration_url );
-		return esc_url( $registration_url );
+	/**
+	 * Check whether a user and group are eligible for a payment retry.
+	 *
+	 * @param mixed $uid User ID.
+	 * @param mixed $gid Group ID.
+	 * @return bool
+	 */
+	public function pm_is_valid_repayment_target( $uid, $gid ) {
+		$uid = $this->pg_positive_group_id( $uid );
+		$gid = $this->pg_positive_group_id( $gid );
+		if ( ! $uid || ! $gid || ! get_user_by( 'ID', $uid ) || $this->profile_magic_check_paid_group( $gid ) <= 0 ) {
+			return false;
+		}
 
+		$user_groups = $this->pg_filter_users_group_ids( get_user_meta( $uid, 'pm_group', true ) );
+		if ( ! in_array( $gid, $user_groups, true ) ) {
+			return false;
+		}
+
+		$payment_statuses = PM_sanitizer::safe_unserialize_array( get_user_meta( $uid, 'pm_group_payment_status', true ) );
+		return isset( $payment_statuses[ $gid ] ) && 'pending' === strtolower( (string) $payment_statuses[ $gid ] );
+	}
+
+	/**
+	 * Issue a short-lived repayment token bound to one user and group.
+	 *
+	 * @param mixed $uid User ID.
+	 * @param mixed $gid Group ID.
+	 * @return string Raw token, or an empty string when no retry is allowed.
+	 */
+	public function pm_create_repayment_token( $uid, $gid ) {
+		$uid = $this->pg_positive_group_id( $uid );
+		$gid = $this->pg_positive_group_id( $gid );
+		if ( ! $this->pm_is_valid_repayment_target( $uid, $gid ) ) {
+			return '';
+		}
+
+		$token  = wp_generate_password( 64, false, false );
+		$record = array(
+			'hash'    => hash_hmac( 'sha256', $token, wp_salt( 'nonce' ) ),
+			'gid'     => $gid,
+			'expires' => time() + ( 15 * MINUTE_IN_SECONDS ),
+		);
+
+		return false === update_user_meta( $uid, 'pm_repayment_token', $record ) ? '' : $token;
+	}
+
+	/**
+	 * Validate and optionally consume a repayment token.
+	 *
+	 * Consumption uses the complete stored value so only one concurrent request can win.
+	 *
+	 * @param mixed $uid     User ID.
+	 * @param mixed $gid     Group ID.
+	 * @param mixed $token   Raw repayment token.
+	 * @param bool  $consume Whether to delete the token before returning success.
+	 * @return bool
+	 */
+	public function pm_validate_repayment_token( $uid, $gid, $token, $consume = false ) {
+		$uid = $this->pg_positive_group_id( $uid );
+		$gid = $this->pg_positive_group_id( $gid );
+		if ( ! $uid || ! $gid || ! is_string( $token ) || ! preg_match( '/^[A-Za-z0-9]{64}$/D', $token ) ) {
+			return false;
+		}
+		if ( ! $this->pm_is_valid_repayment_target( $uid, $gid ) ) {
+			return false;
+		}
+
+		$record = get_user_meta( $uid, 'pm_repayment_token', true );
+		if ( ! is_array( $record ) || ! isset( $record['hash'], $record['gid'], $record['expires'] ) ) {
+			return false;
+		}
+		if ( (int) $record['expires'] <= time() ) {
+			delete_user_meta( $uid, 'pm_repayment_token', $record );
+			return false;
+		}
+		if ( $gid !== (int) $record['gid'] || ! hash_equals( (string) $record['hash'], hash_hmac( 'sha256', $token, wp_salt( 'nonce' ) ) ) ) {
+			return false;
+		}
+
+		return ! $consume || delete_user_meta( $uid, 'pm_repayment_token', $record );
+	}
+
+	/**
+	 * Build a bound repayment URL for a trusted token or the authenticated owner.
+	 *
+	 * @param mixed  $uid   User ID.
+	 * @param string $token Previously issued raw token.
+	 * @return string
+	 */
+	public function pm_get_repayment_url( $uid, $token = '' ) {
+		$uid = $this->pg_positive_group_id( $uid );
+		if ( ! $uid ) {
+			return '';
+		}
+
+		$gid              = 0;
+		$payment_statuses = PM_sanitizer::safe_unserialize_array( get_user_meta( $uid, 'pm_group_payment_status', true ) );
+		foreach ( $payment_statuses as $group_id => $status ) {
+			$group_id = $this->pg_positive_group_id( $group_id );
+			if ( $group_id && 'pending' === strtolower( (string) $status ) && $this->pm_is_valid_repayment_target( $uid, $group_id ) ) {
+				$gid = $group_id;
+				break;
+			}
+		}
+		if ( ! $gid ) {
+			return '';
+		}
+
+		if ( '' === $token && get_current_user_id() === $uid ) {
+			$token = $this->pm_create_repayment_token( $uid, $gid );
+		}
+		if ( ! $this->pm_validate_repayment_token( $uid, $gid, $token ) ) {
+			return '';
+		}
+
+		$registration_url = $this->profile_magic_get_frontend_url( 'pm_registration_page', '' );
+		$registration_url = add_query_arg(
+			array(
+				'gid'                => $gid,
+				'uid'                => $uid,
+				'action'             => 're_process',
+				'pm_repayment_token' => $token,
+			),
+			$registration_url
+		);
+		return esc_url( $registration_url );
 	}
 
 	public function pm_get_user_redirect( $gid ) {
 			  $dbhandler = new PM_DBhandler();
-		$options         = maybe_unserialize( $dbhandler->get_value( 'GROUPS', 'group_options', $gid ) );
+		$options         = pg_safe_unserialize_group_options( $dbhandler->get_value( 'GROUPS', 'group_options', $gid ) );
 		$url             = '';
 		if ( ! empty( $options ) && isset( $options['redirect'] ) ) {
 			switch ( $options['redirect'] ) {
@@ -3880,7 +4044,7 @@ class PM_request {
 		$group_options = array();
 		$group         = $dbhandler->get_row( 'GROUPS', $gid );
 		if ( $group->group_options != '' ) {
-			$group_options = maybe_unserialize( $group->group_options );
+			$group_options = pg_safe_unserialize_group_options( $group->group_options );
 		}
 		$group_options['enable_notification'] = '1';
 		$body                                 = 'Dear {{first_name}} {{last_name}},<br /><br />You are now a member of {{group_name}} Group on {{site_name}}.<br /><br />Kind Regards.';
@@ -4063,7 +4227,7 @@ class PM_request {
 		$groups    = $dbhandler->get_all_result( 'GROUPS', '*', 1, 'results' );
 		foreach ( $groups as $group ) {
 			if ( $group->group_options != '' ) {
-				$options = maybe_unserialize( $group->group_options );
+				$options = pg_safe_unserialize_group_options( $group->group_options );
 				if ( isset( $options['on_registration'] ) && $options['on_registration'] == $tid ) {
 					return $group->group_name;
 				}
@@ -4164,7 +4328,7 @@ class PM_request {
 		$group       = $dbhandler->get_row( 'GROUPS', $gid );
 		$admin_label = 'Group Manager';
 		if ( $group->group_options != '' ) {
-			$group_options = maybe_unserialize( $group->group_options );
+			$group_options = pg_safe_unserialize_group_options( $group->group_options );
 			if ( isset( $group_options['admin_label'] ) && trim( $group_options['admin_label'] ) != '' ) {
 				$admin_label = $group_options['admin_label'];
 			}
@@ -4894,7 +5058,7 @@ class PM_request {
 			$user_name           = $this->profile_magic_get_user_field_value( $uid, 'user_login' );
 			$group_page_url      = admin_url( 'admin.php?page=pm_add_group' );
 			$group_page_url      = add_query_arg( 'id', $gid, $group_page_url );
-                        $group_options       = maybe_unserialize($row->group_options);
+                        $group_options       = pg_safe_unserialize_group_options($row->group_options);
 			$dbhandler->update_row( 'GROUPS', 'id', $gid, array( 'group_leaders' => $group_leaders_array ) );
 			$subject  = esc_html__( 'A Manager Left the Group', 'profilegrid-user-profiles-groups-and-communities' );
 			$message  = esc_html__( 'Hello,', 'profilegrid-user-profiles-groups-and-communities' );
@@ -5018,7 +5182,7 @@ class PM_request {
 
 	public function profile_magic_get_group_type( $gid ) {
 		$dbhandler     = new PM_DBhandler();
-		$group_options = maybe_unserialize( $dbhandler->get_value( 'GROUPS', 'group_options', $gid ) );
+		$group_options = pg_safe_unserialize_group_options( $dbhandler->get_value( 'GROUPS', 'group_options', $gid ) );
 		if ( isset( $group_options['group_type'] ) ) {
 			return $group_options['group_type'];
 		} else {
@@ -5051,10 +5215,16 @@ class PM_request {
 		return $row;
 	}
 	public function profile_magic_get_join_group_button( $gid, $show_action = 'no' ) {
-		$dbhandler        = new PM_DBhandler();
-		$pmrequests       = new PM_request();
-		$registration_url = $this->profile_magic_get_frontend_url( 'pm_registration_page', '' );
-		$registration_url = add_query_arg( 'gid', $gid, $registration_url );
+		$gid = $this->pg_positive_group_id( $gid );
+		if ( ! $gid ) {
+			return;
+		}
+
+		$dbhandler            = new PM_DBhandler();
+		$pmrequests           = new PM_request();
+		$registration_url     = $this->profile_magic_get_frontend_url( 'pm_registration_page', '' );
+		$registration_url     = add_query_arg( 'gid', $gid, $registration_url );
+		$registration_onclick = 'window.location.href=' . wp_json_encode( $registration_url );
 		if ( $show_action == 'yes' ) {
 			$group_page = $this->profile_magic_get_frontend_url( 'pm_group_page', '' ,$gid );
 			//$group_page = add_query_arg( 'gid', $gid, $group_page );
@@ -5135,23 +5305,23 @@ class PM_request {
 				}
 			}
 		} else {
-                    $allowed_tags = array(
-                        'button' => array(
-                            'class' => true,
-                            'onclick' => true,
-                        ),
-                    );
+			$allowed_tags = array(
+				'button' => array(
+					'class'   => true,
+					'onclick' => true,
+				),
+			);
 			if ( $is_group_limit == 1 ) {
 				
 				if ( $limit > $total_users_in_group ) {
 					?>
 					
 				<div class="pm-group-signup">
-                                    <?php 
-                                       $link = '<button onclick="window.location.href=\'' . esc_url( $registration_url ) . '\'" class="pm_button">'.esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ).'</button>';
-                                       $link = apply_filters('profilegrid_group_page_button_link',$link,$gid);
-                                       echo wp_kses($link, $allowed_tags);
-                                    ?>
+					<?php
+					$link = '<button onclick="' . esc_attr( $registration_onclick ) . '" class="pm_button">' . esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ) . '</button>';
+					$link = apply_filters( 'profilegrid_group_page_button_link', $link, $gid );
+					echo wp_kses( $link, $allowed_tags );
+					?>
                                     
 				</div>
 					<?php
@@ -5162,12 +5332,12 @@ class PM_request {
 			} else {
 				?>
 				<div class="pm-group-signup">
-                                    <?php 
-                                        $link = '<button onclick="window.location.href=\'' . esc_url( $registration_url ) . '\'" class="pm_button">' . esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ) . '</button>';
-                                        $link = apply_filters('profilegrid_group_page_button_link', $link, $gid);
-                                        echo wp_kses($link, $allowed_tags);
+					<?php
+					$link = '<button onclick="' . esc_attr( $registration_onclick ) . '" class="pm_button">' . esc_html__( 'Join Group', 'profilegrid-user-profiles-groups-and-communities' ) . '</button>';
+					$link = apply_filters( 'profilegrid_group_page_button_link', $link, $gid );
+					echo wp_kses( $link, $allowed_tags );
 
-                                    ?>
+					?>
 				</div>                
 				<?php
 			}
@@ -5486,7 +5656,7 @@ class PM_request {
 
 	public function pm_check_if_group_associate_with_rm_form( $gid ) {
 		$dbhandler     = new PM_DBhandler();
-		$group_options = maybe_unserialize( $dbhandler->get_value( 'GROUPS', 'group_options', $gid, 'id' ) );
+		$group_options = pg_safe_unserialize_group_options( $dbhandler->get_value( 'GROUPS', 'group_options', $gid, 'id' ) );
 
 		if ( isset( $group_options ) && isset( $group_options['pg_rm_form'] ) && $group_options['pg_rm_form']!=0 ) {
 			$form_type = $this->pm_check_rm_form_type( $group_options['pg_rm_form'] );
@@ -5511,7 +5681,7 @@ class PM_request {
 		$groups           = $dbhandler->get_all_result( 'GROUPS' );
 		$associate_groups = array();
 		foreach ( $groups as $group ) {
-			$group_options = maybe_unserialize( $group->group_options );
+			$group_options = pg_safe_unserialize_group_options( $group->group_options );
 			if ( isset( $group_options ) && isset( $group_options['pg_rm_form'] ) && $group_options['pg_rm_form'] == $form_id ) {
 				$associate_groups[] = $group->id;
 			}
@@ -5776,7 +5946,7 @@ class PM_request {
 		$group_options = array();
 		$row           = $dbhandler->get_row( $identifier, $gid );
 		if ( $row->group_options != '' ) {
-			$group_options = maybe_unserialize( $row->group_options );
+			$group_options = pg_safe_unserialize_group_options( $row->group_options );
 		}
 
 		if ( ! empty( $group_options['group_page'] ) ) {
@@ -5959,7 +6129,7 @@ class PM_request {
 	public function pm_get_group_html( $group, $view = 'grid' ) {
 		$dbhandler = new PM_DBhandler();
 		$option    = 'pm_show_group_on_groups_page_' . $group->id;
-                $pmgroupoption = maybe_unserialize($group->group_options);
+                $pmgroupoption = pg_safe_unserialize_group_options($group->group_options);
                 $is_global_password_protected = $dbhandler->get_global_option_value('pm_enable_group_password_option',0);
                 $allowed_tags = array(
                         'button' => array(
@@ -6573,7 +6743,7 @@ class PM_request {
 		$dbhandler    = new PM_DBhandler();
 		$current_user = wp_get_current_user();
 		$row          = $dbhandler->get_row( 'GROUPS', $gid );
-		$options      = maybe_unserialize( $row->group_options );
+		$options      = pg_safe_unserialize_group_options( $row->group_options );
 		$pagenum      = filter_input( INPUT_GET, 'pagenum' );
 
 		$pagenum    = isset( $pagenum ) ? absint( $pagenum ) : 1;
@@ -7094,7 +7264,7 @@ class PM_request {
 		$group       = $dbhandler->get_row( 'GROUPS', $gid );
 		$admin_flag = 0;
 		if ( $group->group_options != '' ) {
-			$group_options = maybe_unserialize( $group->group_options );
+			$group_options = pg_safe_unserialize_group_options( $group->group_options );
 			if ( isset( $group_options['flag_group_leader'] ) && trim( $group_options['flag_group_leader'] ) == 1 ) {
 				$admin_flag = 1;
 			}

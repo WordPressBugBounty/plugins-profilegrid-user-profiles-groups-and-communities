@@ -357,6 +357,8 @@ class Profile_Magic {
 				$this->loader->add_action( 'wp_ajax_pm_load_pg_blogs', $plugin_public, 'pm_load_pg_blogs' );
 				$this->loader->add_action( 'wp_ajax_pm_load_user_blogs_shortcode_posts', $plugin_public, 'pm_load_user_blogs_shortcode_posts' );
 				$this->loader->add_action( 'wp_ajax_nopriv_pm_load_user_blogs_shortcode_posts', $plugin_public, 'pm_load_user_blogs_shortcode_posts' );
+				$this->loader->add_action( 'wp_ajax_pm_refresh_user_blogs_nonce', $plugin_public, 'pm_refresh_user_blogs_nonce' );
+				$this->loader->add_action( 'wp_ajax_nopriv_pm_refresh_user_blogs_nonce', $plugin_public, 'pm_refresh_user_blogs_nonce' );
 				$this->loader->add_action( 'wp_ajax_nopriv_pm_load_pg_blogs', $plugin_public, 'pm_load_pg_blogs' );
 				$this->loader->add_action( 'wp_ajax_pm_get_rid_by_uname', $plugin_public, 'pm_get_rid_by_uname' );
 				$this->loader->add_action( 'wp_ajax_pm_activate_new_thread', $plugin_public, 'pm_activate_new_thread' );

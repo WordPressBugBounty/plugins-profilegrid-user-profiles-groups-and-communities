@@ -13,7 +13,7 @@ foreach ( $groups as $group ) {
     break;
 }
 if ( $row->group_options!='' ) {
-	$group_options = maybe_unserialize( $row->group_options );
+	$group_options = pg_safe_unserialize_group_options( $row->group_options );
 }
 
 ?>

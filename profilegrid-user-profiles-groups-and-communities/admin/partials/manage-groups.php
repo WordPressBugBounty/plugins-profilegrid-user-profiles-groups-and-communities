@@ -141,7 +141,7 @@ if ( $pg_demo_content_is_installed ) {
       
     <?php if(!empty($groups)):
     foreach($groups as $group):
-       $group_options =($group->group_options!="")? maybe_unserialize($group->group_options):array('group_type'=>'open');
+       $group_options =($group->group_options!="")? pg_safe_unserialize_group_options($group->group_options):array('group_type'=>'open');
         if(isset($group_options['group_type'])){$group_type = $group_options['group_type'];}else{$group_type='Open';}
 	$meta_query_array = $pmrequests->pm_get_user_meta_query(array('gid'=>$group->id));
 	$date_query = $pmrequests->pm_get_user_date_query(array('gid'=>$group->id));

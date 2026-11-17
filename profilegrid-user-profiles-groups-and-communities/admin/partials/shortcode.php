@@ -1316,7 +1316,7 @@ wp_enqueue_style( 'pg-google-fonts', 'https://fonts.googleapis.com/icon?family=M
 			
 			<div class="pg-scblock pg-sc-description-row">
 				<div class="pg-sc-title"><?php esc_html_e( 'Description', 'profilegrid-user-profiles-groups-and-communities' ); ?></div> 
-				<div class="pg-sc-dec pg-morelink"><?php esc_html_e( 'Publishes First Name of the currently logged in user. To publish First Name of another user, use uid parameter.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+				<div class="pg-sc-dec pg-morelink"><?php esc_html_e( 'Publishes the first name of the currently logged-in user when uid is omitted. Displaying another user\'s first name requires permission to list users and is subject to profile privacy.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
 			</div>
 				
 				
@@ -1380,7 +1380,7 @@ wp_enqueue_style( 'pg-google-fonts', 'https://fonts.googleapis.com/icon?family=M
 			
 			<div class="pg-scblock pg-sc-description-row">
 				<div class="pg-sc-title"><?php esc_html_e( 'Description', 'profilegrid-user-profiles-groups-and-communities' ); ?></div> 
-				<div class="pg-sc-dec pg-morelink"><?php esc_html_e( 'Publishes Last Name of the currently logged in user. To publish Last Name of another user, use uid parameter. ', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+				<div class="pg-sc-dec pg-morelink"><?php esc_html_e( 'Publishes the last name of the currently logged-in user when uid is omitted. Displaying another user\'s last name requires permission to list users and is subject to profile privacy.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
 			</div>
 				
 				
@@ -1445,7 +1445,7 @@ wp_enqueue_style( 'pg-google-fonts', 'https://fonts.googleapis.com/icon?family=M
 			
 			<div class="pg-scblock pg-sc-description-row">
 				<div class="pg-sc-title"><?php esc_html_e( 'Description', 'profilegrid-user-profiles-groups-and-communities' ); ?></div> 
-				<div class="pg-sc-dec pg-morelink"><?php esc_html_e( 'Publishes registered email address of the currently logged in user. To publish email of another user, use uid parameter.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
+				<div class="pg-sc-dec pg-morelink"><?php esc_html_e( 'Publishes the registered email address of the currently logged-in user when uid is omitted. Displaying another user\'s email requires permission to list users and is subject to profile privacy.', 'profilegrid-user-profiles-groups-and-communities' ); ?></div>
 			</div>
 				
 				

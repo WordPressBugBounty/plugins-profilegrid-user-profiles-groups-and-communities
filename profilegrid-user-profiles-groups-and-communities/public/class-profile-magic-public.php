@@ -128,9 +128,10 @@ class Profile_Magic_Public {
 			$this->profile_magic,
 			'pm_ajax_object',
 			array(
-				'ajax_url'         => admin_url( 'admin-ajax.php' ),
-				'plugin_emoji_url' => plugin_dir_url( __FILE__ ) . 'partials/images/img',
-				'nonce'            => wp_create_nonce( 'ajax-nonce' ),
+				'ajax_url'              => admin_url( 'admin-ajax.php' ),
+				'plugin_emoji_url'      => plugin_dir_url( __FILE__ ) . 'partials/images/img',
+				'nonce'                 => wp_create_nonce( 'ajax-nonce' ),
+				'user_blogs_load_error' => esc_html__( 'Unable to load more posts. Please try again.', 'profilegrid-user-profiles-groups-and-communities' ),
 			)
 		);
 
@@ -249,9 +250,10 @@ class Profile_Magic_Public {
 				$this->profile_magic,
 				'pm_ajax_object',
 				array(
-					'ajax_url'         => admin_url( 'admin-ajax.php' ),
-					'plugin_emoji_url' => plugin_dir_url( __FILE__ ) . 'partials/images/img',
-					'nonce'            => wp_create_nonce( 'ajax-nonce' ),
+					'ajax_url'              => admin_url( 'admin-ajax.php' ),
+					'plugin_emoji_url'      => plugin_dir_url( __FILE__ ) . 'partials/images/img',
+					'nonce'                 => wp_create_nonce( 'ajax-nonce' ),
+					'user_blogs_load_error' => esc_html__( 'Unable to load more posts. Please try again.', 'profilegrid-user-profiles-groups-and-communities' ),
 				)
 			);
 			$reg_sub_page                     = array();
@@ -261,9 +263,10 @@ class Profile_Magic_Public {
 				'profile-magic-footer.js',
 				'pm_ajax_object',
 				array(
-					'ajax_url'         => admin_url( 'admin-ajax.php' ),
-					'plugin_emoji_url' => plugin_dir_url( __FILE__ ) . 'partials/images/img',
-					'nonce'            => wp_create_nonce( 'ajax-nonce' ),
+					'ajax_url'              => admin_url( 'admin-ajax.php' ),
+					'plugin_emoji_url'      => plugin_dir_url( __FILE__ ) . 'partials/images/img',
+					'nonce'                 => wp_create_nonce( 'ajax-nonce' ),
+					'user_blogs_load_error' => esc_html__( 'Unable to load more posts. Please try again.', 'profilegrid-user-profiles-groups-and-communities' ),
 				)
 			);
 			$error                                 = array();
@@ -490,7 +493,7 @@ class Profile_Magic_Public {
             $group_options = array();
             $row  = $dbhandler->get_row( 'GROUPS', $gid );
             if ( isset( $row ) && isset( $row->group_options ) && $row->group_options != '' ) {
-                    $group_options = maybe_unserialize( $row->group_options );
+                    $group_options = pg_safe_unserialize_group_options( $row->group_options );
             }
 
             if ( isset($group_options['group_profile_template']) && ! empty( $group_options['group_profile_template'] )) {
@@ -867,7 +870,6 @@ class Profile_Magic_Public {
 				$gids           = get_user_meta( $user->ID, 'pm_group', true );
 				$ugid           = $pmrequests->pg_filter_users_group_ids( $gids );
 				$gid            = $pmrequests->pg_get_primary_group_id( $ugid );
-				$payment_status = get_user_meta( $user->ID, 'pm_user_payment_status', true );
 				$group_payment_array = PM_sanitizer::safe_unserialize_array( get_user_meta( $user->ID, 'pm_group_payment_status', true ) );
                                 if(!empty($group_payment_array))
                                 foreach ($group_payment_array as $key=>$status)
@@ -879,10 +881,11 @@ class Profile_Magic_Public {
                                     }
                                 }
                                 
-				$price = $pmrequests->profile_magic_check_paid_group( $gid );
-			if ( $price > 0 && $payment_status == 'pending' ) {
+			$repayment_token = $pmrequests->pm_create_repayment_token( $user->ID, $gid );
+			if ( $repayment_token ) {
 				$login_url = add_query_arg( 'errors', 'payment_pending', $login_url );
 				$login_url = add_query_arg( 'id', $user->ID, $login_url );
+				$login_url = add_query_arg( 'pm_repayment_token', $repayment_token, $login_url );
 			} else {
 					$login_url = add_query_arg( 'errors', 'account_disabled', $login_url );
 			}
@@ -1847,10 +1850,28 @@ if ( isset( $_POST['tid'] ) ) {
 				$uid = false;
 			}
 
-			if ( $request['action'] == 're_process' ) {
-								$additional  = "uid = $uid";
-								$payment_log = $dbhandler->get_all_result( 'PAYPAL_LOG', '*', 1, 'results', 0, 1, 'id', 'DESC', $additional );
-				if ( isset( $payment_log ) ) {
+			if ( 're_process' === $request['action'] ) {
+				$repayment_token = isset( $request['pm_repayment_token'] ) && is_string( $request['pm_repayment_token'] ) ? $request['pm_repayment_token'] : '';
+				if ( ! $pmrequests->pm_validate_repayment_token( $uid, $gid, $repayment_token, true ) ) {
+					return false;
+				}
+
+				$uid         = $pmrequests->pg_positive_group_id( $uid );
+				$gid         = $pmrequests->pg_positive_group_id( $gid );
+				$payment_log = $dbhandler->get_all_result(
+					'PAYPAL_LOG',
+					'*',
+					array(
+						'uid' => $uid,
+						'gid' => $gid,
+					),
+					'results',
+					0,
+					1,
+					'id',
+					'DESC'
+				);
+				if ( ! empty( $payment_log ) ) {
 					$payment_method = $payment_log[0]->pay_processor;
 				} else {
 					$payment_method = 'paypal';
@@ -4704,10 +4725,8 @@ if ( isset( $_POST['tid'] ) ) {
 
 	public function pm_load_user_blogs_shortcode_posts() {
             $pm_sanitizer = new PM_sanitizer;
-                
-            if ( !isset( $_POST['nonce'] ) || ! is_string( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field(wp_unslash($_POST['nonce'])), 'ajax-nonce' ) ) {
-                die(esc_html__('Failed security check','profilegrid-user-profiles-groups-and-communities') );
-            }
+
+		$this->pm_validate_ajax_nonce_or_403( 'pm_load_user_blogs_shortcode_posts' );
                 $post = $pm_sanitizer->sanitize($_POST);
 		$pmhtmlcreator = new PM_HTML_Creator( $this->profile_magic, $this->version );
 		if ( ( isset( $post['authors'] ) && ! is_string( $post['authors'] ) ) || ! isset( $post['posttypes'] ) || ! is_string( $post['posttypes'] ) ) {
@@ -4725,6 +4744,14 @@ if ( isset( $_POST['tid'] ) ) {
 			die;
 	}
 
+	public function pm_refresh_user_blogs_nonce() {
+		wp_send_json_success(
+			array(
+				'nonce' => wp_create_nonce( 'ajax-nonce' ),
+			)
+		);
+	}
+
 	public function pg_get_group_page_link( $page, $default, $gid ) {
 		$url = $default;
 		if ( $page == 'pm_group_page' && $gid != '' ) {
@@ -4733,7 +4760,7 @@ if ( isset( $_POST['tid'] ) ) {
 			$group_options = array();
 			$row           = $dbhandler->get_row( $identifier, $gid );
 			if ( isset( $row ) && isset( $row->group_options ) && $row->group_options != '' ) {
-				$group_options = maybe_unserialize( $row->group_options );
+				$group_options = pg_safe_unserialize_group_options( $row->group_options );
 			}
 
 			if ( ! empty( $group_options['group_page'] ) && $group_options['group_page'] != '0' ) {
@@ -5272,12 +5299,34 @@ if ( isset( $_POST['tid'] ) ) {
 		return $html;
 	}
 
+	/**
+	 * Determine whether the current user may render private user-data shortcodes.
+	 *
+	 * @param mixed $uid Requested user ID.
+	 * @return bool
+	 */
+	private function profile_magic_can_view_shortcode_user_data( $uid ) {
+		if ( ( ! is_int( $uid ) && ! is_string( $uid ) ) || ! preg_match( '/^[1-9][0-9]*$/D', (string) $uid ) ) {
+			return false;
+		}
+
+		$uid       = filter_var( $uid, FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1 ) ) );
+		$viewer_id = get_current_user_id();
+
+		return false !== $uid && $viewer_id > 0
+			&& ( $viewer_id === $uid || current_user_can( 'list_users' ) );
+	}
+
 	public function profile_magic_shortcode_user_first_name( $content ) {
 		$pmrequests = new PM_request();
 		ob_start();
 		$current_user       = wp_get_current_user();
 		$default_attributes = array( 'uid' => $current_user->ID );
 		$attributes         = shortcode_atts( $default_attributes, $content );
+		if ( ! $this->profile_magic_can_view_shortcode_user_data( $attributes['uid'] ) ) {
+			ob_end_clean();
+			return '';
+		}
 		  $user_exists      = $pmrequests->pm_check_user_exist_by_id( $attributes['uid'] );
 		if ( $attributes['uid'] !== 0 && is_object( $user_exists ) ) :
 			echo wp_kses_post($pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'first_name' ));
@@ -5293,6 +5342,10 @@ if ( isset( $_POST['tid'] ) ) {
 		$current_user       = wp_get_current_user();
 		$default_attributes = array( 'uid' => $current_user->ID );
 		$attributes         = shortcode_atts( $default_attributes, $content );
+		if ( ! $this->profile_magic_can_view_shortcode_user_data( $attributes['uid'] ) ) {
+			ob_end_clean();
+			return '';
+		}
 		 $user_exists       = $pmrequests->pm_check_user_exist_by_id( $attributes['uid'] );
 		if ( $attributes['uid'] !== 0 && is_object( $user_exists ) ) :
 			echo wp_kses_post($pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'last_name' ));
@@ -5308,6 +5361,10 @@ if ( isset( $_POST['tid'] ) ) {
 		$current_user       = wp_get_current_user();
 		$default_attributes = array( 'uid' => $current_user->ID );
 		$attributes         = shortcode_atts( $default_attributes, $content );
+		if ( ! $this->profile_magic_can_view_shortcode_user_data( $attributes['uid'] ) ) {
+			ob_end_clean();
+			return '';
+		}
 		$user_exists        = $pmrequests->pm_check_user_exist_by_id( $attributes['uid'] );
 		if ( $attributes['uid'] !== 0 && is_object( $user_exists ) ) :
 			echo wp_kses_post($pmrequests->profile_magic_get_user_field_value( $attributes['uid'], 'user_email' ));

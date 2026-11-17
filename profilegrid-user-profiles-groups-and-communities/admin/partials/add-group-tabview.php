@@ -25,7 +25,7 @@ if ( $id==false || $id==null ) {
 } else {
     $row = $dbhandler->get_row( $identifier, $id );
 	if ( $row->group_options!='' ) {
-		$group_options = maybe_unserialize( $row->group_options );
+		$group_options = pg_safe_unserialize_group_options( $row->group_options );
 		if ( ! is_array( $group_options ) ) {
 			$group_options = array();
 		}
@@ -295,7 +295,7 @@ if ( filter_input( INPUT_POST, 'submit_group' ) ) {
             }
 	$group_options_saved = array();
 	if ( isset( $data['group_options'] ) ) {
-		$group_options_saved = maybe_unserialize( $data['group_options'] );
+		$group_options_saved = pg_safe_unserialize_group_options( $data['group_options'] );
 		if ( ! is_array( $group_options_saved ) ) {
 			$group_options_saved = array();
 		}
@@ -382,7 +382,7 @@ if ( filter_input( INPUT_POST, 'duplicate' ) ) {
 	$selected = filter_input( INPUT_POST, 'selected', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );
 	foreach ( $selected as $gid ) {
 		$data                      =$dbhandler->get_row( $identifier, $gid, 'id', 'ARRAY_A' );
-                $group_options_old = maybe_unserialize( $data['group_options'] );
+                $group_options_old = pg_safe_unserialize_group_options( $data['group_options'] );
                 //$group_options_old['group_type']='open';
                 $data['group_leaders']   = '';
                 $data['is_group_leader'] = '0';

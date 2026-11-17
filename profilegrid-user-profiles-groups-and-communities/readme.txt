@@ -5,7 +5,7 @@ Tags: user profile, community, membership, profile, profile-widget
 Requires at least: 3.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 6.0.0.6
+Stable tag: 6.0.0.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -664,6 +664,13 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 18. Dashboard Area - All the shortcodes associated with ProfileGrid.
 
 == Changelog ==
+
+= 6.0.0.7: November 17, 2026 =
+* Security: Prevented group leaders from changing internal group options and blocked PHP object instantiation when stored group options are read. Thanks to Ananda Dhakal (Patchstack) for responsibly reporting the issue.
+* Security: Validated database update column identifiers and restricted editable group fields to prevent authenticated SQL injection. Thanks to Yuninha / Yannix-sec for responsibly reporting the issue.
+* Security: Hardened authorization for user-data shortcodes and blocks. Thanks to wellknown.info for responsibly reporting the issue.
+* Security: Hardened repayment authorization and payment-state protection. Thanks to Nguyen Hung Anh for responsibly reporting the issue.
+* Fixed: User Blogs Load More now refreshes expired security nonces, retries once, and restores a visible retry state if loading fails.
 
 = 6.0.0.6: October 26, 2026 =
 * Fixed: Restored frontend profile updates by super administrators and group managers for members they are authorized to manage.
@@ -1651,6 +1658,9 @@ Yes, you can change field order of custom fields by drag and drop method in dash
 
 
 == Upgrade Notice ==
+
+= 6.0.0.7: November 17, 2026 =
+Hardens authorization for user-data shortcodes, blocks, payment retries, and group settings storage, and restores User Blogs Load More when cached pages contain an expired security nonce.
 
 = 6.0.0.6: October 26, 2026 =
 Restores delegated frontend profile editing and nonce compatibility for theme overrides that retain the standard edit-field hook.

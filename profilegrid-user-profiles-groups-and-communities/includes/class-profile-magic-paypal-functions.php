@@ -37,6 +37,13 @@ class PM_paypal_request {
     public function profile_magic_repayment_process( $user_id, $gid ) {
                  $dbhandler = new PM_DBhandler();
                 $pmrequests = new PM_request();
+		if ( ! $pmrequests->pm_is_valid_repayment_target( $user_id, $gid ) ) {
+			return false;
+		}
+
+		$user_id = $pmrequests->pg_positive_group_id( $user_id );
+		$gid     = $pmrequests->pg_positive_group_id( $gid );
+
 		$invoice            = gmdate( 'His' ) . wp_rand( 1234, 9632 );
 		$amount             = $pmrequests->profile_magic_check_paid_group( $gid );
 		$p                  = new profile_magic_paypal_class(); // paypal class
@@ -52,7 +59,10 @@ class PM_paypal_request {
                 }
                 $group_payment_array[$gid] = 'pending';
                 update_user_meta( $user_id, 'pm_group_payment_status', $group_payment_array );
-		update_user_meta( $user_id, 'pm_user_payment_status', 'pending' );
+		$user_payment_status = strtolower( (string) get_user_meta( $user_id, 'pm_user_payment_status', true ) );
+		if ( '' === $user_payment_status || 'pending' === $user_payment_status ) {
+			update_user_meta( $user_id, 'pm_user_payment_status', 'pending' );
+		}
 		update_user_meta( $user_id, 'pm_invoice', $invoice );
 		$this_script = get_permalink();
 		$sign        = strpos( $this_script, '?' )?'&':'?';
@@ -69,6 +79,7 @@ class PM_paypal_request {
 		$p->add_field( 'item_name_1', $group_name );
 		$p->add_field( 'amount_1', $amount );
 		$p->submit_paypal_post(); // POST it to paypal
+		return true;
 	}
 
 	public function profile_magic_payment_process( $post, $action, $gid, $user_id, $textdomain ) {

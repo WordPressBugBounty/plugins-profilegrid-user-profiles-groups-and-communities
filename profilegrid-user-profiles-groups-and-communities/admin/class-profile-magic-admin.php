@@ -2239,7 +2239,7 @@ class Profile_Magic_Admin {
 			$group_name = array();
 			foreach ( $is_associate as $group ) {
 				$group_name[]                = $dbhandler->get_value( 'GROUPS', 'group_name', $group );
-				$group_options               = maybe_unserialize( $dbhandler->get_value( 'GROUPS', 'group_options', $group ) );
+				$group_options               = pg_safe_unserialize_group_options( $dbhandler->get_value( 'GROUPS', 'group_options', $group ) );
 				$group_options['pg_rm_form'] = '0';
 
 				$dbhandler->update_row( 'GROUPS', 'id', $group, array( 'group_options' => maybe_serialize( $group_options ) ), array( '%s' ), '%d' );
@@ -2465,7 +2465,7 @@ class Profile_Magic_Admin {
 			$identifier = 'GROUPS';
 			$row        = $dbhandler->get_row( $identifier, $gid );
 			if ( $row->group_options != '' ) {
-				$group_options = maybe_unserialize( $row->group_options );
+				$group_options = pg_safe_unserialize_group_options( $row->group_options );
 			}
 
 			$group_name = 'User Group - ' . $dbhandler->get_value( 'GROUPS', 'group_name', $gid );

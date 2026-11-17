@@ -1580,22 +1580,79 @@ function load_more_pg_blogs(uid)
 
 }
 
-function load_more_user_blogs_shortcode_posts(authors,posttypes)
+function load_more_user_blogs_shortcode_posts(authors, posttypes, trigger)
 {
-    jQuery('.pm-load-more-blogs').hide();
-    jQuery('.pg-load-more-container .pm-loader').show();
-    var page = parseInt(jQuery('#pg_next_blog_page').val());
-    var nextpage = page +1;
-    var data = {action: 'pm_load_user_blogs_shortcode_posts',authors: authors, posttypes:posttypes, page:page, 'nonce': pm_ajax_object.nonce};
-    jQuery.post(pm_ajax_object.ajax_url, data, function (response) {
-        if(response)
-        {
-            jQuery('.pg-load-more-container .pm-loader').hide();
-            jQuery('#pg_next_blog_page').val(nextpage);
-            jQuery('#pg-user-blog-container').append(response);
-        }
-    });
+    var $button = trigger ? jQuery(trigger) : jQuery('#pg-user-blog-container .pm-load-more-blogs').first();
+    var $controls = $button.closest('.pg-load-more-container');
+    var $blogContainer = $controls.closest('#pg-user-blog-container');
+    var $loader = $controls.find('.pm-loader').first();
+    var $error = $controls.find('.pm-user-blogs-load-error').first();
+    var page = parseInt($controls.find('#pg_next_blog_page').val(), 10);
 
+    if (!$button.length || !$controls.length || !$blogContainer.length || isNaN(page) || $button.data('pm-loading')) {
+        return false;
+    }
+
+    $button.data('pm-loading', true).prop('disabled', true).hide();
+    $controls.attr('aria-busy', 'true');
+    $loader.show();
+    $error.hide().text('');
+
+    function showError() {
+        var message = (window.pm_ajax_object && pm_ajax_object.user_blogs_load_error) ? pm_ajax_object.user_blogs_load_error : 'Unable to load more posts. Please try again.';
+        $loader.hide();
+        $controls.removeAttr('aria-busy');
+        $button.data('pm-loading', false).prop('disabled', false).show();
+        $error.text(message).show();
+    }
+
+    function isInvalidNonce(xhr) {
+        return xhr && xhr.status === 403 && xhr.responseJSON && xhr.responseJSON.success === false && xhr.responseJSON.data && xhr.responseJSON.data.code === 'invalid_nonce';
+    }
+
+    function requestPosts(hasRetried) {
+        var data = {
+            action: 'pm_load_user_blogs_shortcode_posts',
+            authors: authors,
+            posttypes: posttypes,
+            page: page,
+            nonce: pm_ajax_object.nonce
+        };
+
+        jQuery.ajax({
+            url: pm_ajax_object.ajax_url,
+            method: 'POST',
+            data: data
+        }).done(function (response) {
+            $loader.hide();
+            $controls.removeAttr('aria-busy');
+            $controls.remove();
+            if (response) {
+                $blogContainer.append(response);
+            }
+        }).fail(function (xhr) {
+            if (!hasRetried && isInvalidNonce(xhr)) {
+                jQuery.ajax({
+                    url: pm_ajax_object.ajax_url,
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {action: 'pm_refresh_user_blogs_nonce'}
+                }).done(function (response) {
+                    if (response && response.success && response.data && response.data.nonce) {
+                        pm_ajax_object.nonce = response.data.nonce;
+                        requestPosts(true);
+                        return;
+                    }
+                    showError();
+                }).fail(showError);
+                return;
+            }
+            showError();
+        });
+    }
+
+    requestPosts(false);
+    return false;
 }
 
 
